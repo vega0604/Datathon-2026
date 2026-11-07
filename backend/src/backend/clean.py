@@ -81,10 +81,26 @@ def fill_feb_2025_sql(src: str) -> str:
     """
 
 
+def add_epss_pct_sql(src: str) -> str:
+    """SHE-21: EPSS changed its model in March 2025, so raw scores aren't comparable
+    across months. epss_pct ranks each score within its month (0 = lowest, 1 = highest).
+    NULL where the CVE had no EPSS score that month."""
+    return f"""
+        SELECT
+            *,
+            CASE
+                WHEN epss IS NULL THEN NULL
+                ELSE percent_rank() OVER (PARTITION BY month, epss IS NULL ORDER BY epss)
+            END AS epss_pct
+        FROM {src}
+    """
+
+
 # Applied in order to the 2024 + 2025 signals. Each entry: (log name, step).
 SIGNAL_STEPS = [
     ("drop_rejected", drop_rejected_sql),
     ("fill_feb_2025", fill_feb_2025_sql),
+    ("epss_pct", add_epss_pct_sql),
 ]
 
 

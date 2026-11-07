@@ -68,3 +68,19 @@ def test_feb_2025_filled(con, log):
         )
     """
     assert scalar(con, duplicates) == 0
+
+
+# --- SHE-21 ---
+
+
+def test_epss_pct(con, log):
+    assert log["signals_after_epss_pct"] == 6_327_309  # adds a column, not rows
+    low, high, missing, epss_missing = con.execute(
+        """
+        SELECT min(epss_pct), max(epss_pct), count(*) FILTER (WHERE epss_pct IS NULL),
+               count(*) FILTER (WHERE epss IS NULL)
+        FROM clean.exploit_signals
+        """
+    ).fetchone()
+    assert (low, high) == (0.0, 1.0)
+    assert missing == epss_missing == 302

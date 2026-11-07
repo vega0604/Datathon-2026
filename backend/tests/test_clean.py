@@ -72,3 +72,22 @@ def test_fill_feb_2025(con):
         ("2025-02", "CVE-A")
     ]
     assert rows(con, f"SELECT count(*) FROM ({sql})") == [(9,)]
+
+
+# --- SHE-21 ---
+
+
+def test_epss_pct(con):
+    con.execute(
+        """
+        CREATE TABLE s AS SELECT * FROM (VALUES
+            ('2025-01', 'A', 0.1::DOUBLE),
+            ('2025-01', 'B', 0.5::DOUBLE),
+            ('2025-01', 'C', 0.9::DOUBLE),
+            ('2025-01', 'D', NULL::DOUBLE),
+            ('2025-02', 'E', 0.2::DOUBLE)
+        ) AS t(month, cve_id, epss)
+        """
+    )
+    result = dict(rows(con, f"SELECT cve_id, epss_pct FROM ({clean.add_epss_pct_sql('s')})"))
+    assert result == {"A": 0.0, "B": 0.5, "C": 1.0, "D": None, "E": 0.0}
