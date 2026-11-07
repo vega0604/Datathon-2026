@@ -1,8 +1,8 @@
 """SHE-18 to SHE-22: clean the typed Parquet tables into data/clean/.
 
-Run after `uv run python -m backend.load`:
+Run after `uv run python -m backend.pipeline.load`:
 
-    uv run python -m backend.clean
+    uv run python -m backend.pipeline.clean
 
 Each step is a function that returns SQL, so it can be unit-tested on tiny tables
 (tests/test_clean.py) without the real data. main() runs the steps on the real
@@ -224,7 +224,7 @@ def build_vendors(con: duckdb.DuckDBPyConnection, log: dict[str, int]) -> None:
 
 def main() -> None:
     if not (PARQUET_DIR / "vulnerabilities.parquet").exists():
-        raise SystemExit("No Parquet data. Run `uv run python -m backend.load` first.")
+        raise SystemExit("No Parquet data. Run `uv run python -m backend.pipeline.load` first.")
     con = connect()
     log: dict[str, int] = {}
     log["cwe"] = write_parquet(con, cwe_long_sql(), "cwe")

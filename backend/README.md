@@ -43,7 +43,7 @@ Data pipeline, ranking model, Granite enrichment and dashboard for **Before the 
 
 | Task | Command |
 | --- | --- |
-| Run a module | `uv run python -m backend.load` |
+| Run a module | `uv run python -m backend.pipeline.load` |
 | Run tests | `uv run pytest` |
 | Lint and format | `uv run ruff check .` / `uv run ruff format .` |
 | Add a package | `uv add polars` (or `uv add --group granite peft`) |

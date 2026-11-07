@@ -21,7 +21,7 @@ EXPECTED_ROWS = {
 
 pytestmark = pytest.mark.skipif(
     not (PARQUET_DIR / "vulnerabilities.parquet").exists(),
-    reason="no Parquet data: run `uv run python -m backend.load` first",
+    reason="no Parquet data: run `uv run python -m backend.pipeline.load` first",
 )
 
 

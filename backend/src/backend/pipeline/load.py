@@ -1,6 +1,6 @@
 """SHE-16: convert the raw CSVs in data/raw/ to typed Parquet in data/parquet/.
 
-Run: uv run python -m backend.load
+Run: uv run python -m backend.pipeline.load
 
 Every column is read as text first (so nothing is guessed wrong, and version
 strings like "1.10" stay "1.10"), then the columns below are cast. Blank values
