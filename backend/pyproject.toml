@@ -1,0 +1,66 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Before the Breach: predicting which vulnerabilities attackers will exploit (IBM track, Sheridan Datathon 2026)"
+readme = "README.md"
+authors = [
+    { name = "Sebastian Vega", email = "sebasvega4604@gmail.com" }
+]
+# Pinned to 3.12 so every ML package (torch, lightgbm, shap) has ready-made Windows/macOS wheels.
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    # Data loading and cleaning
+    "duckdb",
+    "polars",
+    "pandas",
+    "pyarrow",
+    # Modeling
+    "scikit-learn",
+    "lightgbm",
+    "shap",
+    # Charts
+    "plotly",
+    "kaleido",
+    # Config and HTTP (Linear API, X-Force)
+    "python-dotenv",
+    "httpx",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+    "ipykernel",
+]
+# Granite models (SHE-7). Large download; skip with `uv sync --no-group granite`.
+granite = [
+    "torch",
+    "transformers",
+    "sentence-transformers",
+    "accelerate",
+]
+# Dashboard (SHE-11)
+app = [
+    "streamlit",
+]
+# Tiger Data backend (SHE-10)
+tiger = [
+    "psycopg[binary]",
+]
+
+[project.scripts]
+backend = "backend:main"
+
+[build-system]
+requires = ["uv_build>=0.12.19,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+# Install every group by default so `uv sync` never removes a teammate's packages.
+default-groups = "all"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
