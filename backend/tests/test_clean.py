@@ -50,3 +50,25 @@ def test_drop_rejected(con):
         "AS t(month, cve_id)"
     )
     assert rows(con, clean.drop_rejected_sql("s")) == [("2025-01", "CVE-A")]
+
+
+# --- SHE-20 ---
+
+
+def test_fill_feb_2025(con):
+    # A: Jan + Mar, missing Feb -> filled. B: Jan only. C: all three months. D: no Jan.
+    con.execute(
+        """
+        CREATE TABLE s AS SELECT * FROM (VALUES
+            ('2025-01', 'CVE-A'), ('2025-03', 'CVE-A'),
+            ('2025-01', 'CVE-B'),
+            ('2025-01', 'CVE-C'), ('2025-02', 'CVE-C'), ('2025-03', 'CVE-C'),
+            ('2025-02', 'CVE-D'), ('2025-03', 'CVE-D')
+        ) AS t(month, cve_id)
+        """
+    )
+    sql = clean.fill_feb_2025_sql("s")
+    assert rows(con, f"SELECT month, cve_id FROM ({sql}) WHERE filled_gap = 1") == [
+        ("2025-02", "CVE-A")
+    ]
+    assert rows(con, f"SELECT count(*) FROM ({sql})") == [(9,)]

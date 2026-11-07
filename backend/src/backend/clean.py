@@ -67,9 +67,24 @@ def drop_rejected_sql(src: str, vulns: str = "vulnerabilities") -> str:
     return f"SELECT * FROM {src} WHERE cve_id IN (SELECT cve_id FROM {vulns})"
 
 
+def fill_feb_2025_sql(src: str) -> str:
+    """SHE-20: February 2025 is missing ~14,500 CVEs. A CVE present in January and
+    March but not February gets January's values for February, with filled_gap = 1."""
+    return f"""
+        SELECT *, 0::UTINYINT AS filled_gap FROM {src}
+        UNION ALL
+        SELECT * REPLACE ('2025-02' AS month), 1::UTINYINT AS filled_gap
+        FROM {src}
+        WHERE month = '2025-01'
+          AND cve_id IN (SELECT cve_id FROM {src} WHERE month = '2025-03')
+          AND cve_id NOT IN (SELECT cve_id FROM {src} WHERE month = '2025-02')
+    """
+
+
 # Applied in order to the 2024 + 2025 signals. Each entry: (log name, step).
 SIGNAL_STEPS = [
     ("drop_rejected", drop_rejected_sql),
+    ("fill_feb_2025", fill_feb_2025_sql),
 ]
 
 

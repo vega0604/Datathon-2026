@@ -52,3 +52,19 @@ def test_rejected_ids_dropped(con, log):
         WHERE cve_id NOT IN (SELECT cve_id FROM vulnerabilities)
     """
     assert scalar(con, orphans) == 0
+
+
+# --- SHE-20 ---
+
+
+def test_feb_2025_filled(con, log):
+    assert log["signals_after_fill_feb_2025"] == 6_327_309  # + 14,552 filled rows
+    assert scalar(con, "SELECT sum(filled_gap) FROM clean.exploit_signals") == 14_552
+    feb = "SELECT count(*) FROM clean.exploit_signals WHERE month = '2025-02'"
+    assert scalar(con, feb) == 267_661
+    duplicates = """
+        SELECT count(*) FROM (
+            SELECT month, cve_id FROM clean.exploit_signals GROUP BY ALL HAVING count(*) > 1
+        )
+    """
+    assert scalar(con, duplicates) == 0
