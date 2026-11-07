@@ -3,7 +3,7 @@ work from any working directory."""
 
 from pathlib import Path
 
-BACKEND_DIR = Path(__file__).resolve().parents[2]  # src/backend/paths.py -> backend/
+BACKEND_DIR = Path(__file__).resolve().parents[3]  # src/backend/core/config.py -> backend/
 DATA_DIR = BACKEND_DIR / "data"
 RAW_DIR = DATA_DIR / "raw"  # the 8 CSVs from data.zip (gitignored)
 PARQUET_DIR = DATA_DIR / "parquet"  # typed copies of the raw CSVs (SHE-16)

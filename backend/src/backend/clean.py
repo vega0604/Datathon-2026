@@ -14,8 +14,8 @@ import json
 
 import duckdb
 
-from backend.paths import CLEAN_DIR, LOGS_DIR, PARQUET_DIR
-from backend.warehouse import connect
+from backend.core.config import CLEAN_DIR, LOGS_DIR, PARQUET_DIR
+from backend.db.warehouse import connect
 
 
 def write_parquet(con: duckdb.DuckDBPyConnection, query: str, name: str) -> int:

@@ -8,8 +8,8 @@ import json
 
 import pytest
 
-from backend.paths import LOGS_DIR
-from backend.warehouse import connect
+from backend.core.config import LOGS_DIR
+from backend.db.warehouse import connect
 
 LOG_PATH = LOGS_DIR / "clean_log.json"
 

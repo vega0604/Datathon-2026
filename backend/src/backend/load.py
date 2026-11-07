@@ -10,7 +10,7 @@ silently turning into NULL.
 
 import duckdb
 
-from backend.paths import PARQUET_DIR, RAW_DIR
+from backend.core.config import PARQUET_DIR, RAW_DIR
 
 FLAGS = ("exploitdb", "metasploit", "nuclei", "poc_github")
 SIGNAL_TYPES = {"epss": "DOUBLE", "in_kev": "UTINYINT"} | {f: "UTINYINT" for f in FLAGS}
