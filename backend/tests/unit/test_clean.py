@@ -1,9 +1,9 @@
-"""Unit tests for backend.clean on tiny in-memory tables. No real data needed."""
+"""Unit tests for backend.pipeline.clean on tiny in-memory tables. No real data needed."""
 
 import duckdb
 import pytest
 
-from backend import clean
+from backend.pipeline import clean
 
 
 @pytest.fixture

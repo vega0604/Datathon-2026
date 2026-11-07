@@ -5,8 +5,8 @@ Skipped when data/parquet/ hasn't been built (fresh clone, CI).
 
 import pytest
 
-from backend.paths import PARQUET_DIR
-from backend.warehouse import connect
+from backend.core.config import PARQUET_DIR
+from backend.db.warehouse import connect
 
 EXPECTED_ROWS = {
     "vulnerabilities": 401_082,
@@ -21,7 +21,7 @@ EXPECTED_ROWS = {
 
 pytestmark = pytest.mark.skipif(
     not (PARQUET_DIR / "vulnerabilities.parquet").exists(),
-    reason="no Parquet data: run `uv run python -m backend.load` first",
+    reason="no Parquet data: run `uv run python -m backend.pipeline.load` first",
 )
 
 

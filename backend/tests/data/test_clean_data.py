@@ -1,20 +1,21 @@
 """Checks on the real cleaned data in data/clean/ (SHE-18 to SHE-22).
 
 Expected numbers were measured from the challenge data on 2026-11-07. Skipped
-until `uv run python -m backend.clean` has run.
+until `uv run python -m backend.pipeline.clean` has run.
 """
 
 import json
 
 import pytest
 
-from backend.paths import LOGS_DIR
-from backend.warehouse import connect
+from backend.core.config import LOGS_DIR
+from backend.db.warehouse import connect
 
 LOG_PATH = LOGS_DIR / "clean_log.json"
 
 pytestmark = pytest.mark.skipif(
-    not LOG_PATH.exists(), reason="no cleaned data: run `uv run python -m backend.clean` first"
+    not LOG_PATH.exists(),
+    reason="no cleaned data: run `uv run python -m backend.pipeline.clean` first",
 )
 
 

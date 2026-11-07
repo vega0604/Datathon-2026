@@ -10,7 +10,7 @@ Every Parquet file becomes a view named after the file. Names are quoted because
 
 import duckdb
 
-from backend.paths import CLEAN_DIR, PARQUET_DIR
+from backend.core.config import CLEAN_DIR, PARQUET_DIR
 
 
 def connect(database: str = ":memory:") -> duckdb.DuckDBPyConnection:
