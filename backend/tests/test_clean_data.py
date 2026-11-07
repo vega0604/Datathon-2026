@@ -39,3 +39,16 @@ def test_cwe(con):
     assert scalar(con, "SELECT count(*) FROM clean.cwe") == 441_086
     assert scalar(con, "SELECT count(DISTINCT cve_id) FROM clean.cwe") == 401_082
     assert scalar(con, "SELECT count(*) FROM clean.cwe WHERE cwe_id = 'unknown'") == 61_297
+
+
+# --- SHE-19 ---
+
+
+def test_rejected_ids_dropped(con, log):
+    assert log["signals_raw"] == 6_463_734
+    assert log["signals_after_drop_rejected"] == 6_312_757  # 150,977 rows, 11,793 IDs
+    orphans = """
+        SELECT count(*) FROM clean.exploit_signals
+        WHERE cve_id NOT IN (SELECT cve_id FROM vulnerabilities)
+    """
+    assert scalar(con, orphans) == 0

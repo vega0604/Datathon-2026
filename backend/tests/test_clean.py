@@ -38,3 +38,15 @@ def test_cwe_long(con):
         ("CVE-D", "unknown"),
         ("CVE-E", "CWE-22"),
     ]
+
+
+# --- SHE-19 ---
+
+
+def test_drop_rejected(con):
+    con.execute("CREATE TABLE vulnerabilities AS SELECT * FROM (VALUES ('CVE-A')) AS t(cve_id)")
+    con.execute(
+        "CREATE TABLE s AS SELECT * FROM (VALUES ('2025-01', 'CVE-A'), ('2025-01', 'CVE-X')) "
+        "AS t(month, cve_id)"
+    )
+    assert rows(con, clean.drop_rejected_sql("s")) == [("2025-01", "CVE-A")]

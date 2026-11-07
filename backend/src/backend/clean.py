@@ -55,12 +55,42 @@ def cwe_long_sql(vulns: str = "vulnerabilities") -> str:
     """
 
 
+# --- SHE-19 to SHE-21: monthly exploit signals ---------------------------------
+
+
+def signals_union_sql() -> str:
+    return "SELECT * FROM exploit_signals_2024 UNION ALL SELECT * FROM exploit_signals_2025"
+
+
+def drop_rejected_sql(src: str, vulns: str = "vulnerabilities") -> str:
+    """SHE-19: drop rows whose ID isn't in vulnerabilities (rejected IDs)."""
+    return f"SELECT * FROM {src} WHERE cve_id IN (SELECT cve_id FROM {vulns})"
+
+
+# Applied in order to the 2024 + 2025 signals. Each entry: (log name, step).
+SIGNAL_STEPS = [
+    ("drop_rejected", drop_rejected_sql),
+]
+
+
+def build_signals(con: duckdb.DuckDBPyConnection, log: dict[str, int]) -> int:
+    con.execute(f"CREATE OR REPLACE TEMP TABLE signals AS {signals_union_sql()}")
+    log["signals_raw"] = count(con, "signals")
+    for name, step in SIGNAL_STEPS:
+        con.execute(f"CREATE OR REPLACE TEMP TABLE signals_next AS {step('signals')}")
+        con.execute("DROP TABLE signals")
+        con.execute("ALTER TABLE signals_next RENAME TO signals")
+        log[f"signals_after_{name}"] = count(con, "signals")
+    return write_parquet(con, "SELECT * FROM signals ORDER BY month, cve_id", "exploit_signals")
+
+
 def main() -> None:
     if not (PARQUET_DIR / "vulnerabilities.parquet").exists():
         raise SystemExit("No Parquet data. Run `uv run python -m backend.load` first.")
     con = connect()
     log: dict[str, int] = {}
     log["cwe"] = write_parquet(con, cwe_long_sql(), "cwe")
+    log["exploit_signals"] = build_signals(con, log)
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     (LOGS_DIR / "clean_log.json").write_text(json.dumps(log, indent=2) + "\n")
     for name, value in log.items():
