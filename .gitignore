@@ -1,0 +1,16 @@
+﻿# Data and outputs
+data/
+outputs/
+!outputs/charts/
+!outputs/top500.csv
+
+# Secrets and environment configs
+.env
+*.env.local
+
+# Python caches
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+.ipynb_checkpoints/
