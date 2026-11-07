@@ -84,3 +84,20 @@ def test_epss_pct(con, log):
     ).fetchone()
     assert (low, high) == (0.0, 1.0)
     assert missing == epss_missing == 302
+
+
+# --- SHE-22 ---
+
+
+def test_vendor_keys(con, log):
+    assert log["vendor_aliases"] == 47
+    assert log["kev"] == 1_484
+    assert log["affected_products"] == 3_155_934
+    # 1,365 KEV rows match by key alone; the derived aliases bring it to 1,454.
+    assert log["kev_vendor_matches"] == 1_454
+    assert scalar(con, "SELECT count(*) FROM clean.kev WHERE vendor_key = ''") == 0
+    aliases = dict(
+        con.execute("SELECT kev_vendor, cpe_vendor FROM clean.vendor_aliases").fetchall()
+    )
+    assert aliases["Android"] == "google"
+    assert aliases["Zoho"] == "zohocorp"

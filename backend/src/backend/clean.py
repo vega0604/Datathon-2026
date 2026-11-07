@@ -115,6 +115,113 @@ def build_signals(con: duckdb.DuckDBPyConnection, log: dict[str, int]) -> int:
     return write_parquet(con, "SELECT * FROM signals ORDER BY month, cve_id", "exploit_signals")
 
 
+# --- SHE-22: vendor names -------------------------------------------------------
+
+# Linux distributions repackage other vendors' software, so they are never alias targets.
+REDISTRIBUTORS = ("debian", "fedoraproject", "canonical", "redhat", "suse", "opensuse")
+
+
+def vendor_key_sql(expr: str) -> str:
+    """A comparable vendor key: lowercase letters and digits only.
+    'Palo Alto Networks' -> 'paloaltonetworks'; 'TP-Link' and 'tp-link' -> 'tplink'."""
+    return f"regexp_replace(lower({expr}), '[^a-z0-9]', '', 'g')"
+
+
+def vendor_aliases_sql(kev: str = "known_exploited", affected: str = "affected_products") -> str:
+    """Derive aliases from the data: CISA vendor name -> NIST (CPE) vendor name.
+
+    A KEV vendor needs an alias only if its key never matches the vendor of a vulnerable
+    product on any of its own CVEs (e.g. 'Android', whose CVEs list 'google'). Its alias
+    is the CPE vendor on the most of its CVEs, ignoring Linux distributions. Ties go to
+    the candidate whose key contains the KEV key or vice versa ('Git' -> 'git-scm').
+    No alias if the winner is still tied, or appears on fewer than half its CVEs.
+    """
+    kev_key = vendor_key_sql("k.vendor")
+    cpe_key = vendor_key_sql("a.vendor")
+    redistributors = ", ".join(f"'{v}'" for v in REDISTRIBUTORS)
+    return f"""
+        WITH pairs AS (
+            SELECT DISTINCT
+                k.vendor AS kev_vendor, {kev_key} AS kev_key, k.cve_id,
+                a.vendor AS cpe_vendor, {cpe_key} AS cpe_key
+            FROM {kev} AS k
+            JOIN {affected} AS a ON a.cve_id = k.cve_id AND a.vulnerable = 'Y'
+        ),
+        needs_alias AS (
+            SELECT kev_vendor, count(DISTINCT cve_id) AS kev_cves
+            FROM pairs
+            GROUP BY kev_vendor
+            HAVING NOT bool_or(cpe_key = kev_key)
+        ),
+        candidates AS (
+            SELECT
+                p.kev_vendor,
+                p.cpe_vendor,
+                n.kev_cves,
+                count(DISTINCT p.cve_id) AS cves,
+                contains(p.cpe_key, p.kev_key) OR contains(p.kev_key, p.cpe_key) AS name_match
+            FROM pairs AS p
+            JOIN needs_alias AS n ON n.kev_vendor = p.kev_vendor
+            WHERE p.cpe_key NOT IN ({redistributors})
+            GROUP BY p.kev_vendor, p.kev_key, p.cpe_vendor, p.cpe_key, n.kev_cves
+        ),
+        ranked AS (
+            SELECT
+                *,
+                row_number() OVER (
+                    PARTITION BY kev_vendor ORDER BY cves DESC, name_match DESC, cpe_vendor
+                ) AS pos,
+                count(*) OVER (PARTITION BY kev_vendor, cves, name_match) AS tied
+            FROM candidates
+        )
+        SELECT kev_vendor, cpe_vendor, cves, kev_cves
+        FROM ranked
+        WHERE pos = 1 AND tied = 1 AND cves * 2 >= kev_cves
+        ORDER BY kev_vendor
+    """
+
+
+def kev_with_vendor_key_sql(kev: str = "known_exploited", aliases: str = "vendor_aliases") -> str:
+    """KEV plus vendor_key, using the alias where vendor_aliases_sql() found one."""
+    key = vendor_key_sql("coalesce(a.cpe_vendor, k.vendor)")
+    return f"""
+        SELECT k.*, {key} AS vendor_key
+        FROM {kev} AS k
+        LEFT JOIN {aliases} AS a ON a.kev_vendor = k.vendor
+        ORDER BY k.date_added, k.cve_id
+    """
+
+
+def affected_with_vendor_key_sql(affected: str = "affected_products") -> str:
+    return f"SELECT *, {vendor_key_sql('vendor')} AS vendor_key FROM {affected}"
+
+
+def kev_vendor_matches_sql(kev: str, affected: str) -> str:
+    """KEV rows whose vendor_key matches a vulnerable product's vendor on the same CVE."""
+    return f"""
+        SELECT count(*) FROM {kev} AS k
+        WHERE EXISTS (
+            SELECT 1 FROM {affected} AS a
+            WHERE a.cve_id = k.cve_id AND a.vulnerable = 'Y' AND a.vendor_key = k.vendor_key
+        )
+    """
+
+
+def clean_parquet(name: str) -> str:
+    return f"read_parquet('{(CLEAN_DIR / f'{name}.parquet').as_posix()}')"
+
+
+def build_vendors(con: duckdb.DuckDBPyConnection, log: dict[str, int]) -> None:
+    log["vendor_aliases"] = write_parquet(con, vendor_aliases_sql(), "vendor_aliases")
+    kev_sql = kev_with_vendor_key_sql(aliases=clean_parquet("vendor_aliases"))
+    log["kev"] = write_parquet(con, kev_sql, "kev")
+    log["affected_products"] = write_parquet(
+        con, affected_with_vendor_key_sql(), "affected_products"
+    )
+    matches = kev_vendor_matches_sql(clean_parquet("kev"), clean_parquet("affected_products"))
+    log["kev_vendor_matches"] = con.execute(matches).fetchone()[0]
+
+
 def main() -> None:
     if not (PARQUET_DIR / "vulnerabilities.parquet").exists():
         raise SystemExit("No Parquet data. Run `uv run python -m backend.load` first.")
@@ -122,6 +229,7 @@ def main() -> None:
     log: dict[str, int] = {}
     log["cwe"] = write_parquet(con, cwe_long_sql(), "cwe")
     log["exploit_signals"] = build_signals(con, log)
+    build_vendors(con, log)
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     (LOGS_DIR / "clean_log.json").write_text(json.dumps(log, indent=2) + "\n")
     for name, value in log.items():
