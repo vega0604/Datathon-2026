@@ -5,9 +5,9 @@ Run after `uv run python -m backend.pipeline.load`:
     uv run python -m backend.pipeline.clean
 
 Each step is a function that returns SQL, so it can be unit-tested on tiny tables
-(tests/test_clean.py) without the real data. main() runs the steps on the real
+(tests/unit/test_clean.py) without the real data. main() runs the steps on the real
 tables, writes data/clean/*.parquet, and records row counts in
-outputs/logs/clean_log.json (checked by tests/test_clean_data.py).
+outputs/logs/clean_log.json (checked by tests/data/test_clean_data.py).
 """
 
 import json
