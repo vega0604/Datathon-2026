@@ -25,7 +25,7 @@ function LegendPill({ file, size, children }) {
 
 function EmbeddingMap({ clusters }) {
   return (
-    <PlotFrame>
+    <PlotFrame minH="min-h-[140px]">
       <PlotSurface width={MAP_W} height={MAP_H}>
         <div
           className="absolute inset-0 rounded-[18px] bg-card"
@@ -59,11 +59,11 @@ function EmbeddingMap({ clusters }) {
 }
 
 // "Exploited CVEs cluster in Granite’s text space" (from the former Model check page),
-// shown on the Catch rate page.
+// shown on the Model overview page.
 export function EmbeddingCard() {
   const e = model.embedding
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
       <h2 className="shrink-0 text-lg leading-7 text-ink xl:text-xl">{e.title}</h2>
       <div className="flex shrink-0 flex-wrap gap-2">
         <LegendPill file="legend-dot" size={7}>Not on KEV (dot)</LegendPill>

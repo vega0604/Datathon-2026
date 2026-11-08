@@ -1,13 +1,14 @@
+import { useRef } from 'react'
+import { useFitHeight } from '../../lib/useFitHeight'
 import { Takeaway } from './ChartParts'
-import { AboutDataBox, NoteBox, SidePanel, WhatToDoCard } from './NextStepsPanel'
 import { VendorHeatmap } from './VendorHeatmap'
 import { SHADE } from './vendorShades'
-import { aboutData, vendors } from '../../data/insights'
+import { vendors } from '../../data/insights'
 
 function RankingRow({ vendor }) {
   return (
-    <div className="flex w-full shrink-0 items-center gap-2.5 rounded-full bg-card py-1.5 pr-3.5 pl-1.5">
-      <span className="type-body-compact flex size-9 shrink-0 items-center justify-center rounded-full bg-purple-soft font-semibold text-purple-ink">
+    <div className="flex w-full shrink-0 items-center gap-2.5 rounded-full bg-card py-1.5 pr-3.5 pl-1.5 short:py-1">
+      <span className="type-body-compact flex size-9 short:size-7 shrink-0 items-center justify-center rounded-full bg-blue-soft font-semibold text-blue-ink">
         {vendor.name[0]}
       </span>
       <div className="flex min-w-0 flex-1 flex-col whitespace-nowrap">
@@ -31,10 +32,12 @@ function LegendSwatch({ shade, children }) {
   )
 }
 
-export function VendorsPage({ onOpenFixFirst }) {
+export function VendorsPage() {
+  // Never scrolls or clips: on short windows the card shrinks slightly to fit.
+  const ref = useRef(null)
+  useFitHeight(ref)
   return (
-    <>
-      <main className="flex h-full min-w-0 flex-1 flex-col gap-4 xl:gap-5 xl:pt-2">
+      <main ref={ref} className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden xl:gap-5 xl:pt-2 [&>*]:[zoom:var(--fit,1)]">
         <div className="flex shrink-0 flex-col items-start gap-1 xl:gap-2">
           <h1 className="text-[clamp(30px,3vw,44px)] leading-[1.18] font-light text-ink">Vendors</h1>
           <p className="text-sm leading-5 text-ink-muted xl:text-base xl:leading-6">
@@ -56,12 +59,12 @@ export function VendorsPage({ onOpenFixFirst }) {
               ))}
             </div>
 
-            <div className="flex min-h-[240px] w-full flex-1 items-stretch gap-5">
+            <div className="flex w-full flex-1 items-stretch gap-5">
               {/* Heatmap fills the space it gets; the layout is recomputed on resize */}
-              <div className="w-[clamp(220px,52%,420px)] shrink-0">
+              <div className="min-h-[160px] w-[62%] shrink-0">
                 <VendorHeatmap cells={vendors.cells} />
               </div>
-              <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
+              <div className="flex min-w-0 flex-1 flex-col justify-start gap-2.5 short:gap-2">
                 <p className="type-body-compact font-semibold text-ink-muted">Highest KEV rate</p>
                 {vendors.ranking.map((v) => (
                   <RankingRow key={v.name} vendor={v} />
@@ -73,20 +76,5 @@ export function VendorsPage({ onOpenFixFirst }) {
           </div>
         </section>
       </main>
-
-      <SidePanel>
-        <WhatToDoCard onOpenFixFirst={onOpenFixFirst}>Check your Ivanti, Fortinet and Cisco devices first.</WhatToDoCard>
-        <NoteBox
-          title="How to read this"
-          icon="insights/catch-rate/howto-eye"
-          boxClass="bg-green-soft"
-          chipClass="bg-card"
-          titleClass="text-green-ink"
-        >
-          Bigger boxes mean more CVEs. Darker purple means a higher share of them get exploited.
-        </NoteBox>
-        <AboutDataBox rows={aboutData} />
-      </SidePanel>
-    </>
   )
 }

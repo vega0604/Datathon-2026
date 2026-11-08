@@ -14,11 +14,11 @@ export function AppHeader({ iconDir = 'insights', theme, onThemeChange, onHome }
         <button
           type="button"
           onClick={onHome}
-          aria-label="hunch, go to home"
+          aria-label="Hunch, go to home"
           title="Home"
           className="shrink-0 cursor-pointer rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue"
         >
-          <img src={theme === 'dark' ? logoDark : logoLight} alt="" width="473" height="138" className="block h-9 w-auto" />
+          <img src={theme === 'dark' ? logoDark : logoLight} alt="" width="464" height="124" className="block h-9 w-auto" />
         </button>
       </div>
 

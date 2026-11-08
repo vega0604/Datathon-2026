@@ -70,7 +70,7 @@ export function CoverageCard({ coverage }) {
             </span>
           </div>
           {coverage.footer && (
-            <div className="flex flex-col items-start gap-2 border-t border-line pt-3 short:gap-1.5 short:pt-2.5">
+            <div className="flex items-center gap-3 border-t border-line pt-3 short:pt-2.5">
               <span className="type-label rounded-full bg-blue px-2.5 py-1 font-semibold whitespace-nowrap text-white">
                 {coverage.footerPill}
               </span>

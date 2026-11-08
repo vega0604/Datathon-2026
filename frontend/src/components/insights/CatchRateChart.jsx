@@ -53,7 +53,7 @@ const BASELINES = [
 const label = 'absolute text-[1em] leading-[1.333em] tracking-label whitespace-nowrap text-ink-muted'
 
 export function CatchRateChart({ series, top500 }) {
-  // Our-model line, area and marker are teal (the Catch rate colour) with dark-mode twins.
+  // Our-model line, area and marker have softer dark-mode twins.
   const themed = useThemedIcon()
   const src = (name) => iconUrl(themed(`insights/catch-rate/${name}`))
   return (

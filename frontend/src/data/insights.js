@@ -3,7 +3,7 @@ export const user = { name: 'Jane Doe', role: 'Security lead' }
 
 export const coverage = {
   caughtPct: 24, // share of exploited CVEs caught by fixing our top 500
-  // Footer bar under the gauge (Figma Summary). 4× = vs the best public baseline (see Catch rate).
+  // Footer bar under the gauge (Figma Summary). 4× = vs the best public baseline (see Model overview).
   footer: 'Fixing 0.7% of the queue beats every public baseline',
   footerPill: '↗ 4× baseline',
 }
@@ -13,13 +13,7 @@ export const kpis = [
     // Share bar: the 500 we submit out of all 72,670 scored.
     share: { pct: (500 / 72670) * 100, caption: '500 of 72,670 picked · 0.7%', tone: 'bg-chart-1' } },
   { id: 'nist', icon: 'insights/kpi-eye', label: 'Not reviewed by NIST', value: '51,046', pill: '55% of 2026',
-    share: { pct: 55, caption: '55% of 2026 CVEs still unreviewed', tone: 'bg-ai' } },
-]
-
-export const versusPublic = [
-  ['Our top 500 catch', '24%'],
-  ['Best public score', '8 of 500'],
-  ['Any CVE, ever exploited', '1 in 250'],
+    share: { pct: 55, caption: '55% of 2026 CVEs still unreviewed', tone: 'bg-chart-2' } },
 ]
 
 export const aboutData = [
@@ -31,13 +25,13 @@ export const aboutData = [
 export const insightsNav = [
   // V5 sub-nav: each chip has its own tint (Figma "Insights sub-nav").
   { id: 'summary', label: 'Summary', icon: 'nav-v5/sub-summary', chip: 'bg-blue-soft' },
-  { id: 'catch-rate', label: 'Catch rate', icon: 'nav-v5/sub-catch-rate', chip: 'bg-green-soft' },
+  { id: 'catch-rate', label: 'Model overview', icon: 'nav-v5/sub-catch-rate', chip: 'bg-green-soft' },
   // Hidden for now: no Time to attack page yet.
   // { id: 'timing', label: 'Time to attack', icon: 'nav-v5/sub-timing', chip: 'bg-blue-soft' },
   { id: 'vendors', label: 'Vendors', icon: 'nav-v5/sub-vendors', chip: 'bg-purple-soft' },
 ]
 
-// Catch rate page (chart values are sample data for now).
+// Model overview page (chart values are sample data for now).
 export const catchRate = {
   headline: 'Our model catches more exploited CVEs at every queue size',
   // Share of exploited CVEs caught after fixing 5k CVEs, by ranking.

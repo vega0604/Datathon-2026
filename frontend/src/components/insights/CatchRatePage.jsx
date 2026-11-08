@@ -5,8 +5,7 @@ import { useFitHeight } from '../../lib/useFitHeight'
 import { EmbeddingCard } from './EmbeddingCard'
 import { Takeaway } from './ChartParts'
 import { CatchRateChart } from './CatchRateChart'
-import { AboutDataBox, NoteBox, SidePanel, WhatToDoCard } from './NextStepsPanel'
-import { aboutData, catchRate } from '../../data/insights'
+import { catchRate } from '../../data/insights'
 
 function LegendPill({ file, height, children }) {
   const themed = useThemedIcon()
@@ -18,23 +17,22 @@ function LegendPill({ file, height, children }) {
   )
 }
 
-// Catch rate + the embedding map (merged in from the former Model check page).
-export function CatchRatePage({ onOpenFixFirst }) {
+// Model overview: the catch-rate curve + the embedding map.
+export function CatchRatePage() {
   // Never scrolls or clips: on short windows both cards shrink slightly to fit.
   const ref = useRef(null)
   useFitHeight(ref)
   return (
-    <>
       <main ref={ref} className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden xl:gap-5 xl:pt-2 [&>*]:[zoom:var(--fit,1)]">
         <div className="flex shrink-0 flex-col items-start gap-1 xl:gap-2">
-          <h1 className="text-[clamp(30px,3vw,44px)] leading-[1.18] font-light text-ink">Catch rate</h1>
+          <h1 className="text-[clamp(30px,3vw,44px)] leading-[1.18] font-light text-ink">Model overview</h1>
           <p className="text-sm leading-5 text-ink-muted xl:text-base xl:leading-6">
             How many exploited bugs you catch as you fix more of the list, and why the model spots them.
           </p>
         </div>
 
         <section className="flex min-h-0 w-full flex-1 gap-4 rounded-[32px] bg-card p-4 shadow-float xl:gap-5 xl:p-6 short:p-4">
-          <div className="flex min-h-0 min-w-0 flex-[2.3] flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
+          <div className="flex min-h-0 min-w-0 flex-[1.4] flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
             <h2 className="shrink-0 text-lg leading-7 text-ink xl:text-xl">{catchRate.headline}</h2>
             <div className="flex shrink-0 flex-wrap gap-2">
               {catchRate.series.map((s) => (
@@ -51,23 +49,5 @@ export function CatchRatePage({ onOpenFixFirst }) {
           <EmbeddingCard />
         </section>
       </main>
-
-      <SidePanel>
-        <WhatToDoCard onOpenFixFirst={onOpenFixFirst}>
-          Work from the top of the list down. The first 0.7% you fix gives the biggest gain.
-        </WhatToDoCard>
-        <NoteBox
-          title="How to read this"
-          icon="insights/catch-rate/howto-eye"
-          boxClass="bg-green-soft"
-          chipClass="bg-card"
-          titleClass="text-green-ink"
-        >
-          Left: each line shows how many exploited CVEs you catch (up) as you fix more of the list (right); higher
-          and further left is better. Right: similar CVEs sit close together, and diamonds are on KEV.
-        </NoteBox>
-        <AboutDataBox rows={aboutData} />
-      </SidePanel>
-    </>
   )
 }
