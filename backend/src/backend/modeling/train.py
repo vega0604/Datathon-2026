@@ -54,7 +54,7 @@ def load_params() -> dict:
 
 
 # Our own settings in a params dict, not passed to LightGBM as such.
-NOT_LIGHTGBM = ("n_estimators", "max_pos_weight", "monotone", "feature_set")
+NOT_LIGHTGBM = ("n_estimators", "max_pos_weight", "monotone", "monotone_map", "feature_set")
 
 
 def features_for(params: dict, features: list[str] = mf.FEATURES) -> list[str]:
@@ -97,7 +97,8 @@ def fit(
     weight = min((len(y) - positives) / positives, cap)
     p, rounds = lgb_params(params, seed, weight)
     if params.get("monotone"):
-        p["monotone_constraints"] = mf.monotone_vector(list(X.columns))
+        # monotone_map (lean feature sets) overrides the SHE-113 defaults in mf.MONOTONE.
+        p["monotone_constraints"] = mf.monotone_vector(list(X.columns), params.get("monotone_map"))
         p["monotone_constraints_method"] = "advanced"
     booster = lgb.train(p, lgb.Dataset(X, y, free_raw_data=False), num_boost_round=rounds)
     return booster, categories

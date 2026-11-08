@@ -1,6 +1,10 @@
 """Unit tests for the SHE-116 selection rule."""
 
-from backend.modeling.select import decide
+from functools import partial
+
+from backend.modeling import select
+
+decide = partial(select.decide, current_key=("lgbm_she8", "benchmark"))
 
 
 def rows(variant, labels, primary, reversed_):

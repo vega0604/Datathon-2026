@@ -25,6 +25,7 @@ from backend.modeling import features as mf
 from backend.modeling.constrained import PARAMS_PATH as CONSTRAINED_PATH
 from backend.modeling.final import publish, train_final
 from backend.modeling.labels import LABEL_ENDS
+from backend.modeling.lean import LEAN_PATH, lean_params
 from backend.modeling.train import features_for, load_params, long_features
 
 MARGIN = 3.0
@@ -103,6 +104,22 @@ def winner_config(winner: dict) -> dict:
     """The final config (model, parameters, labels, features, blend weight) for a winning
     comparison row. Only tree-model variants and their blends can be retrained here."""
     variant, labels = winner["variant"], winner["labels"]
+    if "lean_" in variant:
+        # lean_stable / lean_nested, alone or blended. The final model trains on 2024 + 2025,
+        # so both select their features on both folds: the lean_stable set.
+        lean = json.loads(LEAN_PATH.read_text())
+        features = lean["variants"]["lean_stable"]["primary"]["features"]
+        directions = lean["variants"]["lean_stable"]["primary"]["directions"]
+        alpha = float(variant.rsplit("_a", 1)[1]) if variant.startswith("blend_") else 1.0
+        return {
+            "variant": variant,
+            "model": "lean_stable",
+            "labels": labels,
+            "label_end": None,
+            "alpha": alpha,
+            "features": features,
+            "params": lean_params(lean["base_params"], directions),
+        }
     if variant.startswith("blend_a"):
         model = blend.model_choice()
         name, labels, params = model["name"], model["labels"], model["params"]

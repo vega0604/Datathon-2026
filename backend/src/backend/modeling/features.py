@@ -78,9 +78,10 @@ CORE: list[str] = [
 FEATURE_SETS: dict[str, list[str]] = {"all": FEATURES, "core": CORE}
 
 
-def monotone_vector(features: list[str]) -> list[int]:
-    """LightGBM's monotone_constraints, in feature order."""
-    return [MONOTONE.get(f, 0) for f in features]
+def monotone_vector(features: list[str], directions: dict[str, int] | None = None) -> list[int]:
+    """LightGBM's monotone_constraints, in feature order (MONOTONE unless `directions`)."""
+    directions = MONOTONE if directions is None else directions
+    return [int(directions.get(f, 0)) for f in features]
 
 
 # Categorical only in the leakage audit (SHE-54); never in FEATURES.
