@@ -44,6 +44,7 @@ Data pipeline, ranking model, Granite enrichment and dashboard for **Before the 
 | Task | Command |
 | --- | --- |
 | Run a module | `uv run python -m backend.pipeline.load` |
+| Run the API | `uv run uvicorn backend.api.app:app --reload` (docs at `/docs`) |
 | Run tests | `uv run pytest` |
 | Run tests that need no data | `uv run pytest tests/unit` |
 | Rebuild the data | `uv run python -m backend.pipeline.load`, then `uv run python -m backend.pipeline.clean` |
@@ -62,7 +63,7 @@ Always add packages with `uv add`, never `pip install`, so `pyproject.toml` and 
 | *(core)* | duckdb, polars, pandas, pyarrow, scikit-learn, lightgbm, shap, plotly | everyone |
 | `dev` | pytest, ruff, ipykernel | everyone |
 | `granite` | torch, transformers, sentence-transformers | SHE-7 |
-| `app` | streamlit | SHE-11 |
+| `app` | empty: the API dependencies (fastapi, uvicorn) are in core and Streamlit is gone | SHE-78 |
 | `tiger` | psycopg | SHE-10 |
 
 `uv sync` installs all groups by default. Skip one with `--no-group <name>`.
