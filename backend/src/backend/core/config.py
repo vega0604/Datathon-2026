@@ -11,6 +11,7 @@ DATA_DIR = BACKEND_DIR / "data"
 RAW_DIR = DATA_DIR / "raw"  # the 8 CSVs from data.zip (gitignored)
 PARQUET_DIR = DATA_DIR / "parquet"  # typed copies of the raw CSVs (SHE-16)
 CLEAN_DIR = DATA_DIR / "clean"  # cleaned tables (SHE-18 to SHE-22)
+FEATURES_DIR = DATA_DIR / "features"
 OUTPUTS_DIR = BACKEND_DIR / "outputs"
 LOGS_DIR = OUTPUTS_DIR / "logs"
 
