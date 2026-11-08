@@ -56,8 +56,37 @@ def test_queue_row_fields(client, sid):
     )
     assert row["explanation_source"] == "nvd"
     assert row["cwe_id"] == "CWE-787" and row["cwe_name"] == "Out-of-bounds Write"
-    assert row["kev_name"] == "Acme Widget RCE" and row["xforce"] is None
+    assert row["kev_name"] == "Acme Widget RCE" and "xforce" not in row
     assert body["counts"] == {"open": 1, "critical": 1, "not_in_linear": 1, "warning_signs": 0}
+    assert body["matched"] == 1
+
+
+def test_queue_search_filter_sort(client, sid):
+    base = f"/api/sboms/{sid}/queue"
+    assert client.get(f"{base}?q=widg").json()["matched"] == 1
+    assert client.get(f"{base}?q=cve-2025-0001").json()["matched"] == 1
+    none = client.get(f"{base}?q=nothing&view=critical").json()
+    assert none["matched"] == 0 and none["items"] == [] and none["total"] == 1
+    assert client.get(f"{base}?view=warning_signs").json()["matched"] == 0
+    assert client.get(f"{base}?view=bogus").status_code == 422
+
+
+def test_filter_rows():
+    rows = [
+        {"rank": 1, "cve_id": "CVE-1", "component": "A", "components": ["A"], "severity": "high",
+         "cvss_score": 7.5, "ticket": None, "signal": "exploit_code"},
+        {"rank": 2, "cve_id": "CVE-2", "component": "B", "components": ["B", "Zlib"],
+         "severity": "critical", "cvss_score": 9.8, "ticket": {"id": "T"}, "signal": None},
+        {"rank": 3, "cve_id": "CVE-3", "component": "C", "components": ["C"], "severity": "high",
+         "cvss_score": 7.5, "ticket": None, "signal": None},
+    ]  # fmt: skip
+    ids = lambda out: [r["cve_id"] for r in out]
+    assert ids(q.filter_rows(rows, q="zlib")) == ["CVE-2"]  # any matched component
+    assert ids(q.filter_rows(rows, view="not_in_linear")) == ["CVE-1", "CVE-3"]
+    assert ids(q.filter_rows(rows, view="warning_signs")) == ["CVE-1"]
+    assert ids(q.filter_rows(rows, sort="cvss_desc")) == ["CVE-2", "CVE-1", "CVE-3"]
+    assert ids(q.filter_rows(rows, sort="cvss_asc")) == ["CVE-1", "CVE-3", "CVE-2"]
+    assert ids(rows) == ["CVE-1", "CVE-2", "CVE-3"]  # input untouched
 
 
 def test_status_patch(client, sid):
@@ -137,6 +166,8 @@ def test_upload_returns_components_with_risk(client, sid):
     assert comp["risk"]["cve_count"] == 1 and comp["risk"]["severity"]["critical"] == 1
     assert comp["risk"]["kev"][0]["name"] == "Acme Widget RCE"
     assert comp["risk"]["top"][0]["kev"]["ransomware"] is True
+    assert comp["match_methods"] == ["cpe"] and body["cve_total"] == 1
+    assert body["uploaded_at"].endswith("Z")  # UTC, so browsers show local time
 
 
 def test_reupload_replaces_and_delete(client, sid, db):
@@ -183,6 +214,30 @@ def test_insights_routes(client, tmp_path, monkeypatch):
     assert client.get("/api/insights/vendors").json() == {"cells": []}
     monkeypatch.setattr(config, "OUTPUTS_DIR", tmp_path)  # no top500.csv here
     assert client.get("/api/benchmark").json()["top_n_ready"] is False
+
+
+def test_insights_built_on_start_when_missing(tmp_path, monkeypatch):
+    from backend.api.routes import insights as route
+
+    path = tmp_path / "insights.json"
+    monkeypatch.setattr(config, "INSIGHTS_PATH", path)
+    monkeypatch.setattr(route, "_build", {"thread": None, "error": None})
+    started = []
+    monkeypatch.setattr(
+        route, "_run_build", lambda: (started.append(1), path.write_text('{"summary": {}}'))
+    )
+    route.build_if_missing()
+    route._build["thread"].join(5)
+    assert started == [1] and route._insights() == {"summary": {}}
+    route.build_if_missing()  # already there: no second build
+    assert started == [1]
+
+
+def test_cluster_labels_are_unique():
+    from backend.modeling.insights import cluster_labels
+
+    members = [["CWE-79"] * 5 + ["CWE-89"] * 2, ["CWE-79"] * 3 + ["CWE-22"], ["unknown"], []]
+    assert cluster_labels(members) == ["CWE-79", "CWE-22", None, None]
 
 
 def test_me(client, monkeypatch):

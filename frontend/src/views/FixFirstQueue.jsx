@@ -1,11 +1,11 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFitHeight } from '../lib/useFitHeight'
 import { AppHeader } from '../components/insights/AppHeader'
 import { Sidebar } from '../components/Sidebar'
 import { QueueTable } from '../components/QueueTable'
 import { WhyPanel } from '../components/WhyPanel'
 import { IconDarkContext } from '../lib/iconTheme'
-import { pushToLinear, setStatus } from '../lib/api'
+import { pushToLinear, setStatus, useQueueView } from '../lib/api'
 
 // Fix first · v5 (Figma page "V5", frame "Fix first · v5 · Light · 1512").
 // The queue is the selected SBOM's (GET /api/sboms/{id}/queue, cached in App).
@@ -15,6 +15,9 @@ const VIEW_FILTERS = {
   critical: (i) => i.severity === 'Critical',
   notInLinear: (i) => !i.ticket,
 }
+// The same views and sorts as the queue API's `view` / `sort` parameters.
+const VIEW_PARAM = { all: 'all', critical: 'critical', notInLinear: 'not_in_linear' }
+const SORT_PARAM = { desc: 'cvss_desc', asc: 'cvss_asc' }
 
 // Rows rendered at once. Real queues hold hundreds to thousands of CVEs; the list
 // grows by this much on "Show more", so the DOM (and the detail panel, which lays
@@ -41,14 +44,41 @@ export function FixFirstQueue({ onHome, onOpenInsights, onUpload, software, tota
   const [panelOpen, setPanelOpen] = useState(true)
   const [actionError, setActionError] = useState(null)
 
+  // Search waits for a pause in typing before asking the server.
+  const [typed, setTyped] = useState('')
+  useEffect(() => {
+    const t = setTimeout(() => setTyped(query.trim()), 250)
+    return () => clearTimeout(t)
+  }, [query])
+
+  // The page holds the top 1,000 rows. When the queue is longer, a search, filter or
+  // sort runs on the server over every row; until it answers, the loaded rows show.
+  const complete = !queue.data || queue.data.total <= items.length
+  const serverParams =
+    !complete && (typed || view !== 'all' || sort)
+      ? { ...(typed && { q: typed }), view: VIEW_PARAM[view], sort: SORT_PARAM[sort] ?? 'rank' }
+      : null
+  const server = useQueueView(sbomId, serverParams)
+  const serverRows = serverParams ? server.data?.items : null
+
   const filtered = useMemo(() => {
+    if (serverRows) return serverRows
     const rows = items.filter((i) => VIEW_FILTERS[view](i) && matches(i, query))
     if (sort) rows.sort((a, b) => (sort === 'desc' ? b.cvss - a.cvss : a.cvss - b.cvss) || a.rank - b.rank)
     return rows
-  }, [items, view, query, sort])
+  }, [serverRows, items, view, query, sort])
   const visible = filtered.slice(0, shown)
   const selectedId = chosenId ?? items[0]?.cveId
-  const selected = items.find((i) => i.cveId === selectedId)
+  const selected = items.find((i) => i.cveId === selectedId) ?? serverRows?.find((i) => i.cveId === selectedId)
+
+  // Rows that exist but aren't in the browser (only the top 1,000 of a view are sent).
+  let note = null
+  if (serverParams && server.loading) note = `Searching all ${queue.data.total.toLocaleString('en-US')}…`
+  else if (serverParams && server.error) note = `Showing loaded rows only: ${server.error.message}`
+  else if (serverParams && server.data && server.data.matched > server.data.items.length)
+    note = `Showing the top 1,000 of ${server.data.matched.toLocaleString('en-US')} matches.`
+  else if (!serverParams && !complete)
+    note = `Showing the top 1,000; ${(queue.data.total - items.length).toLocaleString('en-US')} lower-ranked load when you search, filter or sort.`
 
   const select = (id) => {
     setChosenId(id)
@@ -57,7 +87,7 @@ export function FixFirstQueue({ onHome, onOpenInsights, onUpload, software, tota
   }
   const updateStatus = async (id, status) => {
     setActionError(null)
-    const previous = items.find((i) => i.cveId === id)?.status
+    const previous = (items.find((i) => i.cveId === id) ?? serverRows?.find((i) => i.cveId === id))?.status
     try {
       await setStatus(sbomId, id, status, previous)
     } catch (e) {
@@ -99,7 +129,7 @@ export function FixFirstQueue({ onHome, onOpenInsights, onUpload, software, tota
         onSeeAll={seeAll}
         more={filtered.length - visible.length}
         onShowMore={() => setShown((n) => n + PAGE)}
-        truncated={queue.data.total > items.length ? queue.data.total - items.length : 0}
+        note={note}
       />
     )
 

@@ -145,14 +145,11 @@ def embedding_map(con, data: pd.DataFrame) -> dict:
     xy[:, 1] = 1 - xy[:, 1]  # y = 0 at the top
     labels = KMeans(n_clusters=CLUSTERS, n_init=10, random_state=SEED).fit_predict(xy)
     names = dict(con.execute("SELECT cwe_id, name FROM weakness_types").fetchall())
+    cwes = picked["cwe_primary"].to_numpy()
+    cluster_cwes = cluster_labels([list(cwes[labels == k]) for k in range(CLUSTERS)])
     clusters = []
-    for k in range(CLUSTERS):
-        members = picked["cwe_primary"].to_numpy()[labels == k]
-        common = [
-            c
-            for c, _ in Counter(m for m in members if m not in ("unknown", "other")).most_common(1)
-        ]
-        label = short_cwe(names.get(common[0], common[0])) if common else "Mixed"
+    for k, cwe in enumerate(cluster_cwes):
+        label = short_cwe(names.get(cwe, cwe)) if cwe else "Mixed"
         centre = xy[labels == k].mean(axis=0)
         clusters.append(
             {"label": label, "x": round(float(centre[0]), 4), "y": round(float(centre[1]), 4)}
@@ -164,6 +161,20 @@ def embedding_map(con, data: pd.DataFrame) -> dict:
         ],
         "clusters": clusters,
     }
+
+
+def cluster_labels(members: list[list[str]]) -> list[str | None]:
+    """One weakness per cluster, never the same one twice: the largest cluster picks its
+    most common weakness first, each next one its most common weakness not yet taken
+    (None when none is left, shown as "Mixed")."""
+    taken: set[str] = set()
+    out: list[str | None] = [None] * len(members)
+    for k in sorted(range(len(members)), key=lambda k: -len(members[k])):
+        counts = Counter(m for m in members[k] if m not in ("unknown", "other") and m not in taken)
+        if counts:
+            out[k] = counts.most_common(1)[0][0]
+            taken.add(out[k])
+    return out
 
 
 def short_cwe(name: str) -> str:
@@ -340,12 +351,20 @@ def build(con) -> dict:
     }
 
 
-def main() -> None:
-    out = build(connect())
+def write(con) -> dict:
+    """Build the insights and write insights.json (atomically: the API may be reading)."""
+    out = build(con)
     INSIGHTS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    INSIGHTS_PATH.write_text(
+    tmp = INSIGHTS_PATH.with_suffix(".json.tmp")
+    tmp.write_text(
         json.dumps(out, indent=2, default=str, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+    tmp.replace(INSIGHTS_PATH)
+    return out
+
+
+def main() -> None:
+    out = write(connect())
     s = out["summary"]
     print(f"wrote {INSIGHTS_PATH}")
     print(f"coverage {s['coverage']}")

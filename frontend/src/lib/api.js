@@ -1,6 +1,6 @@
 // Every call the app makes to the FastAPI backend, plus the mapping from the API's
 // snake_case JSON to the camelCase shapes the components already use.
-import { load, mutate, useApi } from './useApi'
+import { drop, load, mutate, mutateMatching, useApi } from './useApi'
 
 const BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 
@@ -78,7 +78,6 @@ export function toQueueItem(row) {
     explanationSource: row.explanation_source,
     reasons: (row.reasons ?? []).map((r) => ({ icon: REASON_ICON[r.kind] ?? REASON_ICON.exposure, label: r.label, value: r.value })),
     reasonsAreSample: !!row.reasons_are_sample,
-    xforce: null, // no X-Force integration in the backend
     kev: row.on_kev
       ? { added: row.kev_date_added, ransomware: !!row.known_ransomware, weakness: weakness(row), name: row.kev_name }
       : null,
@@ -93,6 +92,7 @@ export function toQueue(body) {
     sbomId: body.sbom_id,
     ranking: body.ranking,
     total: body.total,
+    matched: body.matched ?? body.total,
     totals: {
       open: body.counts.open,
       critical: body.counts.critical,
@@ -132,6 +132,7 @@ export function toSbom(body) {
     uploadedAt: body.uploaded_at,
     specVersion: body.spec_version,
     riskChecked: body.risk_checked,
+    cveTotal: body.cve_total, // distinct CVEs (one CVE can affect several components)
     components: body.components.map((c) => ({
       id: String(c.component_id),
       name: c.name,
@@ -141,6 +142,7 @@ export function toSbom(body) {
       purl: c.purl,
       part: c.part,
       rank: c.rank,
+      matchMethods: c.match_methods ?? [],
       risk: toRisk(c.risk),
     })),
   }
@@ -171,6 +173,15 @@ export const useQueue = (id) =>
     ttl: 10 * 60_000,
   })
 
+/** The queue searched, filtered and sorted on the server, for queues longer than the
+ *  1,000 rows the page holds. `params` null skips it. Cached per query, so going back
+ *  to an earlier search is instant. */
+export function useQueueView(id, params) {
+  const search = params && id ? new URLSearchParams({ limit: '1000', ...params }).toString() : null
+  const key = search ? `${keys.queue(id)}?${search}` : null
+  return useApi(key, async () => toQueue(await apiFetch(key)), { ttl: 2 * 60_000 })
+}
+
 /** Starts the requests the first screen needs, in parallel, before it renders. */
 export function prefetchShell() {
   return Promise.all([
@@ -181,11 +192,18 @@ export function prefetchShell() {
 
 // ── Writes: they update the cache in place instead of refetching ─────────────
 
-/** Uploads a CycloneDX file; caches the SBOM and puts it first in the list. */
-export async function uploadSbom(file) {
+/** Uploads a CycloneDX file; caches the SBOM and puts it first in the list.
+ *  Cancelling (`signal`) undoes it: aborting the request wouldn't stop the server from
+ *  storing the file, so the request finishes and the stored SBOM is deleted again. */
+export async function uploadSbom(file, signal) {
   const form = new FormData()
   form.append('file', file, file.name)
-  const sbom = toSbom(await apiFetch('/api/sboms', { method: 'POST', body: form }))
+  const body = await apiFetch('/api/sboms', { method: 'POST', body: form })
+  if (signal?.aborted) {
+    await apiFetch(`/api/sboms/${body.sbom_id}`, { method: 'DELETE' }).catch(() => {})
+    throw new DOMException('Upload cancelled', 'AbortError')
+  }
+  const sbom = toSbom(body)
   mutate(keys.components(sbom.id), sbom)
   mutate(keys.sboms, (list = []) => [
     { id: sbom.id, name: sbom.name, fileName: sbom.fileName, uploadedAt: sbom.uploadedAt, componentCount: sbom.components.length },
@@ -198,13 +216,12 @@ export async function uploadSbom(file) {
 export async function deleteSbom(id) {
   await apiFetch(`/api/sboms/${id}`, { method: 'DELETE' })
   mutate(keys.sboms, (list = []) => list.filter((s) => s.id !== id))
-  mutate(keys.components(id), undefined)
-  mutate(keys.queue(id), undefined)
+  drop(`/api/sboms/${id}/`) // its components and every cached queue view
 }
 
+// A row can sit in the main queue and in any number of searched views: update all.
 function updateRow(sbomId, cveId, patch) {
-  mutate(keys.queue(sbomId), (q) => {
-    if (!q) return q
+  mutateMatching(keys.queue(sbomId), (q) => {
     let notInLinear = q.totals.notInLinear
     const items = q.items.map((i) => {
       if (i.cveId !== cveId) return i

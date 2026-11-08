@@ -181,10 +181,10 @@ function Reasons({ item, items }) {
 const formatDate = (iso) =>
   iso ? new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '—'
 
-// Teal fact box content: IBM X-Force (never sent by the backend today), CISA KEV for
-// CVEs on the list, otherwise the public facts we have (EPSS, weakness, exploit code).
+// Teal fact box content: CISA KEV for CVEs on the list, otherwise the public facts we
+// have (EPSS, weakness, exploit code). There is no X-Force integration.
 function factsFor(it) {
-  if (!it.xforce && !it.kev)
+  if (!it.kev)
     return {
       title: 'Not on CISA KEV',
       link: `https://nvd.nist.gov/vuln/detail/${it.cveId}`,
@@ -193,16 +193,6 @@ function factsFor(it) {
         ['Chance of attack (EPSS)', it.facts.epss == null ? 'No score yet' : it.facts.epss.toFixed(2)],
         ['Public exploit code', it.facts.exploitCode ? 'Yes' : 'Not seen'],
         ['Weakness', it.facts.weakness ?? 'Not given'],
-      ],
-    }
-  if (it.xforce)
-    return {
-      title: 'IBM X-Force',
-      link: `https://exchange.xforce.ibmcloud.com/vulnerabilities/search/${it.cveId}`,
-      linkLabel: 'IBM X-Force Exchange',
-      facts: [
-        ['Risk score', it.xforce.riskScore],
-        ['Attacks seen', it.xforce.attacksSeen],
       ],
     }
   return {

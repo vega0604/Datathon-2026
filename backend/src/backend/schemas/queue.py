@@ -38,7 +38,6 @@ class QueueItem(BaseModel):
     explanation_source: Literal["granite", "nvd"]
     reasons: list[Reason] = []
     reasons_are_sample: bool = False
-    xforce: dict | None = None  # no X-Force integration: always null
     on_kev: bool
     kev_date_added: date | None = None
     kev_name: str | None = None
@@ -87,7 +86,8 @@ class ScoresInfo(BaseModel):
 class QueueOut(BaseModel):
     sbom_id: str
     ranking: Literal["epss_placeholder", "model", "model_live_epss"]
-    total: int
+    total: int  # rows in the whole queue
+    matched: int  # rows the search / filter selects (= total without one)
     counts: Counts
     scores: ScoresInfo = ScoresInfo()
     items: list[QueueItem]

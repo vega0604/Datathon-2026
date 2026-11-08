@@ -66,7 +66,9 @@ export function summarize(sbom) {
     checked: checked.length,
     affected: checked.filter((c) => c.risk.cveCount > 0).length,
     clear: checked.filter((c) => c.risk.cveCount === 0).length,
-    cves: checked.reduce((n, c) => n + c.risk.cveCount, 0),
+    // Distinct CVEs (the Fix first queue's length): one CVE can affect several components,
+    // so the per-component counts add up to more.
+    cves: sbom.cveTotal ?? checked.reduce((n, c) => n + c.risk.cveCount, 0),
     sev,
     exploitedComponents: checked.filter((c) => c.risk.kev.length > 0).length,
   }

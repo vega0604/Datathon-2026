@@ -106,7 +106,7 @@ function SortButton({ sort, onSortChange }) {
   )
 }
 
-export function QueueTable({ items, totals, view, onViewChange, query, onQueryChange, sort, onSortChange, selectedId, onSelect, onSeeAll, more = 0, onShowMore, truncated = 0 }) {
+export function QueueTable({ items, totals, view, onViewChange, query, onQueryChange, sort, onSortChange, selectedId, onSelect, onSeeAll, more = 0, onShowMore, note = null }) {
   // Counts cover the whole queue (API `counts`), not just the rendered rows.
   const FILTERS = [
     { id: 'all', label: 'All', count: totals?.open ?? 0 },
@@ -188,9 +188,9 @@ export function QueueTable({ items, totals, view, onViewChange, query, onQueryCh
         >
           {`See all ${(totals?.open ?? 0).toLocaleString('en-US')}  ›`}
         </button>
-        {truncated > 0 && (
-          <span className="type-label text-ink-muted" title="The API returns at most 1,000 rows per request.">
-            Showing the top 1,000; {truncated.toLocaleString('en-US')} lower-ranked aren’t loaded.
+        {note && (
+          <span className="type-label text-ink-muted" role="status">
+            {note}
           </span>
         )}
       </div>

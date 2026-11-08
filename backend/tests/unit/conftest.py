@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from backend.api.app import create_app
 from backend.core import config
 from backend.db.store import init_store
+from backend.services.queue import forget
 
 
 @pytest.fixture(autouse=True)
@@ -13,6 +14,7 @@ def isolated_settings(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "PREDICTIONS_PATH", tmp_path / "no_predictions.parquet")
     monkeypatch.setattr(config, "EPSS_LIVE", False)
     monkeypatch.setattr(config, "GRANITE_MATCH_CHECK", False)
+    forget()  # the per-SBOM queue cache must not leak between tests
 
 
 @pytest.fixture

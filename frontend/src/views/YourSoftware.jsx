@@ -5,6 +5,8 @@ import { Icon } from '../lib/Icon'
 import { IconDarkContext } from '../lib/iconTheme'
 import { DEMO_FILE, DEMO_URL, MAX_BYTES, previewSbom, rankComponents, summarize, toCsv, worstSeverity } from '../lib/sbom'
 import { uploadSbom, useSbom } from '../lib/api'
+import { useApi } from '../lib/useApi'
+import { byProductList, isExact, matchMethods, methodText } from '../lib/matching'
 import { BlueCard, FactRow, FitMain, FoundBy, PageTitle, SevMix, SevPill, SidePanel, SideBox, Tabs, sevBar, sevText } from '../components/software/SoftwareParts'
 
 // "Your software" flow (Figma V5): Empty → Uploading → Overview ⇄ All components
@@ -30,11 +32,13 @@ export function YourSoftware({ onHome, sbomId, library = [], onUploaded, onSelec
       if (file.size > MAX_BYTES) throw new Error('That file is over 10 MB.')
       const preview = previewSbom(await file.text(), file.name)
       const id = Date.now()
+      const cancel = new AbortController()
       setJob({
         id,
         sbom: { ...preview, sizeKB: Math.max(1, Math.round(file.size / 1024)), uploadedAt: new Date().toISOString(), componentCount: preview.components.length },
         startedAt: new Date(),
-        request: uploadSbom(file),
+        cancel,
+        request: uploadSbom(file, cancel.signal),
       })
       onScreen({ name: 'uploading' })
     } catch (e) {
@@ -67,7 +71,7 @@ export function YourSoftware({ onHome, sbomId, library = [], onUploaded, onSelec
   const open = (c) => onScreen({ name: 'component', id: c.id })
 
   let content
-  if (screen.name === 'uploading' && job) content = <Uploading key={job.id} job={job} onDone={finish} onFail={fail} onCancel={() => (setJob(null), onScreen({ name: 'empty' }))} onOpenFixFirst={onOpenFixFirst} />
+  if (screen.name === 'uploading' && job) content = <Uploading key={job.id} job={job} onDone={finish} onFail={fail} onCancel={() => (job.cancel.abort(), setJob(null), onScreen({ name: 'empty' }))} onOpenFixFirst={onOpenFixFirst} />
   else if (screen.name !== 'empty' && screen.name !== 'uploading' && sbomId && !sbom)
     content = <Loading error={detail.error} onRetry={detail.reload} />
   else if (!sbom || screen.name === 'empty' || screen.name === 'uploading') content = <Empty onFile={chooseFile} onDemo={tryDemo} error={error} />
@@ -118,7 +122,12 @@ function Loading({ error, onRetry }) {
 }
 
 /* ── Empty: choose a file ──────────────────────────────────────────────── */
+// The bundled demo file's name and component count, read once from the file itself.
+const useDemoPreview = () =>
+  useApi(DEMO_URL, async () => previewSbom(await (await fetch(DEMO_URL)).text(), DEMO_FILE), { ttl: Infinity })
+
 function Empty({ onFile, onDemo, error }) {
+  const demo = useDemoPreview().data
   const input = useRef(null)
   const [dragging, setDragging] = useState(false)
   const pick = () => input.current?.click()
@@ -150,7 +159,9 @@ function Empty({ onFile, onDemo, error }) {
             {error ? (
               <p role="alert" className="text-[13px] font-medium text-sev-critical">{error}</p>
             ) : (
-              <p className="text-[13px] text-ink-muted">The demo is Acme Logistics Platform: 22 components, ready to explore.</p>
+              <p className="text-[13px] text-ink-muted">
+                {demo ? `The demo is ${demo.name}: ${demo.components.length} components, ready to explore.` : 'The demo SBOM is ready to explore.'}
+              </p>
             )}
           </div>
           <div className="flex gap-4">
@@ -182,7 +193,7 @@ function Empty({ onFile, onDemo, error }) {
         </SideBox>
         <SideBox tone="purple" icon="software/target-purple" title="Where Granite helps">
           <p className="text-[13px] leading-[19px] text-ink-muted">
-            Some CVEs in NIST have no product list. IBM Granite reads the CVE text and names the vendor and product, so nothing slips through.
+            Some CVEs in NIST have no product list yet. We also look for your products in the CVE text, and IBM Granite can confirm those matches, so fewer slip through.
           </p>
         </SideBox>
       </SidePanel>
@@ -271,7 +282,7 @@ function Uploading({ job, onDone, onFail, onCancel, onOpenFixFirst }) {
               </Step>
               {noCpe.length > 0 && (
                 <Step state="next">
-                  Next: Granite reads {noCpe.length} component{noCpe.length === 1 ? '' : 's'} with no CPE name
+                  Next: matching {noCpe.length} component{noCpe.length === 1 ? '' : 's'} with no CPE name by name and CVE text
                 </Step>
               )}
               <div className="flex items-center justify-between pt-3">
@@ -281,7 +292,7 @@ function Uploading({ job, onDone, onFail, onCancel, onOpenFixFirst }) {
                 </button>
                 <span className="flex items-center gap-1.5 rounded-full bg-purple-soft py-1 pr-3 pl-2.5">
                   <Icon name="software/idea-purple" className="size-3.5" />
-                  <span className="text-xs text-ink">Granite is helping where NIST has no product list</span>
+                  <span className="text-xs text-ink">We also read the CVE text where NIST has no product list</span>
                 </span>
               </div>
             </div>
@@ -521,20 +532,20 @@ function AllComponents({ sbom, ranked, onScreen, onOpen }) {
           <FactRow label="Components" value={s.total} />
           <FactRow label="With a CPE name" value={s.withCpe} />
           <FactRow label="Without a CPE name" value={s.total - s.withCpe} />
-          <p className="text-[13px] leading-[19px] text-ink-muted">A CPE is a standard product ID. Without one, Granite reads the CVE text to find the vendor and product.</p>
+          <p className="text-[13px] leading-[19px] text-ink-muted">A CPE is a standard product ID. Without one, we match the package URL or name, and the CVE text.</p>
         </SideBox>
         <SideBox tone="purple" icon="software/eye-purple" title="Found by">
           <div className="flex items-start gap-3">
             <span className="shrink-0">
-              <FoundBy component={{ cpe: 'x' }} />
+              <FoundBy component={{}} methods={['cpe']} />
             </span>
-            <p className="text-[13px] leading-[18px] text-ink-muted">Product and version are in NIST’s CVE records.</p>
+            <p className="text-[13px] leading-[18px] text-ink-muted">Its CPE name is in NIST’s CVE records: an exact match.</p>
           </div>
           <div className="flex items-start gap-3">
             <span className="shrink-0">
-              <FoundBy component={{ cpe: null }} />
+              <FoundBy component={{}} methods={['description']} />
             </span>
-            <p className="text-[13px] leading-[18px] text-ink-muted">No CPE name. Matched by name and by CVE text; IBM Granite can confirm. Dashed outline.</p>
+            <p className="text-[13px] leading-[18px] text-ink-muted">Matched by package URL, name or CVE text instead; IBM Granite can confirm. Dashed outline.</p>
           </div>
         </SideBox>
         <button type="button" onClick={download} className="w-full shrink-0 cursor-pointer rounded-full border border-line-strong bg-card py-3.5 text-base font-semibold text-ink hover:bg-page">
@@ -546,9 +557,29 @@ function AllComponents({ sbom, ranked, onScreen, onOpen }) {
 }
 
 /* ── Component detail ──────────────────────────────────────────────────── */
+// The "How it matched" steps, from the methods the backend actually used.
+function matchSteps(c, methods) {
+  const n = c.risk?.cveCount ?? 0
+  const steps = []
+  if (methods.includes('cpe'))
+    steps.push(
+      <>
+        Your SBOM names it with a CPE <code className="rounded-md bg-card px-2 py-0.5 font-mono text-xs text-ink">{c.cpe.split(':').slice(0, 6).join(':')}</code>, and NIST lists it in the CVE records
+      </>,
+    )
+  else if (!c.cpe) steps.push('Your SBOM has no CPE name for it')
+  const byName = byProductList(methods)
+  if (byName.length) steps.push(`We matched its ${methodText(byName)} to NIST’s product list`)
+  if (methods.includes('description')) steps.push('Where NIST has no product list yet, we found it named in the CVE text. IBM Granite can confirm those matches')
+  if (!methods.length) steps.push('No CVE record matched its CPE name, package URL, name or the CVE text')
+  else steps.push(isExact(methods) ?`${n.toLocaleString()} CVEs in all. No AI guesswork needed, so this match is exact` : `${n.toLocaleString()} CVEs found in all`)
+  return steps
+}
+
 function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
   const c = sbom.components.find((x) => x.id === id) ?? ranked[0]
   const r = c.risk
+  const methods = matchMethods(c)
   const rank = ranked.indexOf(c) + 1
   const worst = worstSeverity(r)
   const rest = r ? { ...r.severity } : null
@@ -567,7 +598,7 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
           <div className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-5 py-[18px]">
             <p className="text-[13px] text-ink-muted">Known CVEs</p>
             <p className="text-[40px] leading-tight font-light text-ink">{r ? r.cveCount.toLocaleString() : '—'}</p>
-            <p className="text-xs text-ink-muted">{r ? (c.cpe ? 'Matched by its CPE name' : 'Matched by name and CVE text') : 'Not checked'}</p>
+            <p className="text-xs text-ink-muted">{!r ? 'Not checked' : methods.length ? `Matched by its ${methodText(methods)}` : 'No matches found'}</p>
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-5 py-[18px]">
             <p className="text-[13px] text-ink-muted">Worst severity</p>
@@ -588,24 +619,13 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
             <p className="text-lg font-medium text-blue-ink">How it matched</p>
             <FoundBy component={c} />
           </div>
-          {c.cpe ? (
-            <>
-              <MatchStep n={1}>
-                Your SBOM names it with a CPE <code className="rounded-md bg-card px-2 py-0.5 font-mono text-xs text-ink">{c.cpe.split(':').slice(0, 6).join(':')}</code>
-              </MatchStep>
-              <MatchStep n={2}>NIST lists this product and version in {r.cveCount.toLocaleString()} CVE records</MatchStep>
-              <MatchStep n={3}>No AI guesswork needed, so this match is exact</MatchStep>
-            </>
-          ) : (
-            <>
-              <MatchStep n={1}>Your SBOM has no CPE name for it, so we match its package URL or name to NIST’s product list</MatchStep>
-              <MatchStep n={2}>
-                Where NIST has no product list yet, we also look for it in the CVE text{r ? ` (${r.cveCount.toLocaleString()} CVEs found in all)` : ''}. IBM Granite can confirm those matches
-              </MatchStep>
-            </>
-          )}
+          {matchSteps(c, methods).map((step, i) => (
+            <MatchStep key={i} n={i + 1}>
+              {step}
+            </MatchStep>
+          ))}
         </div>
-        {r && (
+        {r?.cveCount > 0 && (
           <section className="flex w-full flex-1 flex-col rounded-[20px] bg-card px-6 pt-[18px] pb-3.5">
             <h2 className="text-lg font-medium text-ink">Top known vulnerabilities</h2>
             <div className="flex w-full shrink-0 items-center gap-4 border-b border-line pt-3.5 pb-2 text-xs font-medium text-ink-muted">
@@ -656,9 +676,11 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
             ? `Upgrade ${c.name} to ${r.fixedIn} or later. That closes all ${r.kev.length} bug${r.kev.length === 1 ? '' : 's'} attackers are using.`
             : r?.kev.length
               ? `${r.kev.length} of its bugs are being used in attacks. Check ${c.vendor}’s advisories for a fixed version.`
-              : r
+              : r?.cveCount
                 ? 'No known attacks on these CVEs yet. Plan an update.'
-                : 'Add a CPE name for this component so we can match it to NIST’s list.'}
+                : c.cpe
+                  ? 'No known CVEs for this version. Nothing to fix right now.'
+                  : 'No known CVEs found. Add a CPE name for this component so we can match it to NIST’s list exactly.'}
         </BlueCard>
         <SideBox tone="red" icon="software/bell-red" title={`Why it’s #${rank}`}>
           <FactRow label="Rank in this SBOM" value={`#${rank} of ${ranked.length}`} />
@@ -667,13 +689,13 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
           <p className="text-[13px] leading-[19px] text-ink-muted">Severity says how bad an attack could be. We rank by how likely one is: attacks seen first, then EPSS.</p>
         </SideBox>
         <button type="button" onClick={() => onScreen({ name: 'ask', id: c.id })} className="flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full border border-ai bg-purple-soft py-3 text-base font-semibold text-purple-ink hover:brightness-95">
-          ✦ Ask Granite why it’s #{rank}
+          ✦ Ask why it’s #{rank}
         </button>
         <SideBox tone="teal" icon="software/queue-blue" title="Component facts">
           <FactRow label="Vendor" value={c.vendor ?? '—'} />
           <FactRow label="Version" value={c.version} />
           <FactRow label="Fixed in" value={r?.fixedIn ?? 'See vendor advisory'} />
-          <FactRow label="Found by" value={c.cpe ? 'NIST list' : 'Name & CVE text'} />
+          <FactRow label="Found by" value={methods.length ? methodText(methods).replace(/^./, (x) => x.toUpperCase()) : 'No match'} />
         </SideBox>
       </SidePanel>
     </>
@@ -690,9 +712,8 @@ function MatchStep({ n, children }) {
 }
 
 /* ── Ask why ───────────────────────────────────────────────────────────── */
-// Answers are templates filled with the facts on screen. In the product IBM
-// Granite on watsonx writes them; it isn't connected in this demo, so nothing
-// here claims to be a Granite answer.
+// Answers are templates filled in the browser with the facts on screen (no backend
+// route, no AI model), and the page says so: nothing here claims to be Granite.
 function facts(c, ranked) {
   const r = c.risk
   return {
@@ -774,7 +795,7 @@ function AskWhy({ ranked, focusId, onScreen, onOpenFixFirst }) {
       return `${x.c.name} has ${x.kev} CVE${x.kev === 1 ? '' : 's'} on CISA’s KEV list and ${y.c.name} has ${y.kev}${x.kev === y.kev ? `; then chance of attack decides it (${x.epss.toFixed(2)} vs ${y.epss.toFixed(2)})` : ''}.`
     }
     if (lower.includes('changed')) return 'This is your first upload of this file, so there’s no earlier version to compare with yet.'
-    return 'I can only answer the suggested questions here. IBM Granite isn’t connected in this demo, so I can’t answer free-form questions yet.'
+    return 'I can only answer the suggested questions. These answers are built from the facts on screen, not by an AI model, so free-form questions aren’t supported.'
   }
   const ask = (q) => {
     if (!q.trim()) return
@@ -876,7 +897,7 @@ function AskWhy({ ranked, focusId, onScreen, onOpenFixFirst }) {
         </SideBox>
         <SideBox tone="purple" icon="software/eye-purple" title="About these answers">
           <p className="text-[13px] leading-[19px] text-ink-muted">
-            These answers are filled in from the facts on screen (CISA KEV, FIRST EPSS, NIST NVD). In the full product IBM Granite on watsonx writes them; it isn’t connected in this demo.
+            These answers are filled in from the facts on screen (CISA KEV, FIRST EPSS, NIST NVD) by fixed rules. No AI model writes them, so they can’t be wrong about the facts, but they only cover the suggested questions.
           </p>
         </SideBox>
       </SidePanel>
@@ -899,7 +920,7 @@ function Answer({ children, note }) {
           <b className="text-sm text-ink">Answer</b> · from the facts shown
         </p>
         {children}
-        {note && <p className="text-xs text-purple-ink">Template answer. Granite isn’t connected in this demo.</p>}
+        {note && <p className="text-xs text-purple-ink">Built from the facts on screen, not by an AI model.</p>}
       </div>
     </div>
   )

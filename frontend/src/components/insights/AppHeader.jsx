@@ -1,6 +1,6 @@
 import logoLight from '../../assets/logolight.png'
 import logoDark from '../../assets/logodark.png'
-import { Icon, iconUrl } from '../../lib/Icon'
+import { iconUrl } from '../../lib/Icon'
 import { useMe } from '../../lib/api'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -27,9 +27,7 @@ export function AppHeader({ iconDir = 'insights', theme, onThemeChange, onHome }
       <div className="h-px min-w-px flex-1" />
 
       <ThemeToggle iconDir={iconDir} theme={theme} onThemeChange={onThemeChange} />
-      <button type="button" aria-label="Notifications" className="cursor-pointer rounded-full">
-        <Icon name={`${iconDir}/button-notifications`} className="size-11" />
-      </button>
+      {/* No notifications bell: there's no alerting feature behind it yet. */}
       <div className="h-8 w-px shrink-0 bg-line" />
       <button type="button" className="flex cursor-pointer items-center gap-2.5 pr-1 text-left">
         {/* avatar_url null keeps the bundled sample photo. */}

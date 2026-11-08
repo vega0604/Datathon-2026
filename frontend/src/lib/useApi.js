@@ -67,6 +67,21 @@ export function mutate(key, next) {
   notify(key)
 }
 
+/** Applies `fn` to the cached data of every key that starts with `prefix` (for a
+ *  write that touches several cached views of the same rows, e.g. searched queues). */
+export function mutateMatching(prefix, fn) {
+  for (const [key, e] of entries) if (key.startsWith(prefix) && e.data !== undefined) mutate(key, fn)
+}
+
+/** Forgets every key that starts with `prefix` (after a delete): no refetch. */
+export function drop(prefix) {
+  for (const key of [...entries.keys()]) {
+    if (!key.startsWith(prefix)) continue
+    entries.delete(key)
+    notify(key)
+  }
+}
+
 /** Drops cached data for every key that starts with `prefix`; listeners refetch. */
 export function invalidate(prefix) {
   for (const [key, e] of entries) {

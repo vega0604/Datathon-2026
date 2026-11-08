@@ -1,7 +1,7 @@
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class Component(BaseModel):
@@ -19,8 +19,14 @@ class SbomSummary(BaseModel):
     sbom_id: str
     name: str | None
     filename: str | None
-    uploaded_at: datetime
+    uploaded_at: datetime  # UTC, sent with "Z"
     component_count: int
+
+    @field_validator("uploaded_at")
+    @classmethod
+    def _utc(cls, v: datetime) -> datetime:
+        # Stored without a zone (DuckDB TIMESTAMP) but always written in UTC.
+        return v.replace(tzinfo=UTC) if v.tzinfo is None else v.astimezone(UTC)
 
 
 class SbomOut(SbomSummary):
@@ -71,10 +77,13 @@ class ComponentRisk(BaseModel):
     purl: str | None = None
     part: Literal["application", "operating system", "hardware"] | None = None
     rank: int  # by the component's highest-ranked CVE
+    # How its CVEs were found: cpe, purl, name (each also as <x>_product_only), description
+    match_methods: list[str] = []
     risk: Risk | None = None
 
 
 class SbomDetail(SbomSummary):
     spec_version: str | None = None
     risk_checked: date
+    cve_total: int = 0  # distinct CVEs across components (= the queue's length)
     components: list[ComponentRisk]

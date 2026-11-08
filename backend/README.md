@@ -84,14 +84,14 @@ Everything the React app reads (see the frontend API handoff). Build the data on
 
 | Method and path | What it returns |
 | --- | --- |
-| `GET /api/sboms/{id}/queue` | Every queue row (default `limit` 1000) with `counts`, and per row: rank, component, score, severity, CVSS rank, warning `signal`, `status`, Linear `ticket`, plain-words `explanation`, 3 `reasons` bars (`kind`, `label`, SHAP `value`), KEV and CWE facts |
+| `GET /api/sboms/{id}/queue` | Queue rows (default `limit` 1000, `offset`) with `total` and `counts` for the whole queue, and per row: rank, component, score, severity, CVSS rank, warning `signal`, `status`, Linear `ticket`, plain-words `explanation`, 3 `reasons` bars (`kind`, `label`, SHAP `value`), KEV and CWE facts. Optional `q` (CVE id or component name), `view` (`all`, `critical`, `not_in_linear`, `warning_signs`) and `sort` (`rank`, `cvss_desc`, `cvss_asc`) run over every row; `matched` counts the rows they select. The full queue is cached per SBOM for 5 minutes and dropped on every write |
 | `PATCH /api/sboms/{id}/queue/{cve_id}` | `{"status": "to_do" \| "in_progress" \| "done"}`; returns the updated row |
 | `POST /api/sboms/{id}/queue/{cve_id}/linear` | Creates the Linear issue (201) or returns the existing one (200); 502 if Linear isn't set up or fails |
 | `POST /api/sboms` | Upload CycloneDX JSON or XML (max 10 MB, 413 above); returns the SBOM with every component and its `risk`. Same filename replaces the earlier upload |
 | `GET /api/sboms` | Saved SBOMs, newest first |
-| `GET /api/sboms/{id}/components` | The SBOM with `spec_version`, `risk_checked` and each component's `part`, `rank` and `risk` (CVE count, severity mix, max CVSS and EPSS, `fixed_in`, KEV entries, top 3 CVEs) |
+| `GET /api/sboms/{id}/components` | The SBOM with `spec_version`, `risk_checked`, `cve_total` (distinct CVEs) and each component's `part`, `rank`, `match_methods` and `risk` (CVE count, severity mix, max CVSS and EPSS, `fixed_in`, KEV entries, top 3 CVEs). `uploaded_at` is UTC (`Z`) |
 | `DELETE /api/sboms/{id}` | 204; removes its components, matches, statuses and tickets |
-| `GET /api/insights/summary`, `/catch-rate`, `/vendors` | The Insights pages, from `insights.json` (503 until built) |
+| `GET /api/insights/summary`, `/catch-rate`, `/vendors` | The Insights pages, from `insights.json`. If it's missing, the API builds it in the background at startup (about 30 s; `INSIGHTS_BUILD_ON_START=false` turns that off) and answers 503 until it's written |
 | `GET /api/benchmark` | The "About this data" facts |
 | `GET /api/me` | The header user, from `ME_NAME` / `ME_ROLE` / `ME_AVATAR_URL` (no login yet) |
 
