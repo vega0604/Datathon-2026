@@ -55,3 +55,18 @@ def test_exposure(con):
         f"SELECT min(days_to_cutoff), max(days_to_cutoff) FROM {FEATURES}"
     ).fetchone()
     assert (low, high) == (35, 278)  # September snapshots to January 2024 (a leap year)
+
+
+# --- SHE-29 ---
+
+
+def test_assigner_history(con):
+    assert con.execute(f"SELECT count(*) FROM {FEATURES} WHERE assigner IS NULL").fetchone()[0] == 0
+    pos, neg = con.execute(
+        f"""
+        SELECT avg(assigner_kev_prior) FILTER (WHERE label = 1),
+               avg(assigner_kev_prior) FILTER (WHERE label = 0)
+        FROM {FEATURES} WHERE fold = 2025
+        """
+    ).fetchone()
+    assert pos > 1.5 * neg  # measured: about 80 vs 44

@@ -89,11 +89,53 @@ def add_exposure_sql(src: str) -> str:
     return f"SELECT *, date_diff('day', snapshot_end, cutoff) AS days_to_cutoff FROM {src}"
 
 
+# --- SHE-29: assigner history ------------------------------------------------------
+
+
+def add_assigner_history_sql(
+    src: str, vulns: str = "vulnerabilities", kev: str = "known_exploited"
+) -> str:
+    """For the vulnerability's assigner (set at publication; the vendor for vendor CNAs),
+    as of snapshot_end: KEV entries added so far, vulnerabilities published so far, and
+    their ratio. ASOF joins read the latest running total at or before snapshot_end."""
+    return f"""
+        WITH kev_daily AS (
+            SELECT v.assigner, k.date_added AS day, count(*) AS n
+            FROM {kev} AS k
+            JOIN {vulns} AS v ON v.cve_id = k.cve_id
+            GROUP BY ALL
+        ),
+        kev_running AS (
+            SELECT assigner, day, sum(n) OVER (PARTITION BY assigner ORDER BY day) AS total
+            FROM kev_daily
+        ),
+        cve_daily AS (
+            SELECT assigner, published AS day, count(*) AS n FROM {vulns} GROUP BY ALL
+        ),
+        cve_running AS (
+            SELECT assigner, day, sum(n) OVER (PARTITION BY assigner ORDER BY day) AS total
+            FROM cve_daily
+        ),
+        scored AS (
+            SELECT p.*, v.assigner FROM {src} AS p JOIN {vulns} AS v ON v.cve_id = p.cve_id
+        )
+        SELECT
+            s.*,
+            coalesce(kr.total, 0) AS assigner_kev_prior,
+            coalesce(cr.total, 0) AS assigner_cves_prior,
+            coalesce(kr.total, 0) / nullif(cr.total, 0) AS assigner_kev_rate
+        FROM scored AS s
+        ASOF LEFT JOIN kev_running AS kr ON kr.assigner = s.assigner AND s.snapshot_end >= kr.day
+        ASOF LEFT JOIN cve_running AS cr ON cr.assigner = s.assigner AND s.snapshot_end >= cr.day
+    """
+
+
 # Applied in order to the population. Each step keeps one row per population row.
 FEATURE_STEPS = [
     ("signals", signals_at_snapshot_sql),
     ("epss_pct", add_epss_pct_sql),
     ("exposure", add_exposure_sql),
+    ("assigner_history", add_assigner_history_sql),
 ]
 
 

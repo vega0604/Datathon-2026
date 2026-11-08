@@ -75,3 +75,48 @@ def test_exposure(con):
         rows(con, f"SELECT cve_id, days_to_cutoff FROM ({features.add_exposure_sql('p')})")
     )
     assert result == {"CVE-A": 277, "CVE-B": 277, "CVE-S": 96}
+
+
+# --- SHE-29 ---
+
+
+@pytest.fixture
+def history(con):
+    con.execute(
+        """
+        CREATE TABLE vulnerabilities AS SELECT * FROM (VALUES
+            ('CVE-X1', 'psirt@x', DATE '2024-01-10'),
+            ('CVE-X2', 'psirt@x', DATE '2024-06-01'),
+            ('CVE-X3', 'psirt@x', DATE '2024-09-01'),
+            ('CVE-A', 'psirt@x', DATE '2025-01-15'),
+            ('CVE-B', 'cna@other', DATE '2025-01-20'),
+            ('CVE-S', 'psirt@x', DATE '2026-06-10')
+        ) AS t(cve_id, assigner, published)
+        """
+    )
+    con.execute(
+        """
+        CREATE TABLE known_exploited AS SELECT * FROM (VALUES
+            ('CVE-X1', DATE '2024-03-01'),
+            ('CVE-X2', DATE '2025-01-31'),
+            ('CVE-X3', DATE '2025-02-01')
+        ) AS t(cve_id, date_added)
+        """
+    )
+    return con
+
+
+def test_assigner_history(history):
+    sql = features.add_assigner_history_sql("p")
+    result = rows(
+        history,
+        f"SELECT cve_id, assigner_kev_prior, assigner_cves_prior, assigner_kev_rate FROM ({sql}) "
+        "ORDER BY cve_id",
+    )
+    # A (snapshot end 2025-01-31): X1 and X2 are on KEV by then; X3 only the next day.
+    # 4 vulnerabilities from psirt@x were published by then (X1, X2, X3, A).
+    assert result == [
+        ("CVE-A", 2, 4, 0.5),
+        ("CVE-B", 0, 1, 0.0),
+        ("CVE-S", 3, 5, 0.6),
+    ]
