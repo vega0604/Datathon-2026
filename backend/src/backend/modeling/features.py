@@ -55,6 +55,8 @@ FEATURE_GROUPS: dict[str, list[str]] = {
 }
 FEATURES: list[str] = [c for group in FEATURE_GROUPS.values() for c in group]
 CATEGORICAL: list[str] = [*CVSS3_METRICS, "cwe_primary"]
+# Categorical only in the leakage audit (SHE-54); never in FEATURES.
+AUDIT_CATEGORICAL: list[str] = ["nvd_status"]
 OTHER = "other"
 MIN_CWE_COUNT = 30  # rarer CWEs in training become "other"
 
@@ -85,10 +87,11 @@ def prepare(
     df: pd.DataFrame,
     categories: dict[str, list[str]] | None = None,
     features: list[str] = FEATURES,
-    categorical: list[str] = CATEGORICAL,
+    categorical: list[str] | None = None,
 ) -> tuple[pd.DataFrame, dict[str, list[str]]]:
     """Model input X (whitelisted columns only) and the categories used. Pass the training
     categories when scoring: unseen or rare values become "other"; NULL stays missing."""
+    categorical = categorical or [*CATEGORICAL, *AUDIT_CATEGORICAL]
     categorical = [c for c in categorical if c in features]
     if categories is None:
         categories = fit_categories(df, categorical)

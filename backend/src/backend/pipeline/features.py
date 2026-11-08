@@ -7,8 +7,15 @@ Run after `uv run python -m backend.pipeline.population`:
 Every feature uses only what was known at the end of the row's snapshot month.
 All folds go through the same SQL, so the 2026 benchmark rows are built exactly
 like the backtest rows. Writes data/features/features.parquet.
+
+Leakage audit only (SHE-54), never for a submission or the API:
+
+    uv run python -m backend.pipeline.features --audit
+
+copies features.parquet and adds the banned columns, as features_audit.parquet.
 """
 
+import argparse
 import json
 
 import duckdb
@@ -265,7 +272,69 @@ def build_features(con: duckdb.DuckDBPyConnection, log: dict[str, int], audit: b
     return write_parquet(con, "SELECT * FROM features ORDER BY fold, cve_id", "features")
 
 
+# --- SHE-54: audit-only leaky columns ------------------------------------------------
+
+# Only for the leakage audit (modeling/audit.py), never a submission or the API.
+AUDIT_COLUMNS = [
+    "nvd_status",
+    "n_affected_cpes",
+    "n_references",
+    "cvss3_source_is_nvd",
+    "cvss3_score_any",
+]
+
+
+def add_audit_columns_sql(src: str, vulns: str = "vulnerabilities") -> str:
+    """The banned columns, as they are today: NIST's analysis status, CPE and reference
+    counts, whether NIST supplied the CVSS 3 score, and that score whoever supplied it."""
+    return f"""
+        SELECT
+            p.*,
+            v.nvd_status,
+            v.n_affected_cpes,
+            v.n_references,
+            CAST(v.cvss3_source = '{NVD_SOURCE}' AS UTINYINT) AS cvss3_source_is_nvd,
+            v.cvss3_score AS cvss3_score_any
+        FROM {src} AS p
+        JOIN {vulns} AS v ON v.cve_id = p.cve_id
+    """
+
+
+def build_audit_features(con: duckdb.DuckDBPyConnection, log: dict[str, int]) -> int:
+    """features.parquet plus AUDIT_COLUMNS, written to features_audit.parquet. The normal
+    build never calls this."""
+    con.execute(
+        "CREATE OR REPLACE TEMP TABLE features_audit AS "
+        f"{add_audit_columns_sql(features_parquet('features'))}"
+    )
+    log["rows"] = count(con, "features_audit")
+    columns = [row[0] for row in con.execute("DESCRIBE features_audit").fetchall()]
+    log["banned_columns"] = len(check_columns(columns, audit=True))
+    log["columns"] = len(columns)
+    return write_parquet(
+        con, "SELECT * FROM features_audit ORDER BY fold, cve_id", "features_audit"
+    )
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--audit",
+        action="store_true",
+        help="leakage audit only: write features_audit.parquet with the banned columns",
+    )
+    args = parser.parse_args()
+    if args.audit:
+        if not (FEATURES_DIR / "features.parquet").exists():
+            raise SystemExit("No features. Run `uv run python -m backend.pipeline.features` first.")
+        con = connect()
+        log: dict[str, int] = {}
+        log["features_audit"] = build_audit_features(con, log)
+        LOGS_DIR.mkdir(parents=True, exist_ok=True)
+        (LOGS_DIR / "features_audit_log.json").write_text(json.dumps(log, indent=2) + "\n")
+        for name, value in log.items():
+            print(f"{name:<32} {value:>10,}")
+        return
     if not (FEATURES_DIR / "population.parquet").exists():
         raise SystemExit("No population. Run `uv run python -m backend.pipeline.population` first.")
     if not (FEATURES_DIR / "similarity.parquet").exists():

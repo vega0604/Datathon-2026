@@ -143,7 +143,7 @@ def submit(con) -> dict:
     """SHE-50: the fallback submission, written through the validated writer."""
     from backend.modeling.submission import write_submission
 
-    return write_submission(con, scores_2026(con))
+    return write_submission(con, scores_2026(con), model_features=INPUTS)
 
 
 if __name__ == "__main__":

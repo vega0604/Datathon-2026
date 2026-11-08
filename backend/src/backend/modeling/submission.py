@@ -14,7 +14,7 @@ import pandas as pd
 
 from backend.core.config import OUTPUTS_DIR
 from backend.modeling.evaluate import BENCHMARK_PICKS
-from backend.pipeline.features import features_parquet
+from backend.pipeline.features import AUDIT_COLUMNS, check_columns, features_parquet
 
 
 class SubmissionError(ValueError):
@@ -47,14 +47,29 @@ def validate(top: pd.DataFrame, scores: pd.DataFrame, scoreboard_ids: set[str]) 
         raise SubmissionError("top500 rejected: " + "; ".join(problems))
 
 
+def check_not_audit(model_features: list[str]) -> None:
+    """SHE-54: scores from a model that saw the leaky audit columns never get written."""
+    leaky = sorted(set(model_features) & set(AUDIT_COLUMNS)) + check_columns(
+        model_features, audit=True
+    )
+    if leaky:
+        raise SubmissionError(
+            f"refusing scores from a model trained with audit columns: {', '.join(sorted(set(leaky)))}"
+        )
+
+
 def write_submission(
     con,
     scores: pd.DataFrame,
+    *,
+    model_features: list[str],
     out_dir: Path = OUTPUTS_DIR,
     scoreboard: str = "scoreboard_2026",
-    features: str | None = None,
+    features_source: str | None = None,
 ) -> dict:
-    """Validate and write the top 500; return a short summary of what was picked."""
+    """Validate and write the top 500; return a short summary of what was picked.
+    model_features: the columns the scoring model used (audit columns are refused)."""
+    check_not_audit(model_features)
     scoreboard_ids = {row[0] for row in con.execute(f"SELECT cve_id FROM {scoreboard}").fetchall()}
     top = pick_top(scores[["cve_id", "score"]])
     validate(top, scores, scoreboard_ids)
@@ -66,7 +81,7 @@ def write_submission(
             f"""
             SELECT t.rank, t.cve_id, t.score, f.snapshot_month, f.any_exploit_code, f.epss_pct
             FROM _top AS t
-            LEFT JOIN {features or features_parquet("features")} AS f
+            LEFT JOIN {features_source or features_parquet("features")} AS f
               ON f.cve_id = t.cve_id AND f.fold = 2026
             ORDER BY t.rank
             """

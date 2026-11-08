@@ -28,8 +28,22 @@ def scores(n=600, ids=IDS):
     return pd.DataFrame({"cve_id": ids[:n], "score": [float(i) for i in range(n)]})
 
 
-def write(con, frame, tmp_path):
-    return write_submission(con, frame, out_dir=tmp_path, scoreboard="sb", features="feats")
+def write(con, frame, tmp_path, model_features=("epss_pct",)):
+    return write_submission(
+        con,
+        frame,
+        model_features=list(model_features),
+        out_dir=tmp_path,
+        scoreboard="sb",
+        features_source="feats",
+    )
+
+
+def test_refuses_scores_from_an_audit_model(con, tmp_path):
+    for leaky in (["epss_pct", "nvd_status"], ["epss_pct", "cvss3_source_is_nvd"], ["ref_count"]):
+        with pytest.raises(SubmissionError, match="audit columns"):
+            write(con, scores(), tmp_path, model_features=leaky)
+    assert not (tmp_path / "top500.csv").exists()
 
 
 def test_writes_one_column_of_500(con, tmp_path):
