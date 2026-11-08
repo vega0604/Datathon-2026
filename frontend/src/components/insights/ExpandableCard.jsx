@@ -63,14 +63,14 @@ export function ChartPopup({ expand, icon, title, subtitle, size = 'w-[min(1200p
   if (!target) return null
   return createPortal(
     <div
-      className="chart-fade fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6 font-sans"
+      className="chart-fade fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6 font-sans dark:bg-black/60"
       onMouseDown={(e) => e.target === e.currentTarget && close()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`flex h-[min(780px,90vh)] ${size} flex-col gap-4 rounded-[28px] bg-page p-6 shadow-panel`}
+        className={`flex h-[min(780px,90vh)] ${size} flex-col gap-4 rounded-[28px] border border-line bg-page p-6 shadow-panel`}
       >
         <CardHead icon={icon} title={title} subtitle={subtitle} onClose={close} />
         {children}

@@ -1,6 +1,5 @@
 import { Icon } from '../lib/Icon'
 import { insightsNav } from '../data/ui'
-import { useBenchmark } from '../lib/api'
 
 // One sidebar for every page (Figma V5 "Sidebar"), so its size, padding and the
 // Upload / Fix first / Insights rows sit in exactly the same place on each page.
@@ -126,20 +125,6 @@ function LastUploadCard({ library = [], uploading }) {
   )
 }
 
-function BenchmarkCard() {
-  const { data } = useBenchmark()
-  if (!data?.top_n_ready) return null // hidden until the backend has a valid top500.csv
-  return (
-    <div className="flex w-full shrink-0 flex-col gap-2 rounded-[18px] bg-blue-soft p-4 whitespace-nowrap text-blue-ink narrow:hidden">
-      <p className="type-label">Benchmark run</p>
-      <p className="text-base leading-6 font-semibold">Top {data.top_n} ready</p>
-      <p className="type-label">
-        {data.top_n_file} · {data.cves_scored.toLocaleString('en-US')} ranked
-      </p>
-    </div>
-  )
-}
-
 export function Sidebar({ current, section, onSectionChange, onOpenFixFirst, onOpenInsights, onUpload, software, totals }) {
   const onFixFirst = current === 'fixFirst'
   const onInsights = current === 'insights'
@@ -176,7 +161,6 @@ export function Sidebar({ current, section, onSectionChange, onOpenFixFirst, onO
       <SoftwareNav {...software} />
       <div className="min-h-3 flex-1" />
       {current === 'software' && <LastUploadCard {...software} />}
-      {onFixFirst && <BenchmarkCard />}
     </nav>
   )
 }
