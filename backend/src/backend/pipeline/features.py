@@ -173,6 +173,38 @@ def add_severity_sql(src: str, vulns: str = "vulnerabilities") -> str:
     """
 
 
+# --- SHE-32: description keywords ---------------------------------------------------
+
+KEYWORDS = {
+    "kw_unauthenticated": "unauthenticated|without authentication|no authentication",
+    "kw_remote_code_execution": "remote code execution|execute arbitrary code|code execution",
+    "kw_command_injection": "command injection|arbitrary command|os command",
+    "kw_pre_auth": "pre-auth|pre-authentication|before authentication",
+    "kw_default_config": "default configuration|default install",
+    "kw_auth_bypass": "authentication bypass|bypass authentication|bypass the authentication",
+    "kw_path_traversal": "path traversal|directory traversal",
+    "kw_deserialization": "deserializ",
+    "kw_privilege_escalation": "privilege escalation|elevation of privilege|escalate privilege",
+    "kw_sql_injection": "sql injection",
+    # Descriptions can be edited after an attack: the leakage audit (SHE-54) checks this one.
+    "kw_exploited": "exploited|in the wild",
+}
+
+
+def add_keywords_sql(src: str, vulns: str = "vulnerabilities") -> str:
+    """0/1 flags for phrases in the description (case-insensitive)."""
+    flags = ",\n".join(
+        f"CAST(coalesce(regexp_matches(lower(v.description), '{pattern}'), false) AS UTINYINT)"
+        f" AS {name}"
+        for name, pattern in KEYWORDS.items()
+    )
+    return f"""
+        SELECT p.*, {flags}
+        FROM {src} AS p
+        JOIN {vulns} AS v ON v.cve_id = p.cve_id
+    """
+
+
 # Applied in order to the population. Each step keeps one row per population row.
 FEATURE_STEPS = [
     ("signals", signals_at_snapshot_sql),
@@ -180,6 +212,7 @@ FEATURE_STEPS = [
     ("exposure", add_exposure_sql),
     ("assigner_history", add_assigner_history_sql),
     ("severity", add_severity_sql),
+    ("keywords", add_keywords_sql),
 ]
 
 

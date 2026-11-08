@@ -167,3 +167,24 @@ def test_severity_uses_assigner_scores_only(con):
         ("CVE-B", 7.5, "NETWORK", "unknown", 0),
         ("CVE-S", 5.0, "NETWORK", "unknown", 1),
     ]
+
+
+# --- SHE-32 ---
+
+
+def test_keywords(con):
+    con.execute(
+        """
+        CREATE TABLE vulnerabilities AS SELECT * FROM (VALUES
+            ('CVE-A', 'An Unauthenticated remote attacker can execute arbitrary code.'),
+            ('CVE-B', 'SQL injection in the login form.'),
+            ('CVE-S', NULL)
+        ) AS t(cve_id, description)
+        """
+    )
+    sql = features.add_keywords_sql("p")
+    assert rows(
+        con,
+        "SELECT cve_id, kw_unauthenticated, kw_remote_code_execution, kw_sql_injection "
+        f"FROM ({sql}) ORDER BY cve_id",
+    ) == [("CVE-A", 1, 1, 0), ("CVE-B", 0, 0, 1), ("CVE-S", 0, 0, 0)]

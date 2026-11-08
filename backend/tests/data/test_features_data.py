@@ -102,3 +102,14 @@ def test_no_nist_sourced_cvss(con):
     assert (
         con.execute(f"SELECT count(*) FROM {FEATURES} WHERE cwe_primary IS NULL").fetchone()[0] == 0
     )
+
+
+# --- SHE-32 ---
+
+
+def test_keywords_are_flags(con):
+    columns = [r[0] for r in con.execute(f"DESCRIBE SELECT * FROM {FEATURES}").fetchall()]
+    keywords = [c for c in columns if c.startswith("kw_")]
+    assert len(keywords) == 11
+    for column in keywords:
+        assert con.execute(f"SELECT max({column}) FROM {FEATURES}").fetchone()[0] in (0, 1)
