@@ -10,7 +10,6 @@ import { useBenchmark } from '../lib/api'
 // page for screen readers (sr-only) and show as tooltips.
 
 const ROW = 'flex h-[38px] w-full shrink-0 items-center gap-2 rounded-xl px-2.5 py-[9px] text-left wide:gap-2.5 short:h-[34px] short:py-1.5 narrow:justify-center narrow:px-0'
-const PILL = 'type-label rounded-full px-1.5 py-0.5 wide:px-2 narrow:hidden'
 
 function CurrentBar() {
   return <span className="h-5 w-[3px] shrink-0 rounded-[2px] bg-blue narrow:hidden" />
@@ -166,17 +165,6 @@ export function Sidebar({ current, section, onSectionChange, onOpenFixFirst, onO
         <span className={`type-body-compact min-w-px flex-1 whitespace-nowrap text-ink narrow:sr-only ${onFixFirst ? 'font-semibold' : ''}`}>
           Fix first
         </span>
-        {/* Badges come from the selected SBOM's queue; none until there is one. */}
-        {totals && (
-          <>
-            <span className={`${PILL} bg-blue-soft text-blue-ink`} aria-label={`${totals.open} open`}>
-              {totals.open.toLocaleString('en-US')}
-            </span>
-            <span className={`${PILL} bg-crit text-white`} aria-label={`${totals.critical} critical`}>
-              {totals.critical.toLocaleString('en-US')}
-            </span>
-          </>
-        )}
       </NavRow>
 
       <NavRow current={onInsights} onClick={onOpenInsights} title="Insights">

@@ -92,7 +92,7 @@ export default function App() {
   const swScreen = swState.name === 'overview' && sboms.data && !library.length ? { name: 'empty' } : swState
 
   // One queue request per SBOM, shared by the Fix first page and every page's
-  // sidebar badges (cached, so switching pages never refetches it).
+  // sidebar (cached, so switching pages never refetches it).
   const queue = useQueue(currentId)
   const totals = queue.data?.totals ?? null
 
