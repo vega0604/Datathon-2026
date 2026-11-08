@@ -44,7 +44,7 @@ Data pipeline, ranking model, Granite enrichment and dashboard for **Before the 
 | Task | Command |
 | --- | --- |
 | Run a module | `uv run python -m backend.pipeline.load` |
-| Run the API | `uv run uvicorn backend.api.app:app --reload` (docs at `/docs`) |
+| Run the API | `uv run dev` (auto-reload on http://127.0.0.1:8000, docs at `/docs`; `PORT` / `HOST` to change) |
 | Run tests | `uv run pytest` |
 | Run tests that need no data | `uv run pytest tests/unit` |
 | Rebuild the data | `uv run python -m backend.pipeline.load`, then `uv run python -m backend.pipeline.clean` |
@@ -61,7 +61,7 @@ Always add packages with `uv add`, never `pip install`, so `pyproject.toml` and 
 One request uploads a CycloneDX SBOM (JSON) and returns its ranked queue:
 
 ```bash
-uv run uvicorn backend.api.app:app --reload
+uv run dev
 curl -F "file=@demo/acme_sbom.cdx.json" "http://127.0.0.1:8000/api/sboms/fix-first?limit=20"
 ```
 

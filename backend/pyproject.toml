@@ -53,6 +53,7 @@ tiger = [
 
 [project.scripts]
 backend = "backend:main"
+dev = "backend.api.dev:main"  # `uv run dev`: the API with auto-reload on :8000
 
 [build-system]
 requires = ["uv_build>=0.12.19,<0.13.0"]

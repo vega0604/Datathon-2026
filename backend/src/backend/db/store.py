@@ -108,6 +108,15 @@ def open_database(app_db: str | None = None) -> duckdb.DuckDBPyConnection:
     path = app_db if app_db is not None else str(config.APP_DB_PATH)
     if path != ":memory:":
         config.APP_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    con.execute(f"ATTACH '{path}' AS app")
+    try:
+        con.execute(f"ATTACH '{path}' AS app")
+    except duckdb.IOException as e:
+        con.close()
+        # DuckDB lets one process write a database file at a time: usually another API
+        # server, a notebook kernel or pytest still has it open.
+        raise RuntimeError(
+            f"{path} is open in another process (another `uv run dev`, a notebook kernel "
+            "or pytest). Stop that process, then start the server again."
+        ) from e
     init_store(con)
     return con
