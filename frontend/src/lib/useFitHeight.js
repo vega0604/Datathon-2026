@@ -11,9 +11,10 @@ import { useLayoutEffect } from 'react'
  *  - the container's own overflow (scrollHeight),
  *  - lists inside it that would otherwise scroll (overflow-y: auto).
  *    Mark a list with `data-fit-scroll` to let it scroll instead of shrinking the page.
- * Re-checks when the container resizes and once web fonts have loaded.
+ * Re-checks when the container resizes, once web fonts have loaded, and whenever
+ * `watch` changes (for content that can grow while the container stays the same size).
  */
-export function useFitHeight(ref) {
+export function useFitHeight(ref, watch) {
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
@@ -51,5 +52,5 @@ export function useFitHeight(ref) {
     ro.observe(el)
     document.fonts?.ready.then(fit)
     return () => ro.disconnect()
-  }, [ref])
+  }, [ref, watch])
 }

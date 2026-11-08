@@ -1,40 +1,27 @@
-import { ChartImg, PlotFrame, PlotSurface, chartText, plotBox } from './ChartParts'
+import { useMemo, useRef } from 'react'
+import { useSize } from '../../lib/useSize'
 import { pct } from '../../data/ui'
+import { plotBox } from './ChartParts'
 
 // Weakness-type bubble chart (one bubble per CWE), shown on Insights → Summary.
-// Drawn from GET /api/insights/summary `weaknesses` on the Figma plot (804×439 design
-// px): x = CVE count (log scale), y = share reaching KEV, area = KEV count. The two
-// highest KEV shares are highlighted and the highest gets a callout.
+// Drawn from GET /api/insights/summary `weaknesses`: x = CVE count (log scale),
+// y = share reaching KEV, area = KEV count. The two highest KEV shares are
+// highlighted and the highest gets a callout.
+//
+// Laid out at the card's real size so text stays a fixed, readable size however
+// small the card gets. Where bubbles crowd together, a label that can't be placed
+// clear of the others is left off; hovering any bubble still names it.
 
-const ICON = 'insights/bug-types'
-const W = 804
-const H = 439
-const box = plotBox(W, H)
-const LINE_LEFT = 49.02
-const LINE_W = 718.207
-// Bubble centres stay inside this box so the largest bubble and its label fit.
-const X0 = 86
-const X1 = 720
-const Y_ZERO = 389.11 // the 0% axis line
-const Y_TOP = 30 // the highest tick
-const MIN_D = 14
-const MAX_D = 44
-
-/** Horizontal rule spanning the plot; `top` is the line's centre in design px. */
-function Rule({ file, top }) {
-  return <ChartImg file={`${ICON}/${file}`} style={box(LINE_LEFT, top - 0.5, LINE_W, 1)} />
-}
-
-function AxisLabel({ x, y, children }) {
-  return (
-    <span className={`absolute text-ink-muted ${chartText.label}`} style={box(x, y)}>
-      {children}
-    </span>
-  )
-}
-
-const LOG_TICKS = [100, 300, 1_000, 3_000, 10_000, 30_000, 100_000, 300_000]
+const LOG_TICKS = [100, 300, 1_000, 3_000, 5_000, 10_000, 20_000, 30_000, 50_000, 100_000, 300_000]
 const fmtCount = (n) => (n >= 10_000 ? `${n / 1000}k` : n.toLocaleString('en-US'))
+
+const PLOT_LEFT = 42 // room for the % labels
+const PLOT_BOTTOM = 42 // room for the x ticks and axis title
+const LABEL_H = 18
+const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi)
+
+// Rough text widths for IBM Plex Sans (12px labels, 14px semibold for the highlights).
+const labelWidth = (text, key) => text.length * (key ? 8.6 : 7.2) + 8 // includes the backing's padding
 
 function yStep(max) {
   if (max <= 0.02) return 0.005
@@ -42,89 +29,150 @@ function yStep(max) {
   return 0.02
 }
 
-export function BubbleChart({ weaknesses, minH }) {
+const hits = (a, b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y
+
+/** Positions every bubble, the callout and as many labels as fit without touching. */
+function layout(weaknesses, W, H) {
   const items = weaknesses.items
   const logs = items.map((w) => Math.log10(w.cve_count))
   const lo = Math.min(...logs) - 0.08
   const hi = Math.max(...logs) + 0.08
   const step = yStep(Math.max(...items.map((w) => w.kev_share), weaknesses.overall_kev_share))
   const yMax = Math.ceil(Math.max(...items.map((w) => w.kev_share)) / step) * step || step
-  const x = (count) => X0 + ((Math.log10(count) - lo) / (hi - lo)) * (X1 - X0)
-  const y = (share) => Y_ZERO - (share / yMax) * (Y_ZERO - Y_TOP)
+  const X0 = PLOT_LEFT + 24
+  const X1 = W - 48
+  const yZero = H - PLOT_BOTTOM
+  const yTop = 12
+  const xAt = (count) => X0 + ((Math.log10(count) - lo) / (hi - lo)) * (X1 - X0)
+  const yAt = (share) => yZero - (share / yMax) * (yZero - yTop)
   const maxKev = Math.max(...items.map((w) => w.kev_count), 1)
-  const diameter = (k) => MIN_D + Math.sqrt(k / maxKev) * (MAX_D - MIN_D)
+  const maxD = clamp(H * 0.15, 22, 46)
+
   const keys = [...items].sort((a, b) => b.kev_share - a.kev_share).slice(0, 2).map((w) => w.cwe_id)
-  const top = items.find((w) => w.cwe_id === keys[0])
-  const yTicks = Array.from({ length: Math.round(yMax / step) + 1 }, (_, i) => i * step)
-  const xTicks = LOG_TICKS.filter((t) => Math.log10(t) >= lo && Math.log10(t) <= hi)
+  const bubbles = items.map((w) => {
+    const d = 9 + Math.sqrt(w.kev_count / maxKev) * (maxD - 9)
+    return { w, d, cx: xAt(w.cve_count), cy: yAt(w.kev_share), key: keys.includes(w.cwe_id) }
+  })
+  const rects = bubbles.map((b) => ({ x: b.cx - b.d / 2, y: b.cy - b.d / 2, w: b.d, h: b.d, owner: b.w.cwe_id }))
+  const yAvg = yAt(weaknesses.overall_kev_share)
+  const avgLabel = { x: W - 104, y: yAvg - 18, w: 100, h: 16 }
+  const taken = [avgLabel]
+
+  // Callout: beside the top bubble, on whichever side stays clear.
+  const top = bubbles.find((b) => b.w.cwe_id === keys[0])
+  let callout = null
+  if (top) {
+    const value = `${pct(top.w.kev_share)} reach KEV`
+    const w = Math.min(230, Math.max(top.w.name.length * 6.7, value.length * 7.8)) + 26
+    const h = 48
+    const near = [top.cx + top.d / 2 + 12, top.cx - top.d / 2 - 12 - w]
+    const spots = [clamp(top.cy - h / 2, 0, yZero - h - 2), 0]
+      .flatMap((y) => near.map((x) => ({ x, y, w, h })))
+      .concat({ x: W - w - 4, y: 0, w, h }) // the top-right corner is usually empty
+      .filter((s) => s.x >= PLOT_LEFT && s.x + w <= W)
+    callout = spots.find((s) => !rects.some((r) => hits(s, r))) ?? spots[0] ?? null
+    if (callout) taken.push(callout)
+  }
+
+  // Labels, most important first, so crowding only ever drops the minor ones.
+  const order = [...bubbles].sort((a, b) => b.key - a.key || b.w.kev_count - a.w.kev_count)
+  const labels = []
+  for (const b of order) {
+    const w = labelWidth(b.w.cwe_id, b.key)
+    const h = LABEL_H
+    const r = b.d / 2
+    const spots = [
+      { x: b.cx + r + 4, y: b.cy - h / 2 },
+      { x: b.cx - r - 4 - w, y: b.cy - h / 2 },
+      { x: b.cx - w / 2, y: b.cy - r - h - 1 },
+      { x: b.cx - w / 2, y: b.cy + r + 1 },
+      { x: b.cx + r * 0.7 + 2, y: b.cy - r * 0.7 - h },
+      { x: b.cx + r * 0.7 + 2, y: b.cy + r * 0.7 },
+    ]
+    const spot = spots
+      .map((s) => ({ ...s, w, h }))
+      .find((s) => s.x >= PLOT_LEFT + 2 && s.x + w <= W - 2 && s.y >= 0 && s.y + h <= yZero - 1 && !taken.some((t) => hits(s, t)) && !rects.some((q) => q.owner !== b.w.cwe_id && hits(s, q)))
+    if (!spot) continue
+    taken.push(spot)
+    labels.push({ ...spot, id: b.w.cwe_id, key: b.key })
+  }
+
+  return {
+    bubbles,
+    labels,
+    callout,
+    top,
+    yAvg,
+    avgLabel,
+    yZero,
+    yTicks: Array.from({ length: Math.round(yMax / step) + 1 }, (_, i) => ({ t: i * step, y: yAt(i * step) })),
+    xTicks: LOG_TICKS.filter((t) => Math.log10(t) >= lo && Math.log10(t) <= hi).map((t) => ({ t, x: xAt(t) })),
+    decimals: step < 0.01 ? 1 : 0,
+  }
+}
+
+export function BubbleChart({ weaknesses, minH = 'min-h-[160px]' }) {
+  const ref = useRef(null)
+  const { width: W, height: H } = useSize(ref)
+  const plot = useMemo(() => (W && H ? layout(weaknesses, W, H) : null), [weaknesses, W, H])
+  const box = plotBox(W || 1, H || 1)
+  const axis = 'absolute text-xs leading-4 whitespace-nowrap text-ink-muted'
 
   return (
-    <PlotFrame minH={minH}>
-      <PlotSurface width={W} height={H}>
+    <div ref={ref} className={`relative w-full flex-1 ${minH}`}>
+      {plot && (
         <div
           role="img"
-          aria-label={`Bubble chart of ${items.length} weakness types: ${top?.name} reaches KEV most often (${pct(top?.kev_share ?? 0)}).`}
+          aria-label={`Bubble chart of ${weaknesses.items.length} weakness types: ${plot.top?.w.name} reaches KEV most often (${pct(plot.top?.w.kev_share ?? 0)}).`}
           className="absolute inset-0"
         >
-          {/* y axis: gridlines and % labels (0% is the solid axis line) */}
-          {yTicks.map((t) => (
+          {plot.yTicks.map(({ t, y }) => (
             <div key={t}>
-              <Rule file={t === 0 ? 'line-axis' : 'line-grid'} top={y(t)} />
-              <AxisLabel x={10} y={y(t) - 8}>
-                {pct(t, step < 0.01 ? 1 : 0)}
-              </AxisLabel>
+              <div className={`absolute border-t ${t === 0 ? 'border-line-strong' : 'border-dashed border-line'}`} style={box(PLOT_LEFT, y, W - PLOT_LEFT, 0)} />
+              <span className={axis} style={box(0, y - 8)}>{pct(t, plot.decimals)}</span>
             </div>
           ))}
 
-          {/* x axis */}
-          {xTicks.map((t) => (
-            <AxisLabel key={t} x={x(t) - 14} y={401.07}>
-              {fmtCount(t)}
-            </AxisLabel>
+          {plot.xTicks.map(({ t, x }) => (
+            <span key={t} className={`${axis} -translate-x-1/2`} style={box(x, plot.yZero + 5)}>{fmtCount(t)}</span>
           ))}
-          <AxisLabel x={348.13} y={421.02}>
-            CVE count (log scale)
-          </AxisLabel>
+          <span className={`${axis} -translate-x-1/2`} style={box((PLOT_LEFT + W) / 2, plot.yZero + 23)}>CVE count (log scale)</span>
 
-          {/* Average across all CWEs */}
-          <Rule file="ref-average" top={y(weaknesses.overall_kev_share)} />
-          <AxisLabel x={LINE_LEFT + LINE_W - 92} y={y(weaknesses.overall_kev_share) - 22}>
+          <div className="absolute border-t border-dashed border-ink-muted" style={box(PLOT_LEFT, plot.yAvg, W - PLOT_LEFT, 0)} />
+          <span className={`${axis} text-right`} style={box(plot.avgLabel.x, plot.avgLabel.y, plot.avgLabel.w)}>
             All CWEs {pct(weaknesses.overall_kev_share)}
-          </AxisLabel>
+          </span>
 
-          {items.map((w, i) => {
-            const d = diameter(w.kev_count)
-            const cx = x(w.cve_count)
-            const cy = y(w.kev_share)
-            const key = keys.includes(w.cwe_id)
-            return (
-              <div key={w.cwe_id} title={`${w.name} (${w.cwe_id}): ${w.cve_count.toLocaleString('en-US')} CVEs, ${w.kev_count} on KEV, ${pct(w.kev_share)}`}>
-                <span
-                  className={`chart-pop absolute rounded-full ${key ? 'border-2 border-chart-2 bg-chart-2/30' : 'border border-chart-1 bg-chart-1/15'}`}
-                  style={{ ...box(cx - d / 2, cy - d / 2, d, d), '--i': i }}
-                />
-                <span
-                  className={`chart-fade absolute text-ink ${key ? 'text-[1.1667em] leading-[1.5em] font-semibold tracking-body whitespace-nowrap' : chartText.label}`}
-                  style={box(cx + d / 2 + 4, cy - 8)}
-                >
-                  {w.cwe_id}
-                </span>
-              </div>
-            )
-          })}
+          {plot.bubbles.map((b, i) => (
+            <span
+              key={b.w.cwe_id}
+              title={`${b.w.name} (${b.w.cwe_id}): ${b.w.cve_count.toLocaleString('en-US')} CVEs, ${b.w.kev_count} on KEV, ${pct(b.w.kev_share)}`}
+              className={`chart-pop absolute rounded-full ${b.key ? 'border-2 border-chart-2 bg-chart-2/30' : 'border border-chart-1 bg-chart-1/15'}`}
+              style={{ ...box(b.cx - b.d / 2, b.cy - b.d / 2, b.d, b.d), '--i': i }}
+            />
+          ))}
 
-          {/* Callout on the top bubble */}
-          {top && (
-            <div
-              className="chart-fade absolute flex flex-col gap-[0.1667em] rounded-[1em] bg-blue-soft px-[1em] py-[0.6667em] whitespace-nowrap text-blue-ink"
-              style={box(Math.min(x(top.cve_count) + 26, W - 230), Math.max(0, y(top.kev_share) - 58))}
+          {plot.labels.map((l) => (
+            <span
+              key={l.id}
+              className={`chart-fade pointer-events-none absolute rounded bg-card/85 px-1 leading-[18px] whitespace-nowrap text-ink ${l.key ? 'text-sm font-semibold' : 'text-xs'}`}
+              style={box(l.x, l.y)}
             >
-              <span className={chartText.label}>{top.name}</span>
-              <span className="text-[1.1667em] leading-[1.2857em] font-semibold tracking-body">{pct(top.kev_share)} reach KEV</span>
+              {l.id}
+            </span>
+          ))}
+
+          {plot.callout && (
+            <div
+              className="chart-fade pointer-events-none absolute flex flex-col justify-center rounded-xl bg-blue-soft px-3 text-blue-ink"
+              style={box(plot.callout.x, plot.callout.y, plot.callout.w, plot.callout.h)}
+            >
+              <span className="truncate text-xs leading-4">{plot.top.w.name}</span>
+              <span className="text-sm leading-5 font-semibold whitespace-nowrap">{pct(plot.top.w.kev_share)} reach KEV</span>
             </div>
           )}
         </div>
-      </PlotSurface>
-    </PlotFrame>
+      )}
+    </div>
   )
 }

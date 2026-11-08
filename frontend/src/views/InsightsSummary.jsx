@@ -66,6 +66,7 @@ function coverageFrom(s) {
   const picked = ((s.coverage.top_n / s.kpis.benchmark_cves) * 100).toFixed(1)
   return {
     caughtPct: Math.round(caught * 100),
+    topN: s.coverage.top_n,
     footer:
       ratio && ratio > 1
         ? `Fixing ${picked}% of the queue beats every public baseline (${s.coverage.backtest_year} backtest)`
@@ -112,7 +113,7 @@ function SummaryBody({ s, benchmark }) {
             <CoverageCard coverage={coverageFrom(s)} />
             <section className={`${summaryCard} flex-1`}>
               <ChartHead title={bugTypesText.title} subtitle={bugTypesText.subtitle} />
-              <BubbleChart weaknesses={s.weaknesses} minH="min-h-[110px]" />
+              <BubbleChart weaknesses={s.weaknesses} />
             </section>
           </div>
 

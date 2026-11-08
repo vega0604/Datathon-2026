@@ -1,25 +1,10 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { hierarchy, treemap, treemapSquarify } from 'd3-hierarchy'
 import { AnimatePresence, MotionConfig, motion } from 'motion/react'
+import { useSize } from '../../lib/useSize'
 import { SHADE } from './vendorShades'
 
 const GAP = 6 // px between cells
-
-/** Tracks an element's content size. */
-function useSize(ref) {
-  const [size, setSize] = useState({ width: 0, height: 0 })
-  useLayoutEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const ro = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect
-      setSize({ width: Math.floor(width), height: Math.floor(height) })
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [ref])
-  return size
-}
 
 // Picks a label that fits the cell without truncating: the full name, then the full name
 // in a smaller font, then the short name. null hides it (the tooltip still has the name).

@@ -14,7 +14,6 @@ import { BlueCard, FactRow, FitMain, FoundBy, PageTitle, SevMix, SevPill, SidePa
 
 // Date-only strings (YYYY-MM-DD) are read as local dates, not UTC midnight.
 const fmtDate = (d) => new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-const fmtTime = (d) => d.toLocaleTimeString('en-GB', { hour12: false })
 
 export function YourSoftware({ onHome, sbomId, library = [], onUploaded, onSelect, onRemove, screen, onScreen, onOpenFixFirst, onOpenInsights, software, totals, theme = 'light', onThemeChange }) {
   const dark = theme === 'dark'
@@ -71,14 +70,14 @@ export function YourSoftware({ onHome, sbomId, library = [], onUploaded, onSelec
   const open = (c) => onScreen({ name: 'component', id: c.id })
 
   let content
-  if (screen.name === 'uploading' && job) content = <Uploading key={job.id} job={job} onDone={finish} onFail={fail} onCancel={() => (job.cancel.abort(), setJob(null), onScreen({ name: 'empty' }))} onOpenFixFirst={onOpenFixFirst} />
+  if (screen.name === 'uploading' && job) content = <Uploading key={job.id} job={job} onDone={finish} onFail={fail} onCancel={() => (job.cancel.abort(), setJob(null), onScreen({ name: 'empty' }))} />
   else if (screen.name !== 'empty' && screen.name !== 'uploading' && sbomId && !sbom)
     content = <Loading error={detail.error} onRetry={detail.reload} />
   else if (!sbom || screen.name === 'empty' || screen.name === 'uploading') content = <Empty onFile={chooseFile} onDemo={tryDemo} error={error} />
   else if (screen.name === 'all') content = <AllComponents sbom={sbom} ranked={ranked} onScreen={onScreen} onOpen={open} />
   else if (screen.name === 'component') content = <ComponentDetail sbom={sbom} ranked={ranked} id={screen.id} onScreen={onScreen} onOpenFixFirst={onOpenFixFirst} />
   else if (screen.name === 'ask') content = <AskWhy ranked={ranked} focusId={screen.id} onScreen={onScreen} onOpenFixFirst={onOpenFixFirst} />
-  else content = <Overview sbom={sbom} ranked={ranked} onScreen={onScreen} onOpen={open} onOpenFixFirst={onOpenFixFirst} />
+  else content = <Overview sbom={sbom} onScreen={onScreen} onOpen={open} onOpenFixFirst={onOpenFixFirst} />
 
   return (
     <IconDarkContext.Provider value={dark}>
@@ -181,28 +180,12 @@ function Empty({ onFile, onDemo, error }) {
           </div>
         </div>
       </FitMain>
-      <SidePanel>
-        <BlueCard action={'Choose a file  →'} onAction={pick}>
-          Export a CycloneDX SBOM from your build tool, then choose it here. No file? Try the demo.
-        </BlueCard>
-        <SideBox tone="teal" icon="software/eye-teal" title="What we read">
-          <FactRow label="Vendor" value="e.g. Fortinet" />
-          <FactRow label="Product" value="e.g. FortiOS" />
-          <FactRow label="Version" value="e.g. 7.4.2" />
-          <FactRow label="CPE name" value="if it’s there" />
-        </SideBox>
-        <SideBox tone="purple" icon="software/target-purple" title="Where Granite helps">
-          <p className="text-[13px] leading-[19px] text-ink-muted">
-            Some CVEs in NIST have no product list yet. We also look for your products in the CVE text, and IBM Granite can confirm those matches, so fewer slip through.
-          </p>
-        </SideBox>
-      </SidePanel>
     </>
   )
 }
 
 /* ── Uploading: steps through the real file while the server matches it ── */
-function Uploading({ job, onDone, onFail, onCancel, onOpenFixFirst }) {
+function Uploading({ job, onDone, onFail, onCancel }) {
   const total = job.sbom.components.length
   const noCpe = job.sbom.components.filter((c) => !c.cpe)
   const [checked, setChecked] = useState(0)
@@ -218,18 +201,6 @@ function Uploading({ job, onDone, onFail, onCancel, onOpenFixFirst }) {
     }
     // Runs once per upload job.
   }, [job]) // eslint-disable-line react-hooks/exhaustive-deps
-  // What happened while reading the file (all real: counts come from the file).
-  const [log] = useState(() => {
-    const t = job.startedAt
-    return [
-      [t, 'Opened the file', 'software/dot-teal'],
-      [t, `Valid CycloneDX ${job.sbom.specVersion ?? ''}`.trim(), 'software/dot-teal'],
-      [t, `Found ${total} components`, 'software/dot-teal'],
-      [t, `${total - noCpe.length} have a CPE name`, 'software/dot-teal'],
-      ...(noCpe.length ? [[t, `${noCpe.length} have no CPE name`, 'software/dot-purple']] : []),
-    ]
-  })
-
   // Steps through the components; the last one waits for the server's answer.
   useEffect(() => {
     let n = 0
@@ -299,25 +270,6 @@ function Uploading({ job, onDone, onFail, onCancel, onOpenFixFirst }) {
           </div>
         </div>
       </FitMain>
-      <SidePanel>
-        <BlueCard action={'Go to Fix first  →'} onAction={onOpenFixFirst}>
-          You can leave this page. We’ll send you an alert when the results are ready.
-        </BlueCard>
-        <SideBox tone="grey" icon="software/queue-blue" title="Activity log">
-          {[...log, ...(done ? [] : [[new Date(), `Checking NIST · ${checked} of ${total}`, 'software/dot-blue']])].map(([t, text, dot], i) => (
-            <div key={i} className="flex items-center gap-2">
-              <Icon name={dot} className="size-2" />
-              <span className="font-mono text-xs text-ink-muted">{fmtTime(t)}</span>
-              <span className="min-w-px flex-1 text-[13px] leading-[18px] text-ink">{text}</span>
-            </div>
-          ))}
-        </SideBox>
-        <SideBox tone="teal" icon="software/eye-teal" title="What we read">
-          <FactRow label="Product name" value={`✓ All ${total}`} />
-          <FactRow label="Version" value={`✓ ${job.sbom.components.filter((c) => c.version).length} of ${total}`} />
-          <FactRow label="CPE name" value={`${total - noCpe.length} of ${total}`} />
-        </SideBox>
-      </SidePanel>
     </>
   )
 }
@@ -355,9 +307,8 @@ function SoftwareHeader({ sbom, tab, onScreen }) {
   )
 }
 
-function Overview({ sbom, ranked, onScreen, onOpen, onOpenFixFirst }) {
+function Overview({ sbom, onScreen, onOpen, onOpenFixFirst }) {
   const s = summarize(sbom)
-  const top = ranked[0]
   const byCount = sbom.components.filter((c) => c.risk?.cveCount).sort((a, b) => b.risk.cveCount - a.risk.cveCount).slice(0, 8)
   const max = byCount[0]?.risk.cveCount ?? 1
   const scale = (n) => `${Math.max(3, (Math.log10(n + 1) / Math.log10(max + 1)) * 100)}%`
@@ -365,42 +316,10 @@ function Overview({ sbom, ranked, onScreen, onOpen, onOpenFixFirst }) {
     <>
       <FitMain className="gap-5 compact:gap-3">
         <SoftwareHeader sbom={sbom} tab="overview" onScreen={onScreen} />
-        <div className="flex w-full shrink-0 gap-5 compact:gap-4">
-          <div className="flex min-h-[156px] min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-[22px] py-5">
-            <p className="text-sm text-ink-muted">Affected components</p>
-            <p className="flex items-baseline gap-2">
-              <span className="text-5xl leading-[52px] font-light text-ink">{s.affected}</span>
-              <span className="text-lg text-ink-muted">of {s.total}</span>
-            </p>
-            <span className="flex gap-[3px]" aria-hidden="true">
-              {sbom.components.map((c) => (
-                <span key={c.id} className={`h-3 w-[9px] rounded-[2px] ${c.risk?.cveCount ? 'bg-blue' : 'bg-track'}`} />
-              ))}
-            </span>
-            {s.total - s.checked > 0 && <p className="text-xs text-ink-muted">{s.total - s.checked} not checked</p>}
-          </div>
-          <div className="flex min-h-[156px] min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-[22px] py-5">
-            <p className="text-sm text-ink-muted">Known vulnerabilities (CVEs)</p>
-            <p className="text-5xl leading-[52px] font-light text-ink">{s.cves.toLocaleString()}</p>
-            <SevMix sev={s.sev} />
-            <p className="text-xs text-ink-muted">{sevText(s.sev, true)}</p>
-          </div>
-          <div className="flex min-h-[156px] min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-brand px-[22px] py-5">
-            <p className="text-sm font-medium text-white">Fix these first</p>
-            <p className="flex items-baseline gap-2.5 text-white">
-              <span className="text-5xl leading-[52px] font-light">{s.exploitedComponents}</span>
-              <span className="text-sm">have bugs in active attacks</span>
-            </p>
-            <button type="button" onClick={onOpenFixFirst} className="flex h-[34px] cursor-pointer items-center gap-2 self-start rounded-full bg-on-brand px-3.5 text-sm font-medium text-primary-strong hover:bg-on-brand-hover">
-              Open Fix first
-              <Icon name="software/arrow-up-right-blue" className="size-3.5" />
-            </button>
-          </div>
-        </div>
         <section className="flex min-h-0 w-full flex-1 flex-col items-start rounded-[20px] bg-card px-6 pt-[22px] pb-[18px]">
           <h2 className="text-xl leading-7 text-ink">Known vulnerabilities by component</h2>
           <p className="pt-1.5 pb-3 text-[13px] text-ink-muted">
-            Longer bar = more CVEs (log scale). Colour and shape show the worst one (key on the right). Click a name for details.
+            Longer bar = more CVEs (log scale). The pill on each row shows the worst one. Click a name for details.
           </p>
           {/* Rows keep their design height (44px); on short screens this list scrolls instead of squashing them. */}
           <div data-fit-scroll className="relative flex min-h-0 w-full flex-1 flex-col overflow-y-auto">
@@ -433,45 +352,55 @@ function Overview({ sbom, ranked, onScreen, onOpen, onOpenFixFirst }) {
         </section>
       </FitMain>
       <SidePanel>
-        <BlueCard action={'Open Fix first  →'} onAction={onOpenFixFirst}>
-          {top?.risk
-            ? `Start with ${top.name}. It has ${top.risk.cveCount.toLocaleString()} known CVEs and ${top.risk.kev.length} ${top.risk.kev.length === 1 ? 'is' : 'are'} being used in attacks right now.`
-            : 'None of these components are on NIST’s list yet.'}
-        </BlueCard>
-        <SideBox tone="purple" icon="software/eye-purple" title="How we found them">
-          <div className="flex flex-col gap-1.5">
-            <FactRow label="Matched CVEs" value={<span className="text-base text-purple-ink">{s.cves.toLocaleString()}</span>} />
-            <span className="h-2 overflow-hidden rounded bg-card">
-              <span className="block h-2 w-full rounded bg-ai" />
-            </span>
-          </div>
-          <p className="text-[13px] leading-[19px] text-ink-muted">
-            Most come from the product and version in NIST’s list. Where NIST has no product list yet, we also match the CVE text, and IBM Granite can confirm those matches. Fix first shows how each CVE was matched.
+        <div className="flex min-h-[140px] w-full flex-1 flex-col justify-center gap-1.5 rounded-[20px] bg-brand px-[22px] py-5">
+          <p className="text-sm font-medium text-white">Fix these first</p>
+          <p className="flex items-baseline gap-2.5 text-white">
+            <span className="text-5xl leading-[52px] font-light">{s.exploitedComponents}</span>
+            <span className="text-sm">have bugs in active attacks</span>
           </p>
-        </SideBox>
-        <SideBox tone="grey" icon="software/target-blue" title="How to read colours">
-          {[
-            ['critical', 'Fix today'],
-            ['high', 'Fix this week'],
-            ['medium', 'Plan a fix'],
-            ['none', `${s.clear} component${s.clear === 1 ? ' is' : 's are'} clear`],
-          ].map(([k, t]) => (
-            <div key={k} className="flex items-center gap-2.5">
-              <SevPill severity={k} />
-              <span className="min-w-px flex-1 text-right text-sm text-ink-muted">{t}</span>
-            </div>
-          ))}
-        </SideBox>
+          <button type="button" onClick={onOpenFixFirst} className="flex h-[34px] cursor-pointer items-center gap-2 self-start rounded-full bg-on-brand px-3.5 text-sm font-medium text-primary-strong hover:bg-on-brand-hover">
+            Open Fix first
+            <Icon name="software/arrow-up-right-blue" className="size-3.5" />
+          </button>
+        </div>
+        <div className="flex min-h-[140px] w-full flex-1 flex-col justify-center gap-1.5 rounded-[20px] bg-page px-[22px] py-5">
+          <p className="text-sm text-ink-muted">Affected components</p>
+          <p className="flex items-baseline gap-2">
+            <span className="text-5xl leading-[52px] font-light text-ink">{s.affected}</span>
+            <span className="text-lg text-ink-muted">of {s.total}</span>
+          </p>
+          {sbom.components.length <= 24 ? (
+            <span className="flex gap-[3px]" aria-hidden="true">
+              {sbom.components.map((c) => (
+                <span key={c.id} className={`h-3 min-w-0 flex-1 rounded-[2px] ${c.risk?.cveCount ? 'bg-blue' : 'bg-track'}`} />
+              ))}
+            </span>
+          ) : (
+            // Too many components for one block each: show the share instead.
+            <span className="block h-3 overflow-hidden rounded-[3px] bg-track" aria-hidden="true">
+              <span className="block h-full bg-blue" style={{ width: `${(s.affected / s.total) * 100}%` }} />
+            </span>
+          )}
+          {s.total - s.checked > 0 && <p className="text-xs text-ink-muted">{s.total - s.checked} not checked</p>}
+        </div>
+        <div className="flex min-h-[140px] w-full flex-1 flex-col justify-center gap-1.5 rounded-[20px] bg-page px-[22px] py-5">
+          <p className="text-sm text-ink-muted">Known vulnerabilities (CVEs)</p>
+          <p className="text-5xl leading-[52px] font-light text-ink">{s.cves.toLocaleString()}</p>
+          <SevMix sev={s.sev} width="100%" />
+          <p className="text-xs text-ink-muted">{sevText(s.sev, true)}</p>
+        </div>
       </SidePanel>
     </>
   )
 }
 
 /* ── All components ────────────────────────────────────────────────────── */
+// One column template for the header and every row, so they always line up.
+const ALL_COLS = 'grid grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,0.8fr)_132px_56px_112px] items-center gap-x-3 narrow:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,0.8fr)_56px_112px]'
+
 function AllComponents({ sbom, ranked, onScreen, onOpen }) {
   const s = summarize(sbom)
   const rows = [...sbom.components].sort((a, b) => (b.risk?.cveCount ?? -1) - (a.risk?.cveCount ?? -1))
-  const max = Math.max(1, ...rows.map((c) => c.risk?.cveCount ?? 0))
   const top = ranked[0]
   const download = () => {
     const url = URL.createObjectURL(new Blob([toCsv(sbom)], { type: 'text/csv' }))
@@ -483,39 +412,32 @@ function AllComponents({ sbom, ranked, onScreen, onOpen }) {
     <>
       <FitMain className="gap-5 compact:gap-3">
         <SoftwareHeader sbom={sbom} tab="all" onScreen={onScreen} />
-        <section className="flex min-h-0 w-full flex-1 flex-col rounded-[20px] bg-card px-6 py-3" aria-label="All components">
-          <div className="flex h-[38px] w-full shrink-0 items-center gap-3 border-b border-line text-xs font-medium text-ink-muted">
-            <span className="min-w-0 flex-1 wide:w-[165px] wide:flex-none">Component</span>
-            <span className="w-[118px] shrink-0 wide:w-[128px]">Vendor</span>
-            <span className="w-[110px] shrink-0 wide:w-[128px]">Version</span>
-            <span className="w-[110px] shrink-0 narrow:hidden">Found by</span>
-            <span className="w-11 shrink-0 text-right">CVEs</span>
-            <span className="hidden w-[80px] shrink-0 wide:block" />
-            <span className="hidden min-w-0 flex-1 wide:block" />
-            <span className="w-[96px] shrink-0">Worst severity</span>
+        <section className="flex min-h-0 w-full flex-1 flex-col rounded-[20px] bg-card px-6 pt-2 pb-3" aria-label="All components">
+          <div className={`${ALL_COLS} h-11 w-full shrink-0 border-b border-line text-sm font-medium text-ink-muted`}>
+            <span>Component</span>
+            <span>Vendor</span>
+            <span>Version</span>
+            <span className="narrow:hidden">Found by</span>
+            <span className="text-right">CVEs</span>
+            <span>Worst severity</span>
           </div>
-          <div className="flex min-h-0 flex-1 flex-col">
+          {/* Rows keep a comfortable height; the list scrolls rather than shrinking the text. */}
+          <div data-fit-scroll className="flex min-h-0 flex-1 flex-col overflow-y-auto">
             {rows.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => onOpen(c)}
-                className="flex max-h-[30px] min-h-[26px] w-full flex-1 basis-0 cursor-pointer items-center gap-3 border-b border-line text-left hover:bg-page"
+                className={`${ALL_COLS} h-[52px] w-full shrink-0 cursor-pointer border-b border-line text-left hover:bg-page`}
               >
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink wide:w-[165px] wide:flex-none" title={c.name}>{c.name}</span>
-                <span className="w-[118px] shrink-0 truncate text-[13px] text-ink-muted wide:w-[128px] wide:text-sm" title={c.vendor ?? undefined}>{c.vendor ?? '—'}</span>
-                <span className="w-[110px] shrink-0 truncate font-mono text-xs text-ink wide:w-[128px] wide:text-[13px]" title={c.version}>{c.version}</span>
-                <span className="w-[110px] shrink-0 narrow:hidden">
+                <span className="truncate text-base font-medium text-ink" title={c.name}>{c.name}</span>
+                <span className="truncate text-[15px] text-ink-muted" title={c.vendor ?? undefined}>{c.vendor ?? '—'}</span>
+                <span className="truncate font-mono text-sm text-ink" title={c.version}>{c.version}</span>
+                <span className="min-w-0 narrow:hidden [&_span]:text-[13px]">
                   <FoundBy component={c} />
                 </span>
-                <span className={`w-11 shrink-0 text-right text-sm font-semibold ${c.risk?.cveCount ? 'text-ink' : 'text-ink-muted'}`}>{c.risk ? c.risk.cveCount.toLocaleString() : '—'}</span>
-                <span className="relative hidden h-2 w-[80px] shrink-0 overflow-hidden rounded bg-track wide:block">
-                  {c.risk?.cveCount > 0 && (
-                    <span className={`absolute inset-y-0 left-0 rounded ${sevBar(worstSeverity(c.risk))}`} style={{ width: `${Math.max(4, (Math.log10(c.risk.cveCount + 1) / Math.log10(max + 1)) * 100)}%` }} />
-                  )}
-                </span>
-                <span className="hidden min-w-0 flex-1 wide:block" />
-                <span className="w-[96px] shrink-0">
+                <span className={`text-right text-base font-semibold ${c.risk?.cveCount ? 'text-ink' : 'text-ink-muted'}`}>{c.risk ? c.risk.cveCount.toLocaleString() : '—'}</span>
+                <span className="min-w-0 [&_span]:text-[13px]">
                   <SevPill severity={worstSeverity(c.risk)} />
                 </span>
               </button>

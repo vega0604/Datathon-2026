@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Icon } from '../lib/Icon'
+import { useFitHeight } from '../lib/useFitHeight'
 
 /**
  * Keeps a slot the same size for every row: all rows' versions are stacked in one
@@ -62,14 +63,14 @@ function RankContrast({ item }) {
   const shift = item.cvssRank - item.rank
   return (
     <div className="flex w-full shrink-0 items-start gap-2.5">
-      <div className="relative h-[104px] min-w-px flex-1 overflow-hidden rounded-[20px] bg-page">
+      <div className="relative h-[104px] min-w-px flex-1 short:h-[74px] overflow-hidden rounded-[20px] bg-page">
         <Icon name="fixfirst/hatch-cvss-card" className="absolute top-0 left-0 h-[104px] w-[230px]" />
         <p className="type-label absolute top-3 left-4 whitespace-nowrap text-ink-muted">CVSS would rank this</p>
-        <p className="absolute top-[34px] left-4 text-5xl leading-[64px] font-light whitespace-nowrap text-ink-muted">
+        <p className="absolute top-[34px] left-4 text-5xl leading-[64px] short:top-7 short:text-[32px] short:leading-10 font-light whitespace-nowrap text-ink-muted">
           #{item.cvssRank}
         </p>
       </div>
-      <div className="relative h-[104px] min-w-px flex-1 overflow-hidden rounded-[20px] bg-brand">
+      <div className="relative h-[104px] min-w-px flex-1 short:h-[74px] overflow-hidden rounded-[20px] bg-brand">
         {/* Label and shift pill share a row so a wider pill can't cover the label.
             At the design width this puts the pill exactly where Figma has it. */}
         <div className="absolute top-3 right-3 left-4 flex items-center justify-between gap-1">
@@ -85,7 +86,7 @@ function RankContrast({ item }) {
             </span>
           )}
         </div>
-        <p className="absolute top-[34px] left-4 text-5xl leading-[64px] font-light whitespace-nowrap text-white">#{item.rank}</p>
+        <p className="absolute top-[34px] left-4 text-5xl leading-[64px] short:top-7 short:text-[32px] short:leading-10 font-light whitespace-nowrap text-white">#{item.rank}</p>
       </div>
     </div>
   )
@@ -99,7 +100,7 @@ const SOURCE_NOTE = {
 
 function PlainWords({ item, items }) {
   return (
-    <div className="flex w-full shrink-0 flex-col gap-2 rounded-[20px] bg-blue-soft px-4 py-3.5">
+    <div className="flex w-full shrink-0 flex-col gap-2 rounded-[20px] bg-blue-soft px-4 py-3.5 short:gap-1 short:py-2.5">
       <div className="flex items-center gap-2">
         <span className="flex size-[26px] items-center justify-center rounded-full bg-blue-ink">
           <Icon name="fixfirst/icon-idea" className="size-3.5" />
@@ -120,11 +121,8 @@ function PlainWords({ item, items }) {
   )
 }
 
-// Bar track width in the design. The API's values are SHAP contributions in log-odds
-// (often 1-3), so the largest value among the shown rows fills the track; the
-// design's fixed scale (0.31 = full) would clip almost every bar.
-const TRACK_PX = 404
-
+// Bars are scaled so the largest value among the shown rows fills the track (the API's
+// SHAP values are in log-odds, often 1-3).
 function Reasons({ item, items }) {
   const { rank, reasons } = item
   const largest = Math.max(0.0001, ...items.flatMap((it) => (it.reasons ?? []).map((r) => Math.abs(r.value))))
@@ -132,8 +130,8 @@ function Reasons({ item, items }) {
   // (the tallest label anywhere): even spacing, and nothing moves between ranks.
   const allLabels = items.flatMap((it) => (it.reasons ?? []).map((r, k) => ({ cveId: `${it.cveId}#${k}`, label: r.label })))
   return (
-    <div className="flex w-full shrink-0 flex-col gap-3">
-      <div className="flex items-center gap-2">
+    <div className="flex w-full flex-1 flex-col gap-3 rounded-[20px] bg-page p-4 short:gap-2 short:p-3">
+      <div className="flex shrink-0 items-center gap-2">
         <p className="text-base leading-6 font-semibold text-ink">Why it ranks #{rank}</p>
         {item.reasonsAreSample && (
           <span
@@ -147,9 +145,11 @@ function Reasons({ item, items }) {
       {!reasons.length && (
         <p className="type-body text-ink-muted">No model reasons yet: ranked by CISA KEV, EPSS and CVSS.</p>
       )}
+      {/* Rows share the card's spare height evenly. */}
+      <div className="flex flex-1 flex-col justify-evenly gap-2.5 short:gap-1.5">
       {reasons.map((r, i) => (
         <div key={r.label} className="flex w-full items-center gap-2.5">
-          <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-page">
+          <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-card">
             <Icon name={r.icon} className="size-3.5" />
           </span>
           <div className="flex min-w-px flex-1 flex-col gap-1.5">
@@ -164,7 +164,7 @@ function Reasons({ item, items }) {
               {/* Negative weights (factors that lower the rank) are grey, never colour alone: the value shows the sign. */}
               <span
                 className={`absolute top-0 left-0 h-2 rounded-full ${r.value < 0 ? 'bg-line-strong' : i === 0 ? 'bg-blue' : 'bg-chart-seq-4'}`}
-                style={{ width: (Math.abs(r.value) / largest) * TRACK_PX }}
+                style={{ width: `${(Math.abs(r.value) / largest) * 100}%` }}
               />
             </div>
           </div>
@@ -174,84 +174,22 @@ function Reasons({ item, items }) {
           </p>
         </div>
       ))}
-    </div>
-  )
-}
-
-const formatDate = (iso) =>
-  iso ? new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '—'
-
-// Teal fact box content: CISA KEV for CVEs on the list, otherwise the public facts we
-// have (EPSS, weakness, exploit code). There is no X-Force integration.
-function factsFor(it) {
-  if (!it.kev)
-    return {
-      title: 'Not on CISA KEV',
-      link: `https://nvd.nist.gov/vuln/detail/${it.cveId}`,
-      linkLabel: 'the NVD record',
-      facts: [
-        ['Chance of attack (EPSS)', it.facts.epss == null ? 'No score yet' : it.facts.epss.toFixed(2)],
-        ['Public exploit code', it.facts.exploitCode ? 'Yes' : 'Not seen'],
-        ['Weakness', it.facts.weakness ?? 'Not given'],
-      ],
-    }
-  return {
-    title: 'CISA KEV',
-    link: `https://nvd.nist.gov/vuln/detail/${it.cveId}`,
-    linkLabel: 'the NVD record',
-    facts: [
-      ['Added to KEV', formatDate(it.kev.added)],
-      ['Used in ransomware', it.kev.ransomware ? 'Yes, per CISA' : 'Not known'],
-      ['Weakness', it.kev.weakness ?? 'Not given'],
-    ],
-  }
-}
-
-function FactBox({ item, items }) {
-  return (
-    <Stable
-      items={items}
-      current={item}
-      className="w-full shrink-0 rounded-[20px] bg-green-soft p-[18px]"
-      render={(it) => <FactContent {...factsFor(it)} />}
-    />
-  )
-}
-
-function FactContent({ title, link, linkLabel, facts }) {
-  return (
-    <div className="flex w-full flex-col gap-2.5">
-      <div className="flex w-full items-center gap-2.5">
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-card">
-          <Icon name="fixfirst/xforce-shield" className="size-[15.12px]" />
-        </span>
-        <p className="min-w-px flex-1 text-base leading-6 font-semibold text-green-ink">{title}</p>
-        <a
-          href={link}
-          target="_blank"
-          rel="noreferrer"
-          className="text-sm leading-5 font-semibold whitespace-nowrap text-blue-ink hover:underline"
-        >
-          Details<span className="sr-only"> on {linkLabel} (opens in a new tab)</span>
-        </a>
       </div>
-      {facts.map(([label, value]) => (
-        <div key={label} className="flex w-full items-start gap-2 text-sm leading-5">
-          <p className="min-w-px flex-1 text-ink-muted">{label}</p>
-          <p className="shrink-0 text-right font-semibold text-ink">{value}</p>
-        </div>
-      ))}
     </div>
   )
 }
 
 export function WhyPanel({ item, items, error, onClose, onStatusChange, onPushToLinear }) {
+  const ref = useRef(null)
+  // Re-fit when more rows load or an error line appears: both can change the height.
+  useFitHeight(ref, `${items.length}:${Boolean(error)}`)
   return (
-    // Design sizes on every screen; on short windows the panel scrolls instead of squashing its sections.
+    // Never scrolls: on short windows its sections shrink slightly to fit (useFitHeight).
     // `relative` keeps hidden link labels (sr-only) inside the panel so the window itself never scrolls.
     <aside
+      ref={ref}
       aria-label={`Details for ${item.cveId}`}
-      className={`relative flex h-full w-[400px] shrink-0 flex-col justify-between gap-2 overflow-y-auto rounded-[28px] bg-card px-[22px] pt-[18px] pb-5 shadow-float wide:w-[420px]`}
+      className={`relative flex h-full w-[400px] shrink-0 flex-col gap-4 overflow-hidden rounded-[28px] bg-card p-6 shadow-float short:gap-3 short:p-5 wide:w-[420px] [&>*]:[zoom:var(--fit,1)]`}
     >
             <div className="flex w-full shrink-0 items-center gap-2">
         <Icon name="fixfirst/icon-ticket" className="size-4" />
@@ -314,7 +252,6 @@ export function WhyPanel({ item, items, error, onClose, onStatusChange, onPushTo
 
       <PlainWords item={item} items={items} />
       <Reasons item={item} items={items} />
-      <FactBox item={item} items={items} />
     </aside>
   )
 }
