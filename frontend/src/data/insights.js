@@ -23,13 +23,14 @@ export const aboutData = [
 ]
 
 export const insightsNav = [
-  { id: 'summary', label: 'Summary', icon: 'insights/sub-target', chip: 'bg-blue-soft' },
-  { id: 'catch-rate', label: 'Catch rate', icon: 'insights/sub-shield', chip: 'bg-blue-soft' },
-  { id: 'severity', label: 'Severity', icon: 'insights/sub-arrow', chip: 'bg-blue-soft' },
-  { id: 'timing', label: 'Time to attack', icon: 'insights/sub-bell', chip: 'bg-blue-soft' },
-  { id: 'vendors', label: 'Vendors', icon: 'insights/sub-queue', chip: 'bg-blue-soft' },
-  { id: 'bug-types', label: 'Bug types', icon: 'insights/sub-eye', chip: 'bg-blue-soft' },
-  { id: 'model', label: 'Model check', icon: 'insights/sub-shield', chip: 'bg-blue-soft' },
+  // V5 sub-nav: each chip has its own tint (Figma "Insights sub-nav").
+  { id: 'summary', label: 'Summary', icon: 'nav-v5/sub-summary', chip: 'bg-blue-soft' },
+  { id: 'catch-rate', label: 'Catch rate', icon: 'nav-v5/sub-catch-rate', chip: 'bg-green-soft' },
+  { id: 'severity', label: 'Severity', icon: 'nav-v5/sub-severity', chip: 'bg-purple-soft' },
+  { id: 'timing', label: 'Time to attack', icon: 'nav-v5/sub-timing', chip: 'bg-blue-soft' },
+  { id: 'vendors', label: 'Vendors', icon: 'nav-v5/sub-vendors', chip: 'bg-green-soft' },
+  { id: 'bug-types', label: 'Bug types', icon: 'nav-v5/sub-bug-types', chip: 'bg-purple-soft' },
+  { id: 'model', label: 'Model check', icon: 'nav-v5/sub-model', chip: 'bg-blue-soft' },
 ]
 
 // Catch rate page (chart values are sample data for now).

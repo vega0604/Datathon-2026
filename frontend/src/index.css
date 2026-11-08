@@ -1,7 +1,18 @@
 @import 'tailwindcss';
 
-/* Laptop screens with little vertical room (e.g. 13" MacBooks) */
+/* Screens at or above the 1512px Figma frames get the full design spacing */
+@custom-variant wide (@media (min-width: 1440px));
+/* Wide enough (like the 1512 frame) for the queue's separate "What it is" column */
+@custom-variant roomy (@media (min-width: 1500px));
+/* Browser windows on 14" laptops (~860px tall): slightly tighter spacing. */
+@custom-variant compact (@media (max-height: 900px));
+/* Laptop screens with little vertical room (e.g. 13" MacBooks). Registered after
+   `wide` and `compact` so its rules win when they overlap. */
 @custom-variant short (@media (max-height: 820px));
+/* Short windows (13" laptops and below): drop repeated info so panels still fit. */
+@custom-variant tight (@media (max-height: 820px));
+/* Styles that only apply on a page showing its dark skin (.theme-dark) */
+@custom-variant dark (&:where(.theme-dark, .theme-dark *));
 
 /* Very short windows (near the 640px minimum height) */
 @custom-variant tiny (@media (max-height: 700px));
@@ -44,6 +55,12 @@
   --color-crit: #c42652;
   --color-context: #a7afbf; /* chart context series (e.g. "flagged after KEV") */
 
+  /* V5 additions (Figma: chart/series-1, ai/primary, chart/series-2, chart/seq-4) */
+  --color-chart-1: #0f62fe;
+  --color-ai: #8a3ffc;
+  --color-chart-2: #007d79;
+  --color-chart-seq-4: #4589ff;
+
   --tracking-label: 0.32px;
   --tracking-body: 0.16px;
 
@@ -68,6 +85,61 @@
   font-size: 14px;
   line-height: 18px;
   letter-spacing: var(--tracking-body);
+}
+
+/* V5 palette (Figma page "V5": surface/*, text/*, border/*). Same token names as
+   the V4 palette, so components work under either. Only the Fix first view opts
+   in for now; the V5 Insights frames use these exact values too, so adding this
+   class to the Insights view moves it to V5. */
+.theme-v5 {
+  --color-page: #f5f7fb;
+  --color-subtle: #eef1f7;
+  --color-line: #e2e6ee;
+  --color-line-strong: #a7afbf;
+  --color-ink: #1f2633;
+  --color-ink-muted: #5a6377;
+  --color-crit: #da1e28;
+}
+
+/* V5 dark palette (Figma frames "Fix first · v5 · Dark" and "V5 · Insights · Summary · Dark"). Goes on the same
+   element as .theme-v5; components keep their classes and pick these values up. */
+.theme-v5.theme-dark {
+  color-scheme: dark;
+  --color-page: #11151d;
+  --color-card: #1a202b;
+  --color-subtle: #232a37;
+  --color-line: #2c3443;
+  --color-line-strong: #5a6377;
+  --color-ink: #e9ecf3;
+  --color-ink-muted: #a7afbf;
+  --color-blue-soft: #152a4f;
+  --color-blue-ink: #a6c8ff;
+  --color-chart-1: #4589ff;
+  --color-ai: #a56eff;
+  --color-chart-2: #08bdba;
+  --color-chart-seq-4: #6ea6ff;
+  --color-green-soft: #0b2e30;
+  --color-green-ink: #3ddbd9;
+  --color-purple-soft: #2a2142;
+  --color-purple-ink: #be95ff;
+  --shadow-float: 0px 12px 32px -6px rgba(15, 23, 41, 0.35), 0px 1px 3px 0px rgba(15, 23, 41, 0.3);
+}
+
+/* Soft light/dark switch (see lib/themeTransition.js) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Fallback for browsers without view transitions: fade colours briefly */
+.theme-animating *,
+.theme-animating *::before,
+.theme-animating *::after {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease !important;
 }
 
 html,

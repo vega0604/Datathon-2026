@@ -1,21 +1,26 @@
 import { useState } from 'react'
 import { AppHeader } from '../components/insights/AppHeader'
-import { InsightsSidebar } from '../components/insights/InsightsSidebar'
+import { Sidebar } from '../components/Sidebar'
+import { IconDarkContext } from '../lib/iconTheme'
 import { CoverageCard } from '../components/insights/CoverageCard'
 import { NextStepsPanel } from '../components/insights/NextStepsPanel'
 import { CatchRatePage } from '../components/insights/CatchRatePage'
 import { SeverityPage } from '../components/insights/SeverityPage'
 import { aboutData, coverage, kpis, versusPublic } from '../data/insights'
 
-export function InsightsSummary({ onOpenFixFirst }) {
+export function InsightsSummary({ onOpenFixFirst, theme = 'light', onThemeChange }) {
   const [section, setSection] = useState('summary')
+  const dark = theme === 'dark'
 
   return (
-    <div className="flex h-screen min-h-[640px] min-w-[1024px] flex-col bg-page font-sans">
-      <AppHeader />
+    <IconDarkContext.Provider value={dark}>
+    {/* Same shell as Fix first (theme classes, header, body spacing, sidebar) so
+        nothing shifts when moving between the two pages. */}
+    <div className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[640px] min-w-[1024px] flex-col bg-page font-sans`}>
+      <AppHeader iconDir="fixfirst" theme={theme} onThemeChange={onThemeChange} />
 
-      <div className="flex min-h-0 w-full flex-1 items-start gap-4 overflow-hidden p-4 xl:gap-5 xl:p-5 short:py-3">
-        <InsightsSidebar section={section} onSectionChange={setSection} onOpenFixFirst={onOpenFixFirst} />
+      <div className="flex min-h-0 w-full flex-1 items-start gap-4 overflow-hidden p-4 wide:gap-5 wide:p-5 compact:py-3">
+        <Sidebar current="insights" section={section} onSectionChange={setSection} onOpenFixFirst={onOpenFixFirst} />
 
         {section === 'summary' ? (
           <SummaryContent />
@@ -29,6 +34,7 @@ export function InsightsSummary({ onOpenFixFirst }) {
         )}
       </div>
     </div>
+    </IconDarkContext.Provider>
   )
 }
 

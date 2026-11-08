@@ -32,7 +32,7 @@ function SegmentedGauge({ pct }) {
             height="46"
             rx="6.5"
             transform={`rotate(${deg} ${x} ${y})`}
-            className={i < filled ? 'fill-blue' : 'fill-subtle'}
+            className={i < filled ? 'fill-chart-1' : 'fill-subtle'}
           />
         )
       })}
@@ -59,7 +59,7 @@ export function CoverageCard({ coverage }) {
       </div>
       <div className="flex w-full shrink-0 justify-center gap-4">
         <span className="flex items-center gap-1.5">
-          <span className="h-3.5 w-2 rounded bg-blue" />
+          <span className="h-3.5 w-2 rounded bg-chart-1" />
           <span className="type-label whitespace-nowrap text-ink-muted">Caught (filled)</span>
         </span>
         <span className="flex items-center gap-1.5">

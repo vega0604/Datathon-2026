@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="status shape" clip-path="url(#clip0_0_124)">
+<g id="Vector">
+<path d="M6 0.6L11.4 6L6 11.4L0.6 6L6 0.6Z" fill-rule="evenodd" clip-rule="evenodd" fill="#D35400"/>
+<mask id="stroke0_0_124" fill="white">
+<path d="M6 0.6L11.4 6L6 11.4L0.6 6L6 0.6Z" fill-rule="evenodd" clip-rule="evenodd"/>
+</mask>
+<path d="M6 0.6L11.4 6L6 11.4L0.6 6L6 0.6Z" stroke-width="2" stroke="#1F2633" mask="url(#stroke0_0_124)"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_124">
+<rect width="12" height="12" fill="white"/>
+</clipPath>
+</defs>
+</svg>

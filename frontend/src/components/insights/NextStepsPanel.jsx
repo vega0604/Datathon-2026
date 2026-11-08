@@ -74,10 +74,11 @@ export function AboutDataBox({ rows, chipClass = 'bg-blue-soft' }) {
   return (
     <FactBox
       title="About this data"
-      icon="insights/about-queue"
-      boxClass="border border-line bg-subtle"
+      icon="insights/about-data"
+      // Dark frame tints this box purple (Figma ai/soft + ai/strong-text).
+      boxClass="border border-line bg-subtle dark:bg-purple-soft"
       chipClass={chipClass}
-      titleClass="text-ink"
+      titleClass="text-ink dark:text-purple-ink"
       rows={rows}
     />
   )

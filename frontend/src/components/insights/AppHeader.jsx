@@ -2,7 +2,8 @@ import { Icon, iconUrl } from '../../lib/Icon'
 import { user } from '../../data/insights'
 import { ThemeToggle } from './ThemeToggle'
 
-export function AppHeader() {
+// iconDir picks the icon set: 'insights' (V4 colours) or 'fixfirst' (V5 colours).
+export function AppHeader({ iconDir = 'insights', theme, onThemeChange }) {
   return (
     <header className="flex w-full shrink-0 items-center gap-4 border-b border-line bg-card px-6 py-3.5">
       <div className="flex items-center gap-3">
@@ -18,13 +19,13 @@ export function AppHeader() {
 
       <div className="h-px min-w-px flex-1" />
 
-      <ThemeToggle />
+      <ThemeToggle iconDir={iconDir} theme={theme} onThemeChange={onThemeChange} />
       <button type="button" aria-label="Notifications" className="cursor-pointer rounded-full">
-        <Icon name="insights/button-notifications" className="size-11" />
+        <Icon name={`${iconDir}/button-notifications`} className="size-11" />
       </button>
       <div className="h-8 w-px shrink-0 bg-line" />
       <button type="button" className="flex cursor-pointer items-center gap-2.5 pr-1 text-left">
-        <img src={iconUrl('insights/avatar-photo', 'png')} alt="" width="40" height="40" className="size-10 shrink-0" />
+        <img src={iconUrl(`${iconDir}/avatar-photo`, 'png')} alt="" width="40" height="40" className="size-10 shrink-0" />
         <span className="flex flex-col whitespace-nowrap">
           <span className="text-sm leading-5 font-semibold text-ink">{user.name}</span>
           <span className="text-xs leading-[17px] text-ink-muted">{user.role}</span>

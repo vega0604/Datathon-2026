@@ -1,18 +1,17 @@
 import { useMemo, useState } from 'react'
-import { Header } from '../components/Header'
+import { AppHeader } from '../components/insights/AppHeader'
 import { Sidebar } from '../components/Sidebar'
-import { Highlights } from '../components/Highlights'
 import { QueueTable } from '../components/QueueTable'
 import { WhyPanel } from '../components/WhyPanel'
-import { Icon } from '../lib/Icon'
-import { company, queue, totals } from '../data/queue'
+import { IconDarkContext } from '../lib/iconTheme'
+import { queue, totals } from '../data/queue'
+
+// Fix first · v5 (Figma page "V5", frame "Fix first · v5 · Light · 1512").
 
 const VIEW_FILTERS = {
   all: () => true,
   critical: (i) => i.severity === 'Critical',
-  edge: (i) => i.edge,
   notInLinear: (i) => !i.ticket,
-  inLinear: (i) => !!i.ticket,
 }
 
 function matches(item, q) {
@@ -21,19 +20,21 @@ function matches(item, q) {
   return item.cveId.toLowerCase().includes(s) || item.component.toLowerCase().includes(s)
 }
 
-export function FixFirstQueue({ onOpenInsights }) {
+export function FixFirstQueue({ onOpenInsights, theme = 'light', onThemeChange }) {
+  const dark = theme === 'dark'
   const [items, setItems] = useState(() => queue.map((i) => ({ ...i, status: 'To do' })))
   const [view, setView] = useState('all')
   const [query, setQuery] = useState('')
-  const [globalSearch, setGlobalSearch] = useState('')
+  const [sort, setSort] = useState(null) // null = model rank, 'desc' / 'asc' = by CVSS
   const [selectedId, setSelectedId] = useState(queue[0].cveId)
   const [panelOpen, setPanelOpen] = useState(true)
   const [nextTicket, setNextTicket] = useState(14)
 
-  const visible = useMemo(
-    () => items.filter((i) => VIEW_FILTERS[view](i) && matches(i, query) && matches(i, globalSearch)),
-    [items, view, query, globalSearch],
-  )
+  const visible = useMemo(() => {
+    const rows = items.filter((i) => VIEW_FILTERS[view](i) && matches(i, query))
+    if (sort) rows.sort((a, b) => (sort === 'desc' ? b.cvss - a.cvss : a.cvss - b.cvss) || a.rank - b.rank)
+    return rows
+  }, [items, view, query, sort])
   const selected = items.find((i) => i.cveId === selectedId)
 
   const select = (id) => {
@@ -45,35 +46,28 @@ export function FixFirstQueue({ onOpenInsights }) {
     setItems((prev) => prev.map((i) => (i.cveId === id ? { ...i, ticket: `DEMO-${nextTicket}` } : i)))
     setNextTicket((n) => n + 1)
   }
+  const seeAll = () => {
+    setView('all')
+    setQuery('')
+    setSort(null)
+  }
 
   return (
-    <div className="flex h-screen min-w-[1280px] flex-col bg-background">
-      <Header search={globalSearch} onSearch={setGlobalSearch} />
+    <IconDarkContext.Provider value={dark}>
+    <div className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[640px] min-w-[1280px] flex-col bg-page font-sans`}>
+      <AppHeader iconDir="fixfirst" theme={theme} onThemeChange={onThemeChange} />
 
-      <div className="flex min-h-px w-full flex-1 items-start gap-5 overflow-hidden px-4 pb-4">
-        <Sidebar view={view} onViewChange={setView} onOpenInsights={onOpenInsights} />
+      <div className="flex min-h-0 w-full flex-1 items-start gap-4 overflow-hidden p-4 wide:gap-5 wide:p-5 compact:py-3">
+        <Sidebar current="fixFirst" onOpenInsights={onOpenInsights} />
 
-        <main className="flex h-full min-w-px flex-1 flex-col gap-4 overflow-hidden">
+        <main className="flex h-full min-w-0 flex-1 flex-col gap-4 pt-2">
           <div className="flex shrink-0 flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 rounded-full bg-layer py-1 pr-3 pl-2.5">
-                <Icon name="icon-upload" className="size-3.5" />
-                <span className="type-label whitespace-nowrap text-text-secondary">
-                  {company.name} SBOM · {company.components} components
-                </span>
-              </span>
-              <span className="flex items-center gap-1.5 rounded-full border border-dashed border-border-strong py-1 pr-3 pl-2.5">
-                <Icon name="icon-idea" className="size-3.5" />
-                <span className="type-label whitespace-nowrap text-text-secondary">Sample values until the model ships</span>
-              </span>
-            </div>
-            <h1 className="flex items-baseline gap-3.5 text-[52px] leading-[64px] font-light whitespace-nowrap">
-              <span className="text-text-primary">Fix-First queue</span>
-              <span className="text-text-secondary">{totals.open} open</span>
-            </h1>
+            <h1 className="text-[44px] leading-[64px] font-light text-ink short:text-[36px] short:leading-[48px]">Fix first</h1>
+            <p className="text-sm leading-5 text-ink-muted wide:text-base wide:leading-6">
+              {totals.open} vulnerabilities ranked by how likely attackers are to use them. {totals.warningSigns} showed
+              early warning signs.
+            </p>
           </div>
-
-          <Highlights topItem={items[0]} onOpenTop={() => select(items[0].cveId)} />
 
           <QueueTable
             items={visible}
@@ -81,15 +75,18 @@ export function FixFirstQueue({ onOpenInsights }) {
             onViewChange={setView}
             query={query}
             onQueryChange={setQuery}
+            sort={sort}
+            onSortChange={setSort}
             selectedId={panelOpen ? selectedId : null}
             onSelect={select}
-            onStatusChange={updateStatus}
+            onSeeAll={seeAll}
           />
         </main>
 
         {panelOpen && selected && (
           <WhyPanel
             item={selected}
+            items={items}
             onClose={() => setPanelOpen(false)}
             onStatusChange={updateStatus}
             onPushToLinear={pushToLinear}
@@ -97,5 +94,6 @@ export function FixFirstQueue({ onOpenInsights }) {
         )}
       </div>
     </div>
+    </IconDarkContext.Provider>
   )
 }

@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Button &#194;&#183; notifications">
+<rect width="44" height="44" rx="22" fill="#232A37"/>
+<g id="Insights/Icon/bell">
+<path id="Vector" d="M22 13.875C20.5082 13.875 19.0774 14.4676 18.0225 15.5225C16.9676 16.5774 16.375 18.0082 16.375 19.5V23.25L14.5 25.75V27.625H29.5V25.75L27.625 23.25V19.5C27.625 18.0082 27.0324 16.5774 25.9775 15.5225C24.9226 14.4676 23.4918 13.875 22 13.875ZM20.125 28.875H23.875C23.875 29.3723 23.6775 29.8492 23.3258 30.2008C22.9742 30.5525 22.4973 30.75 22 30.75C21.5027 30.75 21.0258 30.5525 20.6742 30.2008C20.3225 29.8492 20.125 29.3723 20.125 28.875Z" fill-rule="evenodd" clip-rule="evenodd" fill="#E9ECF3"/>
+</g>
+<circle id="unread" cx="31.5" cy="14.5" r="4.5" fill="#FA4D56"/>
+</g>
+</svg>
