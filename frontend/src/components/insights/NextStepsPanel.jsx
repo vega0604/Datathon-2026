@@ -1,10 +1,15 @@
+import { useRef } from 'react'
 import { Icon } from '../../lib/Icon'
+import { useFitHeight } from '../../lib/useFitHeight'
 import { KpiSummary } from './KpiSummary'
 
 /** Right-hand column shared by the Insights pages. */
-export function SidePanel({ children, scroll = true }) {
+// Never scrolls: on short windows its boxes shrink slightly to fit (useFitHeight).
+export function SidePanel({ children }) {
+  const ref = useRef(null)
+  useFitHeight(ref)
   return (
-    <aside className={`flex h-full w-[272px] shrink-0 flex-col gap-4 ${scroll ? 'overflow-y-auto' : 'overflow-hidden'} rounded-3xl bg-card p-4 shadow-float xl:w-[300px] xl:gap-5 xl:p-5 2xl:w-[320px] 2xl:p-6 short:gap-3 short:p-4`}>
+    <aside ref={ref} className="flex h-full w-[272px] shrink-0 flex-col gap-4 overflow-hidden rounded-3xl bg-card p-4 shadow-float xl:w-[300px] xl:gap-5 xl:p-5 2xl:w-[320px] 2xl:p-6 short:gap-3 short:p-4 [&>*]:[zoom:var(--fit,1)]">
       {children}
     </aside>
   )
@@ -51,7 +56,7 @@ export function NoteBox({ title, icon, chipClass, boxClass, titleClass, children
 /** Compact "What to do" call to action. */
 export function WhatToDoCard({ onOpenFixFirst, children }) {
   return (
-    <div className="relative flex w-full shrink-0 flex-col items-start gap-3 overflow-hidden rounded-3xl bg-blue p-4">
+    <div className="relative flex w-full shrink-0 flex-col items-start gap-3 overflow-hidden rounded-3xl bg-brand p-4">
       <Icon name="insights/todo-deco-1" className="absolute top-[-170px] left-[140px] size-[260px]" />
       <Icon name="insights/todo-deco-4" className="absolute top-[22px] left-[200px] size-1.5" />
 
@@ -62,7 +67,7 @@ export function WhatToDoCard({ onOpenFixFirst, children }) {
       <button
         type="button"
         onClick={onOpenFixFirst}
-        className="relative cursor-pointer rounded-full bg-white px-4 py-2 text-sm leading-5 font-semibold whitespace-pre text-blue hover:bg-blue-soft"
+        className="relative cursor-pointer rounded-full bg-on-brand px-4 py-2 text-sm leading-5 font-semibold whitespace-pre text-primary-strong hover:bg-on-brand-hover"
       >
         {'Open Fix first  →'}
       </button>
@@ -70,15 +75,15 @@ export function WhatToDoCard({ onOpenFixFirst, children }) {
   )
 }
 
-export function AboutDataBox({ rows, chipClass = 'bg-blue-soft' }) {
+export function AboutDataBox({ rows, chipClass = 'bg-card' }) {
   return (
     <FactBox
       title="About this data"
       icon="insights/about-data"
-      // Dark frame tints this box purple (Figma ai/soft + ai/strong-text).
-      boxClass="border border-line bg-subtle dark:bg-purple-soft"
+      // Purple in both themes, as in Figma (ai/soft background, ai/strong-text title).
+      boxClass="bg-purple-soft"
       chipClass={chipClass}
-      titleClass="text-ink dark:text-purple-ink"
+      titleClass="text-purple-ink"
       rows={rows}
     />
   )
@@ -88,7 +93,7 @@ export function AboutDataBox({ rows, chipClass = 'bg-blue-soft' }) {
 export function NextStepsPanel({ kpis, versusPublic, aboutData }) {
   return (
     // Sized to fit down to the 640px minimum height, so no scrolling.
-    <SidePanel scroll={false}>
+    <SidePanel>
       <KpiSummary kpis={kpis} />
       <FactBox
         title="Versus public scores"

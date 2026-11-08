@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
+import { useFitHeight } from '../lib/useFitHeight'
 import { AppHeader } from '../components/insights/AppHeader'
 import { Sidebar } from '../components/Sidebar'
 import { QueueTable } from '../components/QueueTable'
@@ -20,8 +21,11 @@ function matches(item, q) {
   return item.cveId.toLowerCase().includes(s) || item.component.toLowerCase().includes(s)
 }
 
-export function FixFirstQueue({ onOpenInsights, theme = 'light', onThemeChange }) {
+export function FixFirstQueue({ onOpenInsights, onUpload, software, theme = 'light', onThemeChange }) {
   const dark = theme === 'dark'
+  // The queue never scrolls or clips: on short windows it shrinks slightly to fit.
+  const mainRef = useRef(null)
+  useFitHeight(mainRef)
   const [items, setItems] = useState(() => queue.map((i) => ({ ...i, status: 'To do' })))
   const [view, setView] = useState('all')
   const [query, setQuery] = useState('')
@@ -54,13 +58,13 @@ export function FixFirstQueue({ onOpenInsights, theme = 'light', onThemeChange }
 
   return (
     <IconDarkContext.Provider value={dark}>
-    <div className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[640px] min-w-[1280px] flex-col bg-page font-sans`}>
+    <div className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[560px] min-w-[1024px] flex-col bg-page font-sans`}>
       <AppHeader iconDir="fixfirst" theme={theme} onThemeChange={onThemeChange} />
 
       <div className="flex min-h-0 w-full flex-1 items-start gap-4 overflow-hidden p-4 wide:gap-5 wide:p-5 compact:py-3">
-        <Sidebar current="fixFirst" onOpenInsights={onOpenInsights} />
+        <Sidebar current="fixFirst" onOpenInsights={onOpenInsights} onUpload={onUpload} software={software} />
 
-        <main className="flex h-full min-w-0 flex-1 flex-col gap-4 pt-2">
+        <main ref={mainRef} className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden pt-2 [&>*]:[zoom:var(--fit,1)]">
           <div className="flex shrink-0 flex-col gap-1">
             <h1 className="text-[44px] leading-[64px] font-light text-ink short:text-[36px] short:leading-[48px]">Fix first</h1>
             <p className="text-sm leading-5 text-ink-muted wide:text-base wide:leading-6">

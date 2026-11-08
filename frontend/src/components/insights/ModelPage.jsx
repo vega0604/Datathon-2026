@@ -2,7 +2,11 @@ import { Icon, iconUrl } from '../../lib/Icon'
 import { ChartImg, PlotFrame, PlotSurface, Takeaway, chartText, plotBox } from './ChartParts'
 import { AboutDataBox, NoteBox, SidePanel, WhatToDoCard } from './NextStepsPanel'
 import { aboutData, model } from '../../data/insights'
-import { kevPoints, otherPoints } from '../../data/modelEmbedding'
+// modelEmbedding.js is generated model output. It's loaded optionally so a copy
+// of the repo without it still runs: the map then shows a note instead of points.
+const embedding = Object.values(import.meta.glob('../../data/modelEmbedding.js', { eager: true }))[0]
+const kevPoints = embedding?.kevPoints ?? []
+const otherPoints = embedding?.otherPoints ?? []
 
 const ICON = 'insights/model'
 
@@ -86,7 +90,12 @@ function EmbeddingMap({ clusters }) {
           {kevPoints.map(([x, y], i) => (
             <ChartImg key={`k${i}`} file={`${ICON}/kev`} style={mapBox(x, y, 12, 19.1478)} />
           ))}
-          {clusters.map((c) => (
+          {!embedding && (
+            <p className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-ink-muted">
+              The embedding data (src/data/modelEmbedding.js) isn’t in this copy of the project yet.
+            </p>
+          )}
+          {embedding && clusters.map((c) => (
             <span
               key={c.label}
               className={`absolute rounded-full bg-blue-soft px-[0.833em] py-[0.333em] text-blue-ink ${chartText.label}`}

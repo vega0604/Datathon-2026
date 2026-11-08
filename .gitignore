@@ -1,6 +1,8 @@
 
 ﻿# Data and outputs
 data/
+# …but the frontend's data modules (imported by the UI) are source code.
+!frontend/src/data/
 outputs/
 !outputs/charts/
 !outputs/top500.csv

@@ -1,4 +1,7 @@
+import { useRef } from 'react'
 import { iconUrl } from '../../lib/Icon'
+import { useFitHeight } from '../../lib/useFitHeight'
+import { useThemedIcon } from '../../lib/iconTheme'
 import { ChartImg, PlotFrame, PlotSurface, Takeaway, chartText, plotBox } from './ChartParts'
 import { AboutDataBox, NoteBox, SidePanel, WhatToDoCard } from './NextStepsPanel'
 import { aboutData, severity } from '../../data/insights'
@@ -21,10 +24,11 @@ const SEV_BARS = {
 }
 
 function StatusTag({ band }) {
+  const themed = useThemedIcon()
   return (
     <span className="flex items-center gap-[0.333em] rounded-[1em] bg-subtle px-[0.667em] py-[0.333em]">
-      <img alt="" src={iconUrl(svg(`status-${band.key}`))} className="block size-[1em] max-w-none" />
-      <span className={`${chartText.label} text-[#161616]`}>{band.label}</span>
+      <img alt="" src={iconUrl(themed(svg(`status-${band.key}`)))} className="block size-[1em] max-w-none" />
+      <span className={`${chartText.label} text-[#161616] dark:text-ink`}>{band.label}</span>
     </span>
   )
 }
@@ -153,6 +157,9 @@ function LegendSwatch({ className, children }) {
 const chartCard = 'flex min-h-min flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4'
 
 export function SeverityPage({ onOpenFixFirst }) {
+  // Chart cards shrink slightly on short windows instead of scrolling or clipping.
+  const sectionRef = useRef(null)
+  useFitHeight(sectionRef)
   return (
     <>
       <main className="flex h-full min-w-0 flex-1 flex-col gap-4 xl:gap-5 xl:pt-2">
@@ -163,7 +170,7 @@ export function SeverityPage({ onOpenFixFirst }) {
           </p>
         </div>
 
-        <section className="flex min-h-0 w-full flex-1 gap-4 overflow-y-auto rounded-[32px] bg-card p-4 shadow-float xl:gap-5 xl:p-6 short:p-4">
+        <section ref={sectionRef} className="flex min-h-0 w-full flex-1 gap-4 overflow-hidden rounded-[32px] bg-card p-4 shadow-float xl:gap-5 xl:p-6 short:p-4 [&>*]:[zoom:var(--fit,1)]">
           {/* Severity vs exploitation */}
           <div className={`${chartCard} w-[clamp(240px,38%,340px)] shrink-0`}>
             <h2 className="shrink-0 text-lg leading-7 text-ink xl:text-xl">{severity.bands.title}</h2>

@@ -1,0 +1,1600 @@
+{
+ "checked": "2026-11-08",
+ "sources": [
+  "NIST NVD",
+  "CISA KEV",
+  "FIRST EPSS"
+ ],
+ "components": {
+  "cpe:2.3:o:fortinet:fortios:7.4.2:*:*:*:*:*:*:*": {
+   "cveCount": 75,
+   "severity": {
+    "critical": 8,
+    "high": 23,
+    "medium": 42,
+    "low": 2,
+    "none": 0
+   },
+   "maxCvss": 9.8,
+   "kev": [
+    {
+     "id": "CVE-2024-21762",
+     "added": "2024-02-09",
+     "name": "Fortinet FortiOS Out-of-Bound Write Vulnerability"
+    },
+    {
+     "id": "CVE-2024-23113",
+     "added": "2024-10-09",
+     "name": "Fortinet Multiple Products Format String Vulnerability"
+    },
+    {
+     "id": "CVE-2025-59718",
+     "added": "2025-12-16",
+     "name": "Fortinet Multiple Products Improper Verification of Cryptographic Signature Vulnerability"
+    },
+    {
+     "id": "CVE-2025-25249",
+     "added": "2026-09-09",
+     "name": "Fortinet Multiple Products Heap-based Buffer Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2026-24858",
+     "added": "2026-01-27",
+     "name": "Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability"
+    },
+    {
+     "id": "CVE-2025-68686",
+     "added": "2026-07-27",
+     "name": "Fortinet FortiOS Exposure of Sensitive Information to an Unauthorized Actor Vulnerability"
+    },
+    {
+     "id": "CVE-2025-61624",
+     "added": "2026-10-16",
+     "name": "Fortinet Multiple Products Path Traversal Vulnerability"
+    }
+   ],
+   "fixedIn": "7.4.11",
+   "top": [
+    {
+     "id": "CVE-2024-21762",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-02-09",
+     "kev": {
+      "added": "2024-02-09",
+      "name": "Fortinet FortiOS Out-of-Bound Write Vulnerability",
+      "ransomware": true
+     },
+     "summary": "A out-of-bounds write vulnerability in Fortinet FortiOS 7.4.0 through 7.4.2, FortiOS 7.2.0 through 7.2.6, FortiOS 7.0.0 through 7.0.13, FortiOS 6.4.0 through 6.",
+     "epss": 0.84589
+    },
+    {
+     "id": "CVE-2024-23113",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-02-15",
+     "kev": {
+      "added": "2024-10-09",
+      "name": "Fortinet Multiple Products Format String Vulnerability",
+      "ransomware": false
+     },
+     "summary": "A use of externally-controlled format string in Fortinet FortiOS versions 7.4.0 through 7.4.2, 7.2.0 through 7.2.6, 7.0.0 through 7.0.13, FortiProxy versions 7.",
+     "epss": 0.61725
+    },
+    {
+     "id": "CVE-2025-59718",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2025-12-09",
+     "kev": {
+      "added": "2025-12-16",
+      "name": "Fortinet Multiple Products Improper Verification of Cryptographic Signature Vulnerability",
+      "ransomware": false
+     },
+     "summary": "A improper verification of cryptographic signature vulnerability in Fortinet FortiOS 7.6.0 through 7.6.3, FortiOS 7.4.0 through 7.4.8, FortiOS 7.2.0 through 7.2",
+     "epss": 0.68293
+    }
+   ],
+   "epssMax": 0.84589
+  },
+  "cpe:2.3:a:ivanti:connect_secure:22.7:*:*:*:*:*:*:*": {
+   "cveCount": 54,
+   "severity": {
+    "critical": 6,
+    "high": 26,
+    "medium": 20,
+    "low": 2,
+    "none": 0
+   },
+   "maxCvss": 9.8,
+   "kev": [
+    {
+     "id": "CVE-2025-0282",
+     "added": "2025-01-08",
+     "name": "Ivanti Connect Secure, Policy Secure, and ZTA Gateways Stack-Based Buffer Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2025-22457",
+     "added": "2025-04-04",
+     "name": "Ivanti Connect Secure, Policy Secure, and ZTA Gateways Stack-Based Buffer Overflow Vulnerability"
+    }
+   ],
+   "fixedIn": null,
+   "top": [
+    {
+     "id": "CVE-2025-22457",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2025-04-03",
+     "kev": {
+      "added": "2025-04-04",
+      "name": "Ivanti Connect Secure, Policy Secure, and ZTA Gateways Stack-Based Buffer Overflow Vulnerability",
+      "ransomware": true
+     },
+     "summary": "A stack-based buffer overflow in Ivanti Connect Secure before version 22.7R2.6, Ivanti Policy Secure before version 22.7R1.4, and Ivanti ZTA Gateways before ver",
+     "epss": 0.99981
+    },
+    {
+     "id": "CVE-2025-0282",
+     "cvss": 9,
+     "severity": "critical",
+     "published": "2025-01-08",
+     "kev": {
+      "added": "2025-01-08",
+      "name": "Ivanti Connect Secure, Policy Secure, and ZTA Gateways Stack-Based Buffer Overflow Vulnerability",
+      "ransomware": true
+     },
+     "summary": "A stack-based buffer overflow in Ivanti Connect Secure before version 22.7R2.5, Ivanti Policy Secure before version 22.7R1.2, and Ivanti Neurons for ZTA gateway",
+     "epss": 0.99981
+    },
+    {
+     "id": "CVE-2024-38656",
+     "cvss": 9.1,
+     "severity": "critical",
+     "published": "2024-11-13",
+     "kev": null,
+     "summary": "Argument injection in Ivanti Connect Secure before version 22.7R2.2 and 9.1R18.9 and Ivanti Policy Secure before version 22.7R1.2 allows a remote authenticated ",
+     "epss": 0.01732
+    }
+   ],
+   "epssMax": 0.99981
+  },
+  "cpe:2.3:o:paloaltonetworks:pan-os:11.1.2:*:*:*:*:*:*:*": {
+   "cveCount": 44,
+   "severity": {
+    "critical": 10,
+    "high": 22,
+    "medium": 10,
+    "low": 2,
+    "none": 0
+   },
+   "maxCvss": 10,
+   "kev": [
+    {
+     "id": "CVE-2024-3400",
+     "added": "2024-04-12",
+     "name": "Palo Alto Networks PAN-OS Command Injection Vulnerability"
+    },
+    {
+     "id": "CVE-2024-0012",
+     "added": "2024-11-18",
+     "name": "Palo Alto Networks PAN-OS Management Interface Authentication Bypass Vulnerability"
+    },
+    {
+     "id": "CVE-2024-9474",
+     "added": "2024-11-18",
+     "name": "Palo Alto Networks PAN-OS Management Interface OS Command Injection Vulnerability"
+    },
+    {
+     "id": "CVE-2024-3393",
+     "added": "2024-12-30",
+     "name": "Palo Alto Networks PAN-OS Malicious DNS Packet Vulnerability"
+    },
+    {
+     "id": "CVE-2025-0108",
+     "added": "2025-02-18",
+     "name": "Palo Alto Networks PAN-OS Authentication Bypass Vulnerability"
+    },
+    {
+     "id": "CVE-2025-0111",
+     "added": "2025-02-20",
+     "name": "Palo Alto Networks PAN-OS File Read Vulnerability"
+    },
+    {
+     "id": "CVE-2026-0300",
+     "added": "2026-05-06",
+     "name": "Palo Alto Networks PAN-OS Out-of-bounds Write Vulnerability"
+    },
+    {
+     "id": "CVE-2026-0257",
+     "added": "2026-05-29",
+     "name": "Palo Alto Networks PAN-OS Authentication Bypass Vulnerability"
+    },
+    {
+     "id": "CVE-2026-0322",
+     "added": "2026-10-14",
+     "name": "Palo Alto Networks PAN-OS Code Injection Vulnerability"
+    },
+    {
+     "id": "CVE-2026-109618",
+     "added": "2026-10-26",
+     "name": "PHP Memory Corruption Vulnerability"
+    },
+    {
+     "id": "CVE-2026-109619",
+     "added": "2026-10-26",
+     "name": "PHP Stale Internal Request-State Vulnerability"
+    }
+   ],
+   "fixedIn": "11.1.6",
+   "top": [
+    {
+     "id": "CVE-2024-3400",
+     "cvss": 10,
+     "severity": "critical",
+     "published": "2024-04-12",
+     "kev": {
+      "added": "2024-04-12",
+      "name": "Palo Alto Networks PAN-OS Command Injection Vulnerability",
+      "ransomware": true
+     },
+     "summary": "A command injection as a result of arbitrary file creation vulnerability in the GlobalProtect feature of Palo Alto Networks PAN-OS software for specific PAN-OS ",
+     "epss": 0.99999
+    },
+    {
+     "id": "CVE-2024-0012",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-11-18",
+     "kev": {
+      "added": "2024-11-18",
+      "name": "Palo Alto Networks PAN-OS Management Interface Authentication Bypass Vulnerability",
+      "ransomware": true
+     },
+     "summary": "An authentication bypass in Palo Alto Networks PAN-OS software enables an unauthenticated attacker with network access to the management web interface to gain P",
+     "epss": 0.99787
+    },
+    {
+     "id": "CVE-2026-0300",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2026-05-06",
+     "kev": {
+      "added": "2026-05-06",
+      "name": "Palo Alto Networks PAN-OS Out-of-bounds Write Vulnerability",
+      "ransomware": false
+     },
+     "summary": "A buffer overflow vulnerability in the User-ID™ Authentication Portal (aka Captive Portal) service of Palo Alto Networks PAN-OS software allows an unauthenticat",
+     "epss": 0.41714
+    }
+   ],
+   "epssMax": 0.99999
+  },
+  "cpe:2.3:o:cisco:ios_xe:17.9.4:*:*:*:*:*:*:*": {
+   "cveCount": 68,
+   "severity": {
+    "critical": 6,
+    "high": 45,
+    "medium": 17,
+    "low": 0,
+    "none": 0
+   },
+   "maxCvss": 10,
+   "kev": [
+    {
+     "id": "CVE-2023-44487",
+     "added": "2023-10-10",
+     "name": "HTTP/2 Rapid Reset Attack Vulnerability"
+    },
+    {
+     "id": "CVE-2023-20198",
+     "added": "2023-10-16",
+     "name": "Cisco IOS XE Web UI Privilege Escalation Vulnerability"
+    },
+    {
+     "id": "CVE-2023-20273",
+     "added": "2023-10-23",
+     "name": "Cisco IOS XE Web UI Command Injection Vulnerability"
+    },
+    {
+     "id": "CVE-2025-20352",
+     "added": "2025-09-29",
+     "name": "Cisco IOS and IOS XE Software SNMP Denial of Service and Remote Code Execution Vulnerability"
+    }
+   ],
+   "fixedIn": null,
+   "top": [
+    {
+     "id": "CVE-2023-20198",
+     "cvss": 10,
+     "severity": "critical",
+     "published": "2023-10-16",
+     "kev": {
+      "added": "2023-10-16",
+      "name": "Cisco IOS XE Web UI Privilege Escalation Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Cisco is providing an update for the ongoing investigation into observed exploitation of the web UI feature in Cisco IOS XE Software.",
+     "epss": 0.99781
+    },
+    {
+     "id": "CVE-2025-20352",
+     "cvss": 7.7,
+     "severity": "high",
+     "published": "2025-09-24",
+     "kev": {
+      "added": "2025-09-29",
+      "name": "Cisco IOS and IOS XE Software SNMP Denial of Service and Remote Code Execution Vulnerability",
+      "ransomware": false
+     },
+     "summary": "A vulnerability in the Simple Network Management Protocol (SNMP) subsystem of Cisco IOS Software and Cisco IOS XE Software could allow the following:\r\n\r \r An au",
+     "epss": 0.40575
+    },
+    {
+     "id": "CVE-2023-44487",
+     "cvss": 7.5,
+     "severity": "high",
+     "published": "2023-10-10",
+     "kev": {
+      "added": "2023-10-10",
+      "name": "HTTP/2 Rapid Reset Attack Vulnerability",
+      "ransomware": false
+     },
+     "summary": "The HTTP/2 protocol allows a denial of service (server resource consumption) because request cancellation can reset many streams quickly, as exploited in the wi",
+     "epss": 0.99999
+    }
+   ],
+   "epssMax": 0.99999
+  },
+  "cpe:2.3:o:microsoft:windows_server_2022:10.0.20348.2340:*:*:*:*:*:*:*": {
+   "cveCount": 3740,
+   "severity": {
+    "critical": 136,
+    "high": 2672,
+    "medium": 923,
+    "low": 9,
+    "none": 0
+   },
+   "maxCvss": 9.9,
+   "kev": [
+    {
+     "id": "CVE-2024-29988",
+     "added": "2024-04-30",
+     "name": "Microsoft SmartScreen Prompt Security Feature Bypass Vulnerability"
+    },
+    {
+     "id": "CVE-2024-30040",
+     "added": "2024-05-14",
+     "name": "Microsoft Windows MSHTML Platform Security Feature Bypass Vulnerability"
+    },
+    {
+     "id": "CVE-2024-30051",
+     "added": "2024-05-14",
+     "name": " Microsoft DWM Core Library Privilege Escalation Vulnerability"
+    },
+    {
+     "id": "CVE-2024-30088",
+     "added": "2024-10-15",
+     "name": "Microsoft Windows Kernel TOCTOU Race Condition Vulnerability"
+    },
+    {
+     "id": "CVE-2024-35250",
+     "added": "2024-12-16",
+     "name": "Microsoft Windows Kernel-Mode Driver Untrusted Pointer Dereference Vulnerability "
+    },
+    {
+     "id": "CVE-2024-38080",
+     "added": "2024-07-09",
+     "name": "Microsoft Windows Hyper-V Privilege Escalation Vulnerability"
+    },
+    {
+     "id": "CVE-2024-38112",
+     "added": "2024-07-09",
+     "name": "Microsoft Windows MSHTML Platform Spoofing Vulnerability"
+    },
+    {
+     "id": "CVE-2024-38106",
+     "added": "2024-08-13",
+     "name": "Microsoft Windows Kernel Privilege Escalation Vulnerability"
+    },
+    {
+     "id": "CVE-2024-38107",
+     "added": "2024-08-13",
+     "name": "Microsoft Windows Power Dependency Coordinator Privilege Escalation Vulnerability"
+    },
+    {
+     "id": "CVE-2024-38178",
+     "added": "2024-08-13",
+     "name": "Microsoft Windows Scripting Engine Memory Corruption Vulnerability"
+    },
+    {
+     "id": "CVE-2024-38193",
+     "added": "2024-08-13",
+     "name": "Microsoft Windows Ancillary Function Driver for WinSock Privilege Escalation Vulnerability"
+    },
+    {
+     "id": "CVE-2024-38213",
+     "added": "2024-08-13",
+     "name": "Microsoft Windows SmartScreen Security Feature Bypass Vulnerability"
+    },
+    {
+     "id": "CVE-2024-38014",
+     "added": "2024-09-10",
+     "name": "Microsoft Windows Installer Improper Privilege Management Vulnerability"
+    },
+    {
+     "id": "CVE-2024-38217",
+     "added": "2024-09-10",
+     "name": "Microsoft Windows Mark of the Web (MOTW) Protection Mechanism Failure Vulnerability"
+    },
+    {
+     "id": "CVE-2024-43461",
+     "added": "2024-09-16",
+     "name": "Microsoft Windows MSHTML Platform Spoofing Vulnerability"
+    },
+    {
+     "id": "CVE-2024-43572",
+     "added": "2024-10-08",
+     "name": "Microsoft Windows Management Console Remote Code Execution Vulnerability"
+    },
+    {
+     "id": "CVE-2024-43573",
+     "added": "2024-10-08",
+     "name": "Microsoft Windows MSHTML Platform Spoofing Vulnerability"
+    },
+    {
+     "id": "CVE-2024-43451",
+     "added": "2024-11-12",
+     "name": "Microsoft Windows NTLMv2 Hash Disclosure Spoofing Vulnerability"
+    },
+    {
+     "id": "CVE-2024-49039",
+     "added": "2024-11-12",
+     "name": "Microsoft Windows Task Scheduler Privilege Escalation Vulnerability"
+    },
+    {
+     "id": "CVE-2024-49138",
+     "added": "2024-12-10",
+     "name": "Microsoft Windows Common Log File System (CLFS) Driver Heap-Based Buffer Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2025-21391",
+     "added": "2025-02-11",
+     "name": "Microsoft Windows Storage Link Following Vulnerability"
+    },
+    {
+     "id": "CVE-2025-21418",
+     "added": "2025-02-11",
+     "name": "Microsoft Windows Ancillary Function Driver for WinSock Heap-Based Buffer Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2025-24054",
+     "added": "2025-04-17",
+     "name": "Microsoft Windows NTLM Hash Disclosure Spoofing Vulnerability"
+    },
+    {
+     "id": "CVE-2025-24984",
+     "added": "2025-03-11",
+     "name": "Microsoft Windows NTFS Information Disclosure Vulnerability"
+    },
+    {
+     "id": "CVE-2025-24985",
+     "added": "2025-03-11",
+     "name": "Microsoft Windows Fast FAT File System Driver Integer Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2025-24991",
+     "added": "2025-03-11",
+     "name": "Microsoft Windows NTFS Out-Of-Bounds Read Vulnerability"
+    },
+    {
+     "id": "CVE-2025-24993",
+     "added": "2025-03-11",
+     "name": "Microsoft Windows NTFS Heap-Based Buffer Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2025-26633",
+     "added": "2025-03-11",
+     "name": "Microsoft Windows Management Console (MMC) Improper Neutralization Vulnerability"
+    },
+    {
+     "id": "CVE-2025-29824",
+     "added": "2025-04-08",
+     "name": "Microsoft Windows Common Log File System (CLFS) Driver Use-After-Free Vulnerability"
+    },
+    {
+     "id": "CVE-2025-30397",
+     "added": "2025-05-13",
+     "name": "Microsoft Windows Scripting Engine Type Confusion Vulnerability"
+    },
+    {
+     "id": "CVE-2025-30400",
+     "added": "2025-05-13",
+     "name": "Microsoft Windows DWM Core Library Use-After-Free Vulnerability"
+    },
+    {
+     "id": "CVE-2025-32701",
+     "added": "2025-05-13",
+     "name": "Microsoft Windows Common Log File System (CLFS) Driver Use-After-Free Vulnerability"
+    },
+    {
+     "id": "CVE-2025-32706",
+     "added": "2025-05-13",
+     "name": "Microsoft Windows Common Log File System (CLFS) Driver Heap-Based Buffer Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2025-32709",
+     "added": "2025-05-13",
+     "name": "Microsoft Windows Ancillary Function Driver for WinSock Use-After-Free Vulnerability"
+    },
+    {
+     "id": "CVE-2025-47827",
+     "added": "2025-10-14",
+     "name": "IGEL OS Use of a Key Past its Expiration Date Vulnerability"
+    },
+    {
+     "id": "CVE-2025-33053",
+     "added": "2025-06-10",
+     "name": " Microsoft Windows External Control of File Name or Path Vulnerability"
+    },
+    {
+     "id": "CVE-2025-33073",
+     "added": "2025-10-20",
+     "name": "Microsoft Windows SMB Client Improper Access Control Vulnerability"
+    },
+    {
+     "id": "CVE-2025-24990",
+     "added": "2025-10-14",
+     "name": "Microsoft Windows Untrusted Pointer Dereference Vulnerability"
+    },
+    {
+     "id": "CVE-2025-59230",
+     "added": "2025-10-14",
+     "name": "Microsoft Windows Improper Access Control Vulnerability"
+    },
+    {
+     "id": "CVE-2025-59287",
+     "added": "2025-10-24",
+     "name": "Microsoft Windows Server Update Service (WSUS) Deserialization of Untrusted Data Vulnerability"
+    },
+    {
+     "id": "CVE-2025-62215",
+     "added": "2025-11-12",
+     "name": "Microsoft Windows Race Condition Vulnerability"
+    },
+    {
+     "id": "CVE-2025-62221",
+     "added": "2025-12-09",
+     "name": "Microsoft Windows Use After Free Vulnerability"
+    },
+    {
+     "id": "CVE-2026-20805",
+     "added": "2026-01-13",
+     "name": "Microsoft Windows Information Disclosure Vulnerability"
+    },
+    {
+     "id": "CVE-2026-21510",
+     "added": "2026-02-10",
+     "name": "Microsoft Windows Shell Protection Mechanism Failure Vulnerability"
+    },
+    {
+     "id": "CVE-2026-21513",
+     "added": "2026-02-10",
+     "name": "Microsoft MSHTML Framework Protection Mechanism Failure Vulnerability"
+    },
+    {
+     "id": "CVE-2026-21519",
+     "added": "2026-02-10",
+     "name": "Microsoft Windows Type Confusion Vulnerability"
+    },
+    {
+     "id": "CVE-2026-21525",
+     "added": "2026-02-10",
+     "name": "Microsoft Windows NULL Pointer Dereference Vulnerability"
+    },
+    {
+     "id": "CVE-2026-21533",
+     "added": "2026-02-10",
+     "name": "Microsoft Windows Improper Privilege Management Vulnerability"
+    },
+    {
+     "id": "CVE-2026-32202",
+     "added": "2026-04-28",
+     "name": "Microsoft Windows Protection Mechanism Failure Vulnerability"
+    },
+    {
+     "id": "CVE-2026-33824",
+     "added": "2026-08-18",
+     "name": "Microsoft Internet Key Exchange (IKE) Service Extensions Double Free Vulnerability"
+    },
+    {
+     "id": "CVE-2026-56155",
+     "added": "2026-07-14",
+     "name": "Microsoft Active Directory Federation Services Insufficient Granularity of Access Control Vulnerability "
+    },
+    {
+     "id": "CVE-2026-68820",
+     "added": "2026-08-11",
+     "name": "Microsoft Windows Ancillary Function Driver for WinSock Use-After-Free Vulnerability"
+    },
+    {
+     "id": "CVE-2026-85880",
+     "added": "2026-09-08",
+     "name": "Microsoft Windows Heap-Based Buffer Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2026-96951",
+     "added": "2026-10-13",
+     "name": "Microsoft Windows Command Injection Vulnerability"
+    }
+   ],
+   "fixedIn": "10.0.20348.5761",
+   "top": [
+    {
+     "id": "CVE-2025-59287",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2025-10-14",
+     "kev": {
+      "added": "2025-10-24",
+      "name": "Microsoft Windows Server Update Service (WSUS) Deserialization of Untrusted Data Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Deserialization of untrusted data in Windows Server Update Service allows an unauthorized attacker to execute code over a network.",
+     "epss": 0.9998
+    },
+    {
+     "id": "CVE-2026-33824",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2026-04-14",
+     "kev": {
+      "added": "2026-08-18",
+      "name": "Microsoft Internet Key Exchange (IKE) Service Extensions Double Free Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Double free in Windows IKE Extension allows an unauthorized attacker to execute code over a network.",
+     "epss": 0.77054
+    },
+    {
+     "id": "CVE-2024-29988",
+     "cvss": 8.8,
+     "severity": "high",
+     "published": "2024-04-09",
+     "kev": {
+      "added": "2024-04-30",
+      "name": "Microsoft SmartScreen Prompt Security Feature Bypass Vulnerability",
+      "ransomware": false
+     },
+     "summary": "SmartScreen Prompt Security Feature Bypass Vulnerability",
+     "epss": 0.45151
+    }
+   ],
+   "epssMax": 0.9998
+  },
+  "cpe:2.3:a:google:chrome:131.0.6778.85:*:*:*:*:*:*:*": {
+   "cveCount": 4019,
+   "severity": {
+    "critical": 458,
+    "high": 1801,
+    "medium": 1615,
+    "low": 145,
+    "none": 0
+   },
+   "maxCvss": 10,
+   "kev": [
+    {
+     "id": "CVE-2025-2783",
+     "added": "2025-03-27",
+     "name": "Google Chromium Mojo Sandbox Escape Vulnerability"
+    },
+    {
+     "id": "CVE-2025-5419",
+     "added": "2025-06-05",
+     "name": "Google Chromium V8 Out-of-Bounds Read and Write Vulnerability"
+    },
+    {
+     "id": "CVE-2025-6554",
+     "added": "2025-07-02",
+     "name": "Google Chromium V8 Type Confusion Vulnerability"
+    },
+    {
+     "id": "CVE-2025-6558",
+     "added": "2025-07-22",
+     "name": "Google Chromium ANGLE and GPU Improper Input Validation Vulnerability"
+    },
+    {
+     "id": "CVE-2025-10585",
+     "added": "2025-09-23",
+     "name": "Google Chromium V8 Type Confusion Vulnerability"
+    },
+    {
+     "id": "CVE-2025-13223",
+     "added": "2025-11-19",
+     "name": "Google Chromium V8 Type Confusion Vulnerability"
+    },
+    {
+     "id": "CVE-2025-14174",
+     "added": "2025-12-12",
+     "name": "Google Chromium Out of Bounds Memory Access Vulnerability"
+    },
+    {
+     "id": "CVE-2026-2441",
+     "added": "2026-02-17",
+     "name": "Google Chromium CSS Use-After-Free Vulnerability"
+    },
+    {
+     "id": "CVE-2026-3909",
+     "added": "2026-03-13",
+     "name": "Google Skia Out-of-Bounds Write Vulnerability"
+    },
+    {
+     "id": "CVE-2026-3910",
+     "added": "2026-03-13",
+     "name": "Google Chromium V8 Improper Restriction of Operations Within the Bounds of a Memory Buffer Vulnerability"
+    },
+    {
+     "id": "CVE-2026-5281",
+     "added": "2026-04-01",
+     "name": "Google Dawn Use-After-Free Vulnerability"
+    },
+    {
+     "id": "CVE-2026-11645",
+     "added": "2026-06-09",
+     "name": "Google Chromium V8 Out-of-Bounds Read and Write Vulnerability"
+    },
+    {
+     "id": "CVE-2026-85046",
+     "added": "2026-09-04",
+     "name": "Google Chromium V8 Type Confusion Vulnerability"
+    },
+    {
+     "id": "CVE-2026-87491",
+     "added": "2026-09-09",
+     "name": "Google Chromium V8 Out of Bounds Write Vulnerability"
+    }
+   ],
+   "fixedIn": null,
+   "top": [
+    {
+     "id": "CVE-2025-10585",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2025-09-24",
+     "kev": {
+      "added": "2025-09-23",
+      "name": "Google Chromium V8 Type Confusion Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Type confusion in V8 in Google Chrome prior to 140.0.7339.185 allowed a remote attacker to potentially exploit heap corruption via a crafted HTML page.",
+     "epss": 0.08974
+    },
+    {
+     "id": "CVE-2025-5419",
+     "cvss": 8.8,
+     "severity": "high",
+     "published": "2025-06-03",
+     "kev": {
+      "added": "2025-06-05",
+      "name": "Google Chromium V8 Out-of-Bounds Read and Write Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Out of bounds read and write in V8 in Google Chrome prior to 137.0.7151.68 allowed a remote attacker to potentially exploit heap corruption via a crafted HTML p",
+     "epss": 0.07486
+    },
+    {
+     "id": "CVE-2025-6558",
+     "cvss": 8.8,
+     "severity": "high",
+     "published": "2025-07-15",
+     "kev": {
+      "added": "2025-07-22",
+      "name": "Google Chromium ANGLE and GPU Improper Input Validation Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Insufficient validation of untrusted input in ANGLE and GPU in Google Chrome prior to 138.0.7204.157 allowed a remote attacker to potentially perform a sandbox ",
+     "epss": 0.10927
+    }
+   ],
+   "epssMax": 0.10927
+  },
+  "cpe:2.3:a:apache:http_server:2.4.58:*:*:*:*:*:*:*": {
+   "cveCount": 67,
+   "severity": {
+    "critical": 11,
+    "high": 40,
+    "medium": 15,
+    "low": 1,
+    "none": 0
+   },
+   "maxCvss": 9.8,
+   "kev": [
+    {
+     "id": "CVE-2024-38475",
+     "added": "2025-05-01",
+     "name": "Apache HTTP Server Improper Escaping of Output Vulnerability"
+    }
+   ],
+   "fixedIn": "2.4.60",
+   "top": [
+    {
+     "id": "CVE-2024-38475",
+     "cvss": 9.1,
+     "severity": "critical",
+     "published": "2024-07-01",
+     "kev": {
+      "added": "2025-05-01",
+      "name": "Apache HTTP Server Improper Escaping of Output Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Improper escaping of output in mod_rewrite in Apache HTTP Server 2.4.59 and earlier allows an attacker to map URLs to filesystem locations that are permitted to",
+     "epss": 0.99957
+    },
+    {
+     "id": "CVE-2024-38474",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-07-01",
+     "kev": null,
+     "summary": "Substitution encoding issue in mod_rewrite in Apache HTTP Server 2.4.59 and earlier allows attacker to execute scripts in\ndirectories permitted by the configura",
+     "epss": 0.02456
+    },
+    {
+     "id": "CVE-2024-38476",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-07-01",
+     "kev": null,
+     "summary": "Vulnerability in core of Apache HTTP Server 2.4.59 and earlier are vulnerably to information disclosure, SSRF or local script execution via backend applications",
+     "epss": 0.41611
+    }
+   ],
+   "epssMax": 0.99957
+  },
+  "cpe:2.3:a:openssl:openssl:3.0.13:*:*:*:*:*:*:*": {
+   "cveCount": 38,
+   "severity": {
+    "critical": 3,
+    "high": 20,
+    "medium": 12,
+    "low": 3,
+    "none": 0
+   },
+   "maxCvss": 9.8,
+   "kev": [],
+   "fixedIn": null,
+   "top": [
+    {
+     "id": "CVE-2026-31789",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2026-04-07",
+     "kev": null,
+     "summary": "Issue summary: Converting an excessively large OCTET STRING value to\na hexadecimal string leads to a heap buffer overflow on 32 bit platforms.",
+     "epss": 0.00253
+    },
+    {
+     "id": "CVE-2026-34182",
+     "cvss": 9.1,
+     "severity": "critical",
+     "published": "2026-06-09",
+     "kev": null,
+     "summary": "Issue Summary: Cryptographic Message Services (CMS) processing fails to perform\nsufficient input validation on the cipher and tag length fields of\nAuthEnveloped",
+     "epss": 0.01057
+    },
+    {
+     "id": "CVE-2026-75803",
+     "cvss": 9.1,
+     "severity": "critical",
+     "published": "2026-08-25",
+     "kev": null,
+     "summary": "Issue summary: ChaCha20-Poly1305 and AES-OCB decryption with an empty\nciphertext can report success without verifying the supplied authentication\ntag when the o",
+     "epss": 0.00254
+    }
+   ],
+   "epssMax": 0.01057
+  },
+  "cpe:2.3:a:wordpress:wordpress:6.4.2:*:*:*:*:*:*:*": {
+   "cveCount": 4,
+   "severity": {
+    "critical": 0,
+    "high": 3,
+    "medium": 1,
+    "low": 0,
+    "none": 0
+   },
+   "maxCvss": 8.8,
+   "kev": [
+    {
+     "id": "CVE-2026-87902",
+     "added": "2026-09-25",
+     "name": "WordPress Core Remote File Inclusion Vulnerability"
+    },
+    {
+     "id": "CVE-2026-119977",
+     "added": "2026-11-03",
+     "name": "WordPress WordPress Core Time-of-check Time-of-use (TOCTOU) Race Condition Vulnerability"
+    }
+   ],
+   "fixedIn": "6.4.14",
+   "top": [
+    {
+     "id": "CVE-2026-87902",
+     "cvss": 8.1,
+     "severity": "high",
+     "published": "2026-09-22",
+     "kev": {
+      "added": "2026-09-25",
+      "name": "WordPress Core Remote File Inclusion Vulnerability",
+      "ransomware": false
+     },
+     "summary": "An unauthenticated attacker can make `get_page_template()` page-template resolution include a chosen readable local `.php` file outside the active theme directo",
+     "epss": 0.95769
+    },
+    {
+     "id": "CVE-2026-119977",
+     "cvss": 8.1,
+     "severity": "high",
+     "published": "2026-10-31",
+     "kev": {
+      "added": "2026-11-03",
+      "name": "WordPress WordPress Core Time-of-check Time-of-use (TOCTOU) Race Condition Vulnerability",
+      "ransomware": false
+     },
+     "summary": "WordPress Core is vulnerable to Remote Code Execution in versions 4.7 through 7.1.3.",
+     "epss": 0.01157
+    },
+    {
+     "id": "CVE-2024-31210",
+     "cvss": 8.8,
+     "severity": "high",
+     "published": "2024-04-04",
+     "kev": null,
+     "summary": "WordPress is an open publishing platform for the Web.",
+     "epss": 0.00995
+    }
+   ],
+   "epssMax": 0.95769
+  },
+  "cpe:2.3:a:apache:log4j:2.14.1:*:*:*:*:*:*:*": {
+   "cveCount": 10,
+   "severity": {
+    "critical": 2,
+    "high": 3,
+    "medium": 5,
+    "low": 0,
+    "none": 0
+   },
+   "maxCvss": 10,
+   "kev": [
+    {
+     "id": "CVE-2021-44228",
+     "added": "2021-12-10",
+     "name": "Apache Log4j2 Remote Code Execution Vulnerability"
+    },
+    {
+     "id": "CVE-2021-45046",
+     "added": "2023-05-01",
+     "name": "Apache Log4j2 Deserialization of Untrusted Data Vulnerability"
+    }
+   ],
+   "fixedIn": null,
+   "top": [
+    {
+     "id": "CVE-2021-44228",
+     "cvss": 10,
+     "severity": "critical",
+     "published": "2021-12-10",
+     "kev": {
+      "added": "2021-12-10",
+      "name": "Apache Log4j2 Remote Code Execution Vulnerability",
+      "ransomware": true
+     },
+     "summary": "Apache Log4j2 2.0-beta9 through 2.15.0 (excluding security releases 2.12.2, 2.12.3, and 2.3.1) JNDI features used in configuration, log messages, and parameters",
+     "epss": 0.99999
+    },
+    {
+     "id": "CVE-2021-45046",
+     "cvss": 9,
+     "severity": "critical",
+     "published": "2021-12-14",
+     "kev": {
+      "added": "2023-05-01",
+      "name": "Apache Log4j2 Deserialization of Untrusted Data Vulnerability",
+      "ransomware": true
+     },
+     "summary": "It was found that the fix to address CVE-2021-44228 in Apache Log4j 2.15.0 was incomplete in certain non-default configurations.",
+     "epss": 0.99977
+    },
+    {
+     "id": "CVE-2026-34479",
+     "cvss": 7.5,
+     "severity": "high",
+     "published": "2026-04-10",
+     "kev": null,
+     "summary": "The Log4j1XmlLayout from the Apache Log4j 1-to-Log4j 2 bridge fails to escape characters forbidden by the XML 1.0 standard, producing malformed XML output.",
+     "epss": 0.00544
+    }
+   ],
+   "epssMax": 0.99999
+  },
+  "cpe:2.3:a:atlassian:confluence_data_center:8.5.1:*:*:*:*:*:*:*": {
+   "cveCount": 16,
+   "severity": {
+    "critical": 3,
+    "high": 12,
+    "medium": 1,
+    "low": 0,
+    "none": 0
+   },
+   "maxCvss": 9.8,
+   "kev": [
+    {
+     "id": "CVE-2023-22515",
+     "added": "2023-10-05",
+     "name": "Atlassian Confluence Data Center and Server Broken Access Control Vulnerability"
+    },
+    {
+     "id": "CVE-2023-22518",
+     "added": "2023-11-07",
+     "name": "Atlassian Confluence Data Center and Server Improper Authorization Vulnerability"
+    },
+    {
+     "id": "CVE-2023-22527",
+     "added": "2024-01-24",
+     "name": "Atlassian Confluence Data Center and Server Template Injection Vulnerability"
+    },
+    {
+     "id": "CVE-2026-21589",
+     "added": "2026-10-15",
+     "name": "Atlassian Multiple Products Files or Directories Accessible to External Parties Vulnerability"
+    }
+   ],
+   "fixedIn": "8.5.4",
+   "top": [
+    {
+     "id": "CVE-2023-22515",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2023-10-04",
+     "kev": {
+      "added": "2023-10-05",
+      "name": "Atlassian Confluence Data Center and Server Broken Access Control Vulnerability",
+      "ransomware": true
+     },
+     "summary": "Atlassian has been made aware of an issue reported by a handful of customers where external attackers may have exploited a previously unknown vulnerability in p",
+     "epss": 0.9923
+    },
+    {
+     "id": "CVE-2023-22518",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2023-10-31",
+     "kev": {
+      "added": "2023-11-07",
+      "name": "Atlassian Confluence Data Center and Server Improper Authorization Vulnerability",
+      "ransomware": true
+     },
+     "summary": "All versions of Confluence Data Center and Server are affected by this unexploited vulnerability.",
+     "epss": 0.99999
+    },
+    {
+     "id": "CVE-2023-22527",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-01-16",
+     "kev": {
+      "added": "2024-01-24",
+      "name": "Atlassian Confluence Data Center and Server Template Injection Vulnerability",
+      "ransomware": true
+     },
+     "summary": "A template injection vulnerability on older versions of Confluence Data Center and Server allows an unauthenticated attacker to achieve RCE on an affected insta",
+     "epss": 0.99984
+    }
+   ],
+   "epssMax": 0.99999
+  },
+  "cpe:2.3:a:gitlab:gitlab:17.5.1:*:*:*:*:*:*:*": {
+   "cveCount": 271,
+   "severity": {
+    "critical": 2,
+    "high": 75,
+    "medium": 175,
+    "low": 19,
+    "none": 0
+   },
+   "maxCvss": 10,
+   "kev": [],
+   "fixedIn": null,
+   "top": [
+    {
+     "id": "CVE-2026-110264",
+     "cvss": 10,
+     "severity": "critical",
+     "published": "2026-10-22",
+     "kev": null,
+     "summary": "An issue has been discovered in GitLab CE/EE affecting all versions from 7.0 before 18.11.13, 19.0 before 19.0.10, 19.1 before 19.1.9, 19.2 before 19.2.9, 19.3 ",
+     "epss": 0.01349
+    },
+    {
+     "id": "CVE-2025-9642",
+     "cvss": 9.6,
+     "severity": "critical",
+     "published": "2025-09-26",
+     "kev": null,
+     "summary": "An issue has been discovered in GitLab CE/EE affecting all versions from 14.10 before 18.2.7, 18.3 before 18.3.3, and 18.4 before 18.4.1 that could allow an att",
+     "epss": 0.00557
+    },
+    {
+     "id": "CVE-2024-9693",
+     "cvss": 8.8,
+     "severity": "high",
+     "published": "2024-11-14",
+     "kev": null,
+     "summary": "An issue was discovered in GitLab CE/EE affecting all versions starting from 16.0 prior to 17.3.7, starting from 17.4 prior to 17.4.4, and starting from 17.5 pr",
+     "epss": 0.00551
+    }
+   ],
+   "epssMax": 0.01349
+  },
+  "cpe:2.3:a:mozilla:firefox:128.0:*:*:*:*:*:*:*": {
+   "cveCount": 793,
+   "severity": {
+    "critical": 246,
+    "high": 342,
+    "medium": 202,
+    "low": 3,
+    "none": 0
+   },
+   "maxCvss": 10,
+   "kev": [
+    {
+     "id": "CVE-2024-9680",
+     "added": "2024-10-15",
+     "name": "Mozilla Firefox Use-After-Free Vulnerability"
+    }
+   ],
+   "fixedIn": null,
+   "top": [
+    {
+     "id": "CVE-2024-9680",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-10-09",
+     "kev": {
+      "added": "2024-10-15",
+      "name": "Mozilla Firefox Use-After-Free Vulnerability",
+      "ransomware": true
+     },
+     "summary": "An attacker was able to achieve code execution in the content process by exploiting a use-after-free in Animation timelines.",
+     "epss": 0.23184
+    },
+    {
+     "id": "CVE-2025-2857",
+     "cvss": 10,
+     "severity": "critical",
+     "published": "2025-03-27",
+     "kev": null,
+     "summary": "Following the recent Chrome sandbox escape (CVE-2025-2783), various Firefox developers identified a similar pattern in our IPC code.",
+     "epss": 0.01976
+    },
+    {
+     "id": "CVE-2026-0881",
+     "cvss": 10,
+     "severity": "critical",
+     "published": "2026-01-13",
+     "kev": null,
+     "summary": "Sandbox escape in the Messaging System component.",
+     "epss": 0.00348
+    }
+   ],
+   "epssMax": 0.23184
+  },
+  "cpe:2.3:a:jenkins:jenkins:2.440:*:*:*:*:*:*:*": {
+   "cveCount": 57,
+   "severity": {
+    "critical": 1,
+    "high": 18,
+    "medium": 35,
+    "low": 3,
+    "none": 0
+   },
+   "maxCvss": 9.8,
+   "kev": [
+    {
+     "id": "CVE-2024-23897",
+     "added": "2024-08-19",
+     "name": "Jenkins Command Line Interface (CLI) Path Traversal Vulnerability"
+    }
+   ],
+   "fixedIn": null,
+   "top": [
+    {
+     "id": "CVE-2024-23897",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-01-24",
+     "kev": {
+      "added": "2024-08-19",
+      "name": "Jenkins Command Line Interface (CLI) Path Traversal Vulnerability",
+      "ransomware": true
+     },
+     "summary": "Jenkins 2.441 and earlier, LTS 2.426.2 and earlier does not disable a feature of its CLI command parser that replaces an '@' character followed by a file path i",
+     "epss": 0.99999
+    },
+    {
+     "id": "CVE-2024-23898",
+     "cvss": 8.8,
+     "severity": "high",
+     "published": "2024-01-24",
+     "kev": null,
+     "summary": "Jenkins 2.217 through 2.441 (both inclusive), LTS 2.222.1 through 2.426.2 (both inclusive) does not perform origin validation of requests made through the CLI W",
+     "epss": 0.67151
+    },
+    {
+     "id": "CVE-2024-43044",
+     "cvss": 8.8,
+     "severity": "high",
+     "published": "2024-08-07",
+     "kev": null,
+     "summary": "Jenkins 2.470 and earlier, LTS 2.452.3 and earlier allows agent processes to read arbitrary files from the Jenkins controller file system by using the `ClassLoa",
+     "epss": 0.28782
+    }
+   ],
+   "epssMax": 0.99999
+  },
+  "cpe:2.3:a:f5:nginx:1.25.3:*:*:*:*:*:*:*": {
+   "cveCount": 1,
+   "severity": {
+    "critical": 0,
+    "high": 0,
+    "medium": 1,
+    "low": 0,
+    "none": 0
+   },
+   "maxCvss": 4.3,
+   "kev": [],
+   "fixedIn": null,
+   "top": [
+    {
+     "id": "CVE-2025-23419",
+     "cvss": 4.3,
+     "severity": "medium",
+     "published": "2025-02-05",
+     "kev": null,
+     "summary": "When multiple server blocks are configured to share the same IP address and port, an attacker can use session resumption to bypass client certificate authentica",
+     "epss": 0.02795
+    }
+   ],
+   "epssMax": 0.02795
+  },
+  "cpe:2.3:a:mongodb:mongodb:7.0.2:*:*:*:*:*:*:*": {
+   "cveCount": 112,
+   "severity": {
+    "critical": 2,
+    "high": 41,
+    "medium": 69,
+    "low": 0,
+    "none": 0
+   },
+   "maxCvss": 9.8,
+   "kev": [
+    {
+     "id": "CVE-2025-14847",
+     "added": "2025-12-29",
+     "name": "MongoDB and MongoDB Server Improper Handling of Length Parameter Inconsistency Vulnerability"
+    }
+   ],
+   "fixedIn": "7.0.28",
+   "top": [
+    {
+     "id": "CVE-2025-14847",
+     "cvss": 7.5,
+     "severity": "high",
+     "published": "2025-12-19",
+     "kev": {
+      "added": "2025-12-29",
+      "name": "MongoDB and MongoDB Server Improper Handling of Length Parameter Inconsistency Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Mismatched length fields in Zlib compressed protocol headers may allow a read of uninitialized heap memory by an unauthenticated client.",
+     "epss": 0.83218
+    },
+    {
+     "id": "CVE-2024-1351",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-03-07",
+     "kev": null,
+     "summary": "Under certain configurations of --tlsCAFile and tls.CAFile, MongoDB Server may skip peer certificate validation which may result in untrusted connections to suc",
+     "epss": 0.005
+    },
+    {
+     "id": "CVE-2025-3085",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2025-04-01",
+     "kev": null,
+     "summary": "A MongoDB server under specific conditions running on Linux with TLS and CRL revocation status checking enabled, fails to check the revocation status of the int",
+     "epss": 0.00287
+    }
+   ],
+   "epssMax": 0.83218
+  },
+  "cpe:2.3:a:apache:tomcat:10.1.15:*:*:*:*:*:*:*": {
+   "cveCount": 57,
+   "severity": {
+    "critical": 18,
+    "high": 28,
+    "medium": 9,
+    "low": 2,
+    "none": 0
+   },
+   "maxCvss": 9.8,
+   "kev": [
+    {
+     "id": "CVE-2025-24813",
+     "added": "2025-04-01",
+     "name": "Apache Tomcat Path Equivalence Vulnerability"
+    }
+   ],
+   "fixedIn": "10.1.35",
+   "top": [
+    {
+     "id": "CVE-2025-24813",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2025-03-10",
+     "kev": {
+      "added": "2025-04-01",
+      "name": "Apache Tomcat Path Equivalence Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Path Equivalence: 'file.Name' (Internal Dot) leading to Remote Code Execution and/or Information disclosure and/or malicious content added to uploaded files via",
+     "epss": 0.99942
+    },
+    {
+     "id": "CVE-2024-52316",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-11-18",
+     "kev": null,
+     "summary": "Unchecked Error Condition vulnerability in Apache Tomcat.",
+     "epss": 0.06246
+    },
+    {
+     "id": "CVE-2024-50379",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-12-17",
+     "kev": null,
+     "summary": "Time-of-check Time-of-use (TOCTOU) Race Condition vulnerability during JSP compilation in Apache Tomcat permits an RCE on case insensitive file systems when the",
+     "epss": 0.31824
+    }
+   ],
+   "epssMax": 0.99942
+  },
+  "cpe:2.3:a:citrix:netscaler_application_delivery_controller:13.1-49.13:*:*:*:*:*:*:*": {
+   "cveCount": 30,
+   "severity": {
+    "critical": 12,
+    "high": 17,
+    "medium": 1,
+    "low": 0,
+    "none": 0
+   },
+   "maxCvss": 10,
+   "kev": [
+    {
+     "id": "CVE-2023-4966",
+     "added": "2023-10-18",
+     "name": "Citrix NetScaler ADC and NetScaler Gateway Buffer Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2023-6548",
+     "added": "2024-01-17",
+     "name": "Citrix NetScaler ADC and NetScaler Gateway Code Injection Vulnerability"
+    },
+    {
+     "id": "CVE-2023-6549",
+     "added": "2024-01-17",
+     "name": "Citrix NetScaler ADC and NetScaler Gateway Buffer Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2025-5777",
+     "added": "2025-07-10",
+     "name": "Citrix NetScaler ADC and Gateway Out-of-Bounds Read Vulnerability"
+    },
+    {
+     "id": "CVE-2025-6543",
+     "added": "2025-06-30",
+     "name": "Citrix NetScaler ADC and Gateway Buffer Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2025-7775",
+     "added": "2025-08-26",
+     "name": "Citrix NetScaler Memory Overflow Vulnerability"
+    },
+    {
+     "id": "CVE-2026-3055",
+     "added": "2026-03-30",
+     "name": "Citrix NetScaler Out-of-Bounds Read Vulnerability"
+    },
+    {
+     "id": "CVE-2026-8452",
+     "added": "2026-08-26",
+     "name": "Citrix NetScaler ADC and NetScaler Gateway Improper Restriction of Operations within the Bounds of a Memory Buffer Vulnerability"
+    },
+    {
+     "id": "CVE-2026-19490",
+     "added": "2026-09-09",
+     "name": "Citrix NetScaler Authentication Bypass Using an Alternate Path or Channel Vulnerability"
+    },
+    {
+     "id": "CVE-2026-88771",
+     "added": "2026-09-27",
+     "name": "Citrix NetScaler Improper Input Validation Vulnerability"
+    },
+    {
+     "id": "CVE-2026-88772",
+     "added": "2026-09-27",
+     "name": "Citrix NetScaler Improper Restriction of Operations within the Bounds of a Memory Buffer Vulnerability"
+    },
+    {
+     "id": "CVE-2026-88779",
+     "added": "2026-10-04",
+     "name": "Citrix NetScaler Improper Restriction of Operations within the Bounds of a Memory Buffer Vulnerability"
+    }
+   ],
+   "fixedIn": "13.1-49.15",
+   "top": [
+    {
+     "id": "CVE-2025-6543",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2025-06-25",
+     "kev": {
+      "added": "2025-06-30",
+      "name": "Citrix NetScaler ADC and Gateway Buffer Overflow Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Memory overflow vulnerability leading to unintended control flow and Denial of Service in NetScaler ADC and NetScaler Gateway when configured as Gateway (VPN vi",
+     "epss": 0.10433
+    },
+    {
+     "id": "CVE-2025-7775",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2025-08-26",
+     "kev": {
+      "added": "2025-08-26",
+      "name": "Citrix NetScaler Memory Overflow Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Memory overflow vulnerability leading to Remote Code Execution and/or Denial of Service in NetScaler ADC and NetScaler Gateway when NetScaler is configured as G",
+     "epss": 0.2067
+    },
+    {
+     "id": "CVE-2026-3055",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2026-03-23",
+     "kev": {
+      "added": "2026-03-30",
+      "name": "Citrix NetScaler Out-of-Bounds Read Vulnerability",
+      "ransomware": false
+     },
+     "summary": "Insufficient input validation in NetScaler ADC and NetScaler Gateway when configured as a SAML IDP leading to memory overread",
+     "epss": 0.91491
+    }
+   ],
+   "epssMax": 0.91491
+  },
+  "cpe:2.3:a:progress:moveit_transfer:2023.0.1:*:*:*:*:*:*:*": {
+   "cveCount": 40,
+   "severity": {
+    "critical": 12,
+    "high": 21,
+    "medium": 7,
+    "low": 0,
+    "none": 0
+   },
+   "maxCvss": 9.8,
+   "kev": [
+    {
+     "id": "CVE-2023-34362",
+     "added": "2023-06-02",
+     "name": "Progress MOVEit Transfer SQL Injection Vulnerability"
+    }
+   ],
+   "fixedIn": "2023.0.2",
+   "top": [
+    {
+     "id": "CVE-2023-34362",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2023-06-02",
+     "kev": {
+      "added": "2023-06-02",
+      "name": "Progress MOVEit Transfer SQL Injection Vulnerability",
+      "ransomware": true
+     },
+     "summary": "In Progress MOVEit Transfer before 2021.0.6 (13.0.6), 2021.1.4 (13.1.4), 2022.0.4 (14.0.4), 2022.1.5 (14.1.5), and 2023.0.1 (15.0.1), a SQL injection vulnerabil",
+     "epss": 0.99934
+    },
+    {
+     "id": "CVE-2023-35708",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2023-06-16",
+     "kev": null,
+     "summary": "In Progress MOVEit Transfer before 2021.0.8 (13.0.8), 2021.1.6 (13.1.6), 2022.0.6 (14.0.6), 2022.1.7 (14.1.7), and 2023.0.3 (15.0.3), a SQL injection vulnerabil",
+     "epss": 0.96682
+    },
+    {
+     "id": "CVE-2024-5806",
+     "cvss": 9.8,
+     "severity": "critical",
+     "published": "2024-06-25",
+     "kev": null,
+     "summary": "Improper Authentication vulnerability in Progress MOVEit Transfer (SFTP module) can lead to Authentication Bypass.This issue affects MOVEit Transfer: from 2023.",
+     "epss": 0.81474
+    }
+   ],
+   "epssMax": 0.99934
+  },
+  "cpe:2.3:a:n8n:n8n:1.60.0:*:*:*:*:*:*:*": {
+   "cveCount": 166,
+   "severity": {
+    "critical": 28,
+    "high": 63,
+    "medium": 75,
+    "low": 0,
+    "none": 0
+   },
+   "maxCvss": 10,
+   "kev": [
+    {
+     "id": "CVE-2025-68613",
+     "added": "2026-03-11",
+     "name": "n8n Improper Control of Dynamically-Managed Code Resources Vulnerability"
+    }
+   ],
+   "fixedIn": null,
+   "top": [
+    {
+     "id": "CVE-2025-68613",
+     "cvss": 8.8,
+     "severity": "high",
+     "published": "2025-12-19",
+     "kev": {
+      "added": "2026-03-11",
+      "name": "n8n Improper Control of Dynamically-Managed Code Resources Vulnerability",
+      "ransomware": false
+     },
+     "summary": "n8n is an open source workflow automation platform.",
+     "epss": 0.98994
+    },
+    {
+     "id": "CVE-2026-54309",
+     "cvss": 10,
+     "severity": "critical",
+     "published": "2026-06-23",
+     "kev": null,
+     "summary": "n8n is an open source workflow automation platform.",
+     "epss": 0.00546
+    },
+    {
+     "id": "CVE-2025-68668",
+     "cvss": 9.9,
+     "severity": "critical",
+     "published": "2025-12-26",
+     "kev": null,
+     "summary": "n8n is an open source workflow automation platform.",
+     "epss": 0.13167
+    }
+   ],
+   "epssMax": 0.98994
+  }
+ }
+}

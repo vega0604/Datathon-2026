@@ -11,7 +11,7 @@ import { ModelPage } from '../components/insights/ModelPage'
 import { VendorsPage } from '../components/insights/VendorsPage'
 import { aboutData, coverage, kpis, versusPublic } from '../data/insights'
 
-export function InsightsSummary({ onOpenFixFirst, theme = 'light', onThemeChange }) {
+export function InsightsSummary({ onOpenFixFirst, onUpload, software, theme = 'light', onThemeChange }) {
   const [section, setSection] = useState('summary')
   const dark = theme === 'dark'
 
@@ -19,11 +19,11 @@ export function InsightsSummary({ onOpenFixFirst, theme = 'light', onThemeChange
     <IconDarkContext.Provider value={dark}>
     {/* Same shell as Fix first (theme classes, header, body spacing, sidebar) so
         nothing shifts when moving between the two pages. */}
-    <div className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[640px] min-w-[1024px] flex-col bg-page font-sans`}>
+    <div className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[560px] min-w-[1024px] flex-col bg-page font-sans`}>
       <AppHeader iconDir="fixfirst" theme={theme} onThemeChange={onThemeChange} />
 
       <div className="flex min-h-0 w-full flex-1 items-start gap-4 overflow-hidden p-4 wide:gap-5 wide:p-5 compact:py-3">
-        <Sidebar current="insights" section={section} onSectionChange={setSection} onOpenFixFirst={onOpenFixFirst} />
+        <Sidebar current="insights" section={section} onSectionChange={setSection} onOpenFixFirst={onOpenFixFirst} onUpload={onUpload} software={software} />
 
         {section === 'summary' ? (
           <SummaryContent />

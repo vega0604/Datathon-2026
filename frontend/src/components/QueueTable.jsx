@@ -48,7 +48,7 @@ function QueueRow({ item, selected, onSelect }) {
           onSelect(item.cveId)
         }
       }}
-      className={`flex max-h-[61px] min-h-0 w-full flex-1 basis-0 cursor-pointer items-center gap-2 wide:gap-3 rounded-[14px] py-[7px] pr-3 pl-2.5 short:py-1 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
+      className={`flex max-h-[61px] w-full flex-1 basis-0 cursor-pointer items-center gap-2 wide:gap-3 rounded-[14px] py-[7px] pr-3 pl-2.5 short:py-1 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
         // Inset ring instead of a border so selecting a row doesn't squeeze its columns.
         selected ? 'bg-page ring-2 ring-blue ring-inset' : 'border-b border-line hover:bg-page/70'
       }`}

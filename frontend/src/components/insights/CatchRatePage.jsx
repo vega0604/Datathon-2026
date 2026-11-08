@@ -25,7 +25,7 @@ export function CatchRatePage({ onOpenFixFirst }) {
         </div>
 
         <section className="flex min-h-0 w-full flex-1 flex-col rounded-[32px] bg-card p-4 shadow-float xl:p-6 short:p-4">
-          <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden rounded-3xl border-2 border-blue bg-page p-4 xl:p-6 short:gap-3 short:p-4">
+          <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
             <h2 className="shrink-0 text-lg leading-7 text-ink xl:text-xl">{catchRate.headline}</h2>
             <div className="flex shrink-0 flex-wrap gap-2">
               {catchRate.series.map((s) => (

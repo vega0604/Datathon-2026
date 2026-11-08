@@ -45,13 +45,13 @@ function RankContrast({ item }) {
           #{item.cvssRank}
         </p>
       </div>
-      <div className="relative h-[104px] min-w-px flex-1 overflow-hidden rounded-[20px] bg-blue compact:h-[84px] short:h-[76px] tight:h-[68px]">
+      <div className="relative h-[104px] min-w-px flex-1 overflow-hidden rounded-[20px] bg-brand compact:h-[84px] short:h-[76px] tight:h-[68px]">
         {/* Label and shift pill share a row so a wider pill can't cover the label.
             At the design width this puts the pill exactly where Figma has it. */}
         <div className="absolute top-3 right-3 left-4 flex items-center justify-between gap-1">
           <p className="type-label whitespace-nowrap text-white">We rank it</p>
           {shift > 0 && (
-            <span className="flex shrink-0 items-center gap-1 rounded-full bg-white py-0.5 pr-2 pl-1.5">
+            <span className="flex shrink-0 items-center gap-1 rounded-full bg-on-brand py-0.5 pr-2 pl-1.5">
               <Icon name="fixfirst/arrow-up-blue" className="size-2.5" />
               <span className="type-label font-semibold whitespace-nowrap text-primary-strong">
                 {shift}

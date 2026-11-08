@@ -5,6 +5,7 @@ const PAIRS = [
   ['/fixfirst/', '/fixfirst-dark/'],
   ['/nav-v5/', '/nav-v5-dark/'],
   ['/insights/', '/insights-dark/'],
+  ['/software/', '/software-dark/'],
 ]
 
 function preload(src) {
