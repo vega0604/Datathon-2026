@@ -76,3 +76,38 @@ export const severity = {
       'Our model raised the flag before CISA for about 9 in 10 of the KEV entries it caught, a median of 19 days early.',
   },
 }
+
+// Vendors page (chart values are sample data for now).
+// shade: 1 = under 0.5%, 2 = 0.5 to 1%, 4 = 1 to 3%, 5 = over 3% share reaching KEV.
+export const vendors = {
+  title: 'A handful of vendors carry most of the exploitation',
+  subtitle: 'Box size = CVE count, shade = share reaching KEV',
+  legend: [
+    { shade: 1, label: 'under 0.5%' },
+    { shade: 2, label: '0.5 to 1%' },
+    { shade: 4, label: '1 to 3%' },
+    { shade: 5, label: 'over 3%' },
+  ],
+  // Heatmap cells. cves sets box size; `short` is the label used when the box is too narrow for the full name.
+  cells: [
+    { name: 'Microsoft', cves: 6120, kev: '4.2%', shade: 5 },
+    { name: 'Linux kernel', cves: 4010, kev: '0.2%', shade: 1 },
+    { name: 'Google', cves: 3230, kev: '2.1%', shade: 4 },
+    { name: 'Apple', cves: 3180, kev: '1.8%', shade: 4 },
+    { name: 'WordPress plugins', short: 'WP', cves: 2040, kev: '0.1%', shade: 1 },
+    { name: 'Cisco', cves: 1780, kev: '3.6%', shade: 5 },
+    { name: 'Oracle', cves: 1710, kev: '0.7%', shade: 2 },
+    { name: 'Adobe', cves: 1740, kev: '0.9%', shade: 2 },
+    { name: 'Fortinet', short: 'F', cves: 1000, kev: '6.8%', shade: 5 },
+    { name: 'Ivanti', short: 'I', cves: 940, kev: '9.4%', shade: 5 },
+    { name: 'Other', cves: 1020, kev: '0.3%', shade: 1 },
+  ],
+  ranking: [
+    { name: 'Ivanti', cves: '940 CVEs', kev: '9.4%' },
+    { name: 'Fortinet', cves: '1,000 CVEs', kev: '6.8%' },
+    { name: 'Microsoft', cves: '6,120 CVEs', kev: '4.2%' },
+    { name: 'Cisco', cves: '1,780 CVEs', kev: '3.6%' },
+  ],
+  takeaway:
+    'Edge vendors like Ivanti, Fortinet and Cisco have few CVEs but the highest exploitation rates; WordPress plugins and the Linux kernel are the reverse.',
+}

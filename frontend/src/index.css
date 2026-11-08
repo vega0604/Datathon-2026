@@ -53,6 +53,12 @@
   --color-green-soft: #d9fbfb;
   --color-green-ink: #005d5d;
   --color-crit: #c42652;
+  /* Sequential blue scale for "share reaching KEV" shading */
+  --color-seq-1: #d0e2ff;
+  --color-seq-2: #a6c8ff;
+  --color-seq-4: #4589ff;
+  --color-seq-5: #0f62fe;
+  --color-ink-on-light: #10213f;
   --color-context: #a7afbf; /* chart context series (e.g. "flagged after KEV") */
 
   /* V5 additions (Figma: chart/series-1, ai/primary, chart/series-2, chart/seq-4) */
