@@ -36,11 +36,13 @@
   --color-blue: #0f62fe;
   --color-blue-soft: #eaf2ff;
   --color-blue-ink: #0043ce;
+  --color-purple: #8a3ffc;
   --color-purple-soft: #f4eeff;
   --color-purple-ink: #6929c4;
   --color-green-soft: #d9fbfb;
   --color-green-ink: #005d5d;
   --color-crit: #c42652;
+  --color-context: #a7afbf; /* chart context series (e.g. "flagged after KEV") */
 
   --tracking-label: 0.32px;
   --tracking-body: 0.16px;

@@ -4,6 +4,7 @@ import { InsightsSidebar } from '../components/insights/InsightsSidebar'
 import { CoverageCard } from '../components/insights/CoverageCard'
 import { NextStepsPanel } from '../components/insights/NextStepsPanel'
 import { CatchRatePage } from '../components/insights/CatchRatePage'
+import { SeverityPage } from '../components/insights/SeverityPage'
 import { aboutData, coverage, kpis, versusPublic } from '../data/insights'
 
 export function InsightsSummary({ onOpenFixFirst }) {
@@ -20,6 +21,8 @@ export function InsightsSummary({ onOpenFixFirst }) {
           <SummaryContent />
         ) : section === 'catch-rate' ? (
           <CatchRatePage onOpenFixFirst={onOpenFixFirst} />
+        ) : section === 'severity' ? (
+          <SeverityPage onOpenFixFirst={onOpenFixFirst} />
         ) : (
           // Other Insights sections are intentionally empty for now.
           <main className="h-full min-w-0 flex-1" aria-label={section} />

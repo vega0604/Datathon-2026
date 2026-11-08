@@ -70,13 +70,13 @@ export function WhatToDoCard({ onOpenFixFirst, children }) {
   )
 }
 
-export function AboutDataBox({ rows }) {
+export function AboutDataBox({ rows, chipClass = 'bg-blue-soft' }) {
   return (
     <FactBox
       title="About this data"
       icon="insights/about-queue"
       boxClass="border border-line bg-subtle"
-      chipClass="bg-blue-soft"
+      chipClass={chipClass}
       titleClass="text-ink"
       rows={rows}
     />
@@ -97,7 +97,7 @@ export function NextStepsPanel({ kpis, versusPublic, aboutData }) {
         titleClass="text-green-ink"
         rows={versusPublic}
       />
-      <AboutDataBox rows={aboutData} />
+      <AboutDataBox rows={aboutData} chipClass="bg-card" />
     </SidePanel>
   )
 }

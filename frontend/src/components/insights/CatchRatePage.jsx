@@ -1,4 +1,5 @@
-import { Icon, iconUrl } from '../../lib/Icon'
+import { iconUrl } from '../../lib/Icon'
+import { Takeaway } from './ChartParts'
 import { CatchRateChart } from './CatchRateChart'
 import { AboutDataBox, NoteBox, SidePanel, WhatToDoCard } from './NextStepsPanel'
 import { aboutData, catchRate } from '../../data/insights'
@@ -9,18 +10,6 @@ function LegendPill({ file, height, children }) {
       <img alt="" src={iconUrl(`insights/catch-rate/${file}`)} className="block w-5 max-w-none" style={{ height }} />
       <span className="type-label whitespace-nowrap text-ink">{children}</span>
     </span>
-  )
-}
-
-function Takeaway({ children }) {
-  return (
-    <div className="flex w-full shrink-0 items-start gap-3 rounded-xl bg-blue-soft p-4 short:p-3">
-      <Icon name="insights/catch-rate/takeaway-idea" className="size-4" />
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="type-label text-blue-ink">Takeaway</span>
-        <p className="text-base leading-6 text-ink short:text-sm short:leading-5">{children}</p>
-      </div>
-    </div>
   )
 }
 

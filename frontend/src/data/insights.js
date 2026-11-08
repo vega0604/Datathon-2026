@@ -46,3 +46,32 @@ export const catchRate = {
   takeaway:
     'Fixing just 0.7% of the queue, our top 500, catches about a quarter of the CVEs that went on to be exploited, roughly 4× the best public baseline.',
 }
+
+// Severity page (chart values are sample data for now).
+export const severity = {
+  bands: {
+    title: 'Severity alone misses most attacks',
+    subtitle: 'Share reaching KEV, by CVSS band',
+    items: [
+      { key: 'critical', label: 'Critical', range: '9.0 to 10', value: '1.9%' },
+      { key: 'high', label: 'High', range: '7.0 to 8.9', value: '0.7%' },
+      { key: 'medium', label: 'Medium', range: '4.0 to 6.9', value: '0.2%' },
+      { key: 'low', label: 'Low', range: '0.1 to 3.9', value: '0.04%' },
+    ],
+    takeaway: 'Critical CVEs reach KEV about 10× as often as Medium ones, yet 98% of them are never exploited.',
+  },
+  leadTime: {
+    title: 'We flag most exploited CVEs weeks before CISA',
+    subtitle: '2025 KEV entries, by days between our top-K flag and the KEV listing',
+    buckets: [
+      { label: 'After listing', count: 9 },
+      { label: '0 to 7 days', count: 14 },
+      { label: '8 to 30 days', count: 22 },
+      { label: '31 to 90 days', count: 18 },
+      { label: 'Over 90 days', count: 7 },
+    ],
+    peak: { label: 'Peak · median 19 days early', value: '22 CVEs' },
+    takeaway:
+      'Our model raised the flag before CISA for about 9 in 10 of the KEV entries it caught, a median of 19 days early.',
+  },
+}
