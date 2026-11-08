@@ -70,3 +70,20 @@ def test_assigner_history(con):
         """
     ).fetchone()
     assert pos > 1.5 * neg  # measured: about 80 vs 44
+
+
+# --- SHE-30 ---
+
+
+def test_assigner_history_matches_a_plain_recount(con):
+    # Recount about 1 in 500 rows with an obviously correct (slow) query.
+    mismatches = f"""
+        SELECT count(*) FROM {FEATURES} AS f
+        WHERE hash(f.cve_id) % 500 = 0
+          AND f.assigner_kev_prior <> (
+              SELECT count(*) FROM known_exploited AS k
+              JOIN vulnerabilities AS v ON v.cve_id = k.cve_id
+              WHERE v.assigner = f.assigner AND k.date_added <= f.snapshot_end
+          )
+    """
+    assert con.execute(mismatches).fetchone()[0] == 0

@@ -120,3 +120,20 @@ def test_assigner_history(history):
         ("CVE-B", 0, 1, 0.0),
         ("CVE-S", 3, 5, 0.6),
     ]
+
+
+# --- SHE-30 ---
+
+
+def test_assigner_history_ignores_the_future(history):
+    # A KEV entry added after every snapshot, and a vulnerability published after it,
+    # must not change any count.
+    before = rows(
+        history, f"SELECT * FROM ({features.add_assigner_history_sql('p')}) ORDER BY cve_id"
+    )
+    history.execute("INSERT INTO known_exploited VALUES ('CVE-A', DATE '2027-01-01')")
+    history.execute("INSERT INTO vulnerabilities VALUES ('CVE-Z', 'psirt@x', DATE '2027-01-01')")
+    after = rows(
+        history, f"SELECT * FROM ({features.add_assigner_history_sql('p')}) ORDER BY cve_id"
+    )
+    assert after == before
