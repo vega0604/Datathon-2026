@@ -120,3 +120,21 @@ def test_keywords_are_flags(con):
 
 def test_no_banned_columns(log):
     assert log["banned_columns"] == 0
+
+
+# --- SHE-34 ---
+
+
+def test_benchmark_signals_match_the_scoreboard(con):
+    mismatches = f"""
+        SELECT count(*) FROM {FEATURES} AS f
+        JOIN scoreboard_2026 AS s ON s.cve_id = f.cve_id
+        WHERE f.fold = 2026 AND (
+            f.epss IS DISTINCT FROM s.epss
+            OR f.exploitdb <> s.exploitdb OR f.metasploit <> s.metasploit
+            OR f.nuclei <> s.nuclei OR f.poc_github <> s.poc_github
+        )
+    """
+    assert con.execute(mismatches).fetchone()[0] == 0
+    assert by_fold(con, "count(*)") == (28_839, 35_281, 72_670)
+    assert by_fold(con, "count(label)") == (28_839, 35_281, 0)
