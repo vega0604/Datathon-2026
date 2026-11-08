@@ -24,3 +24,14 @@ class SbomSummary(BaseModel):
 
 class SbomOut(SbomSummary):
     components: list[Component]
+
+
+class ComponentSummary(Component):
+    matched_cves: int
+    kev_cves: int
+
+
+class SbomComponentsOut(BaseModel):
+    sbom_id: str
+    name: str | None
+    components: list[ComponentSummary]

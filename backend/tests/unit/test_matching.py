@@ -4,12 +4,15 @@ from backend.services.matching import match_sbom
 from backend.services.sbom import parse_cyclonedx, store_sbom
 
 
-def add_product(db, cve, vendor, product, vulnerable="Y"):
+def add_product(
+    db, cve, vendor, product, vulnerable="Y", version="*", start_inc=None, end_exc=None
+):
     key = "".join(ch for ch in vendor.lower() if ch.isalnum())
     db.execute(
         "INSERT INTO clean.affected_products (cve_id, vendor, product, version, vulnerable, "
-        "vendor_key) VALUES (?, ?, ?, '*', ?, ?)",
-        [cve, vendor, product, vulnerable, key],
+        "vendor_key, version_start_including, version_end_excluding) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [cve, vendor, product, version, vulnerable, key, start_inc, end_exc],
     )
 
 
@@ -93,3 +96,44 @@ def test_name_method_and_rematch_replaces_rows(db):
     db.execute("DELETE FROM clean.affected_products")
     assert match_sbom(db, sid) == 0
     assert matches(db, sid) == {}
+
+
+def status(db, sid):
+    return {
+        r[0]: r[1]
+        for r in db.execute(
+            "SELECT cve_id, version_status FROM app.matches WHERE sbom_id = ?", [sid]
+        ).fetchall()
+    }
+
+
+def test_out_of_range_dropped_and_in_range_marked(db):
+    add_product(db, "CVE-IN", "acme", "widget", start_inc="1.0", end_exc="2.0")
+    add_product(db, "CVE-OUT", "acme", "widget", end_exc="1.5")
+    add_product(db, "CVE-EXACT", "acme", "widget", version="1.7")
+    add_product(db, "CVE-ANY", "acme", "widget")
+    comp = {"name": "w", "version": "1.7", "cpe": CPE.format("acme", "widget")}
+    sid = upload(db, [comp])
+    assert match_sbom(db, sid) == 3
+    assert status(db, sid) == {
+        "CVE-IN": "in_range",
+        "CVE-EXACT": "in_range",
+        "CVE-ANY": "in_range",
+    }
+
+
+def test_unversioned_component_is_unverified_unless_any_version(db):
+    add_product(db, "CVE-RANGE", "acme", "widget", end_exc="2.0")
+    add_product(db, "CVE-ANY", "acme", "widget")
+    sid = upload(db, [{"name": "w", "cpe": CPE.format("acme", "widget").replace(":1.0:", ":*:")}])
+    match_sbom(db, sid)
+    assert status(db, sid) == {"CVE-RANGE": "unverified", "CVE-ANY": "in_range"}
+
+
+def test_any_confirming_row_wins_over_unverified(db):
+    # Same CVE listed twice: one row can't be checked against exact "1.7", one is any-version.
+    add_product(db, "CVE-1", "acme", "widget", version="9.9")
+    add_product(db, "CVE-1", "acme", "widget")
+    sid = upload(db, [{"name": "w", "version": "1.7", "cpe": CPE.format("acme", "widget")}])
+    assert match_sbom(db, sid) == 1
+    assert status(db, sid) == {"CVE-1": "in_range"}

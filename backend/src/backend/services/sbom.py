@@ -194,6 +194,27 @@ def load_sbom(con, sbom_id: str) -> dict | None:
     return out
 
 
+def component_summaries(con, sbom_id: str) -> list[dict]:
+    """Components with their matched CVE count and how many of those are on KEV."""
+    cur = con.execute(
+        """
+        SELECT c.component_id, c.name, c.group_name AS "group", c.version, c.purl, c.cpe,
+               c.vendor, c.product,
+               count(DISTINCT m.cve_id) AS matched_cves,
+               count(DISTINCT k.cve_id) AS kev_cves
+        FROM app.components c
+        LEFT JOIN app.matches m ON m.sbom_id = c.sbom_id AND m.component_id = c.component_id
+        LEFT JOIN clean.kev k ON k.cve_id = m.cve_id
+        WHERE c.sbom_id = ?
+        GROUP BY ALL
+        ORDER BY c.component_id
+        """,
+        [sbom_id],
+    )
+    cols = [d[0] for d in cur.description]
+    return [dict(zip(cols, r, strict=True)) for r in cur.fetchall()]
+
+
 def list_sboms(con) -> list[dict]:
     rows = con.execute(
         f"SELECT {', '.join(_SUMMARY)} FROM app.sboms ORDER BY uploaded_at DESC, sbom_id"

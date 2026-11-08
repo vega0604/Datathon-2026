@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile
 
 from backend.api.deps import Db
-from backend.schemas.sbom import SbomOut, SbomSummary
+from backend.schemas.sbom import SbomComponentsOut, SbomOut, SbomSummary
 from backend.services import sbom as sbom_service
 from backend.services.matching import match_sbom
 from backend.services.sbom import MAX_BYTES, SbomError
@@ -34,3 +34,15 @@ def get_sbom(sbom_id: str, db: Db):
     if sbom is None:
         raise HTTPException(status_code=404, detail="SBOM not found")
     return sbom
+
+
+@router.get("/{sbom_id}/components", response_model=SbomComponentsOut)
+def get_components(sbom_id: str, db: Db):
+    sbom = sbom_service.load_sbom(db, sbom_id)
+    if sbom is None:
+        raise HTTPException(status_code=404, detail="SBOM not found")
+    return {
+        "sbom_id": sbom_id,
+        "name": sbom["name"],
+        "components": sbom_service.component_summaries(db, sbom_id),
+    }

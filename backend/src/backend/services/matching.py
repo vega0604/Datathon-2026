@@ -1,5 +1,9 @@
 """Match SBOM components to CVEs through NIST's product lists. Plain functions; no FastAPI."""
 
+import pandas as pd
+
+from backend.services.versions import in_range
+
 # Same rule as the pipeline's vendor_key_sql (SHE-22): lower case, letters and digits only.
 # Reimplemented here because the API never imports `pipeline`.
 _KEY = "nullif(regexp_replace(lower({col}), '[^a-z0-9]', '', 'g'), '')"
@@ -77,18 +81,39 @@ def candidates_sql() -> str:
 
 
 def match_sbom(con, sbom_id: str) -> int:
-    """Replace the SBOM's rows in app.matches. Returns the number of (component, cve) pairs."""
+    """Replace the SBOM's rows in app.matches. Returns the number of (component, cve) pairs.
+
+    Rows whose version range excludes the component are dropped. A pair is `in_range` if any
+    row confirmed it, else `unverified` (the component or the row had no usable version).
+    """
     params = {"sbom_id": sbom_id}
     con.execute("DELETE FROM app.matches WHERE sbom_id = $sbom_id", params)
-    con.execute(
-        f"""
-        INSERT INTO app.matches
-        SELECT $sbom_id, component_id, cve_id, min(method), 'not_checked'
-        FROM ({candidates_sql()})
-        GROUP BY component_id, cve_id
-        """,
-        params,
+    # Plain tuples (NULL -> None) are much faster to loop over than a pandas frame.
+    cand = con.execute(candidates_sql(), params).fetchall()
+
+    best: dict[tuple[int, str], list] = {}  # (component_id, cve_id) -> [method, confirmed]
+    for cid, cver, method, cve, exact, si, se, ei, ee in cand:
+        ok = in_range(cver, exact, si, se, ei, ee)
+        if ok is False:
+            continue
+        entry = best.setdefault((cid, cve), [method, False])
+        entry[0] = min(entry[0], method)
+        entry[1] = entry[1] or ok is True
+    if not best:
+        return 0
+
+    df = pd.DataFrame(
+        {
+            "sbom_id": sbom_id,
+            "component_id": [k[0] for k in best],
+            "cve_id": [k[1] for k in best],
+            "method": [v[0] for v in best.values()],
+            "version_status": ["in_range" if v[1] else "unverified" for v in best.values()],
+        }
     )
-    return con.execute(
-        "SELECT count(*) FROM app.matches WHERE sbom_id = $sbom_id", params
-    ).fetchone()[0]
+    con.register("_new_matches", df)
+    try:
+        con.execute("INSERT INTO app.matches SELECT * FROM _new_matches")
+    finally:
+        con.unregister("_new_matches")
+    return len(df)

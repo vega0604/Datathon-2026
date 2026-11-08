@@ -42,3 +42,28 @@ def test_upload_garbage_is_422(client):
 
 def test_unknown_sbom_is_404(client):
     assert client.get("/api/sboms/doesnotexist").status_code == 404
+
+
+def test_components_endpoint_counts(client, db):
+    import json
+
+    for cve, vendor in [("CVE-A", "acme"), ("CVE-B", "acme"), ("CVE-C", "other")]:
+        db.execute(
+            "INSERT INTO clean.affected_products (cve_id, vendor, product, version, vulnerable, "
+            "vendor_key) VALUES (?, ?, 'widget', '*', 'Y', ?)",
+            [cve, vendor, vendor],
+        )
+    db.execute("INSERT INTO clean.kev (cve_id) VALUES ('CVE-A')")
+    bom = {
+        "bomFormat": "CycloneDX",
+        "components": [
+            {"name": "w", "version": "1", "cpe": "cpe:2.3:a:acme:widget:1:*:*:*:*:*:*:*"},
+            {"name": "nothing", "purl": "pkg:npm/nothing@1"},
+        ],
+    }
+    r = client.post("/api/sboms", files={"file": ("b.json", json.dumps(bom).encode())})
+    sid = r.json()["sbom_id"]
+    body = client.get(f"/api/sboms/{sid}/components").json()
+    counts = [(c["name"], c["matched_cves"], c["kev_cves"]) for c in body["components"]]
+    assert counts == [("w", 2, 1), ("nothing", 0, 0)]
+    assert client.get("/api/sboms/nope/components").status_code == 404
