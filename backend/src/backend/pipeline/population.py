@@ -86,9 +86,32 @@ def drop_already_exploited_sql(src: str, kev: str = "known_exploited") -> str:
     """
 
 
+def add_labels_sql(src: str, kev: str = "known_exploited") -> str:
+    """SHE-26: label = 1 if added to KEV after the snapshot and on or before the fold's
+    cutoff, else 0. NULL for the benchmark, whose answers we don't have."""
+    return f"""
+        SELECT
+            p.*,
+            CAST(
+                CASE
+                    WHEN p.fold = {BENCHMARK_FOLD} THEN NULL
+                    WHEN EXISTS (
+                        SELECT 1 FROM {kev} AS k
+                        WHERE k.cve_id = p.cve_id
+                          AND k.date_added > p.snapshot_end
+                          AND k.date_added <= p.cutoff
+                    ) THEN 1
+                    ELSE 0
+                END AS UTINYINT
+            ) AS label
+        FROM {src} AS p
+    """
+
+
 # Applied in order to the candidates. Each entry: (log name, step).
 POPULATION_STEPS = [
     ("drop_already_exploited", drop_already_exploited_sql),
+    ("labels", add_labels_sql),
 ]
 
 

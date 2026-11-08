@@ -73,3 +73,25 @@ def test_drop_already_exploited(con):
     sql = population.drop_already_exploited_sql("c")
     # A: on KEV by its snapshot end -> dropped. B: added later -> kept. S: benchmark -> kept.
     assert rows(con, f"SELECT cve_id FROM ({sql}) ORDER BY cve_id") == [("CVE-B",), ("CVE-S",)]
+
+
+# --- SHE-26 ---
+
+
+def test_labels(con):
+    con.execute(f"CREATE TABLE c AS {population.candidates_sql()}")
+    con.execute(
+        """
+        CREATE TABLE known_exploited AS SELECT * FROM (VALUES
+            ('CVE-A', DATE '2025-11-04'),
+            ('CVE-B', DATE '2025-11-05')
+        ) AS t(cve_id, date_added)
+        """
+    )
+    sql = population.add_labels_sql("c")
+    # A: added on the cutoff day -> 1. B: the day after -> 0. S: benchmark -> NULL.
+    assert rows(con, f"SELECT cve_id, label FROM ({sql}) ORDER BY cve_id") == [
+        ("CVE-A", 1),
+        ("CVE-B", 0),
+        ("CVE-S", None),
+    ]

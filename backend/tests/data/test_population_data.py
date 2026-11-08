@@ -47,3 +47,12 @@ def test_snapshot_rule_reproduces_the_scoreboard(con):
 def test_already_exploited_dropped(log):
     assert log["after_drop_already_exploited"] == 136_790  # 63 + 85 history rows removed
     assert (log["rows_2024"], log["rows_2025"], log["rows_2026"]) == (28_839, 35_281, 72_670)
+
+
+# --- SHE-26 ---
+
+
+def test_labels(con, log):
+    assert (log["positives_2024"], log["positives_2025"]) == (27, 48)
+    unlabelled = f"SELECT count(*) FROM {POPULATION} WHERE fold = 2026 AND label IS NOT NULL"
+    assert con.execute(unlabelled).fetchone()[0] == 0
