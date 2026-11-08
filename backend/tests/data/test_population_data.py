@@ -39,3 +39,11 @@ def test_snapshot_rule_reproduces_the_scoreboard(con):
     rule = population.snapshot_month_sql("published")
     mismatches = f"SELECT count(*) FROM scoreboard_2026 WHERE {rule} <> snapshot_month"
     assert con.execute(mismatches).fetchone()[0] == 0
+
+
+# --- SHE-25 ---
+
+
+def test_already_exploited_dropped(log):
+    assert log["after_drop_already_exploited"] == 136_790  # 63 + 85 history rows removed
+    assert (log["rows_2024"], log["rows_2025"], log["rows_2026"]) == (28_839, 35_281, 72_670)

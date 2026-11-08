@@ -70,8 +70,26 @@ def candidates_sql(vulns: str = "vulnerabilities", scoreboard: str = "scoreboard
     """
 
 
+# --- SHE-25 and SHE-26: eligibility and labels ----------------------------------
+
+
+def drop_already_exploited_sql(src: str, kev: str = "known_exploited") -> str:
+    """SHE-25: drop history rows already on KEV by the end of their snapshot month.
+    The scoreboard was filtered the same way by the organisers."""
+    return f"""
+        SELECT p.* FROM {src} AS p
+        WHERE p.fold = {BENCHMARK_FOLD}
+           OR NOT EXISTS (
+               SELECT 1 FROM {kev} AS k
+               WHERE k.cve_id = p.cve_id AND k.date_added <= p.snapshot_end
+           )
+    """
+
+
 # Applied in order to the candidates. Each entry: (log name, step).
-POPULATION_STEPS: list = []
+POPULATION_STEPS = [
+    ("drop_already_exploited", drop_already_exploited_sql),
+]
 
 
 def build_population(con: duckdb.DuckDBPyConnection, log: dict[str, int]) -> int:
