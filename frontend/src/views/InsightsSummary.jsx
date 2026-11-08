@@ -6,6 +6,7 @@ import { CoverageCard } from '../components/insights/CoverageCard'
 import { NextStepsPanel } from '../components/insights/NextStepsPanel'
 import { CatchRatePage } from '../components/insights/CatchRatePage'
 import { SeverityPage } from '../components/insights/SeverityPage'
+import { BugTypesPage } from '../components/insights/BugTypesPage'
 import { ModelPage } from '../components/insights/ModelPage'
 import { VendorsPage } from '../components/insights/VendorsPage'
 import { aboutData, coverage, kpis, versusPublic } from '../data/insights'
@@ -32,6 +33,8 @@ export function InsightsSummary({ onOpenFixFirst, theme = 'light', onThemeChange
           <SeverityPage onOpenFixFirst={onOpenFixFirst} />
         ) : section === 'vendors' ? (
           <VendorsPage onOpenFixFirst={onOpenFixFirst} />
+        ) : section === 'bug-types' ? (
+          <BugTypesPage onOpenFixFirst={onOpenFixFirst} />
         ) : section === 'model' ? (
           <ModelPage onOpenFixFirst={onOpenFixFirst} />
         ) : (

@@ -27,10 +27,11 @@ export const insightsNav = [
   { id: 'summary', label: 'Summary', icon: 'nav-v5/sub-summary', chip: 'bg-blue-soft' },
   { id: 'catch-rate', label: 'Catch rate', icon: 'nav-v5/sub-catch-rate', chip: 'bg-green-soft' },
   { id: 'severity', label: 'Severity', icon: 'nav-v5/sub-severity', chip: 'bg-purple-soft' },
-  { id: 'timing', label: 'Time to attack', icon: 'nav-v5/sub-timing', chip: 'bg-blue-soft' },
-  { id: 'vendors', label: 'Vendors', icon: 'nav-v5/sub-vendors', chip: 'bg-green-soft' },
-  { id: 'bug-types', label: 'Bug types', icon: 'nav-v5/sub-bug-types', chip: 'bg-purple-soft' },
-  { id: 'model', label: 'Model check', icon: 'nav-v5/sub-model', chip: 'bg-blue-soft' },
+  // Hidden for now: no Time to attack page yet.
+  // { id: 'timing', label: 'Time to attack', icon: 'nav-v5/sub-timing', chip: 'bg-blue-soft' },
+  { id: 'vendors', label: 'Vendors', icon: 'nav-v5/sub-vendors', chip: 'bg-blue-soft' },
+  { id: 'bug-types', label: 'Bug types', icon: 'nav-v5/sub-bug-types', chip: 'bg-green-soft' },
+  { id: 'model', label: 'Model check', icon: 'nav-v5/sub-model', chip: 'bg-purple-soft' },
 ]
 
 // Catch rate page (chart values are sample data for now).
@@ -128,4 +129,37 @@ export const model = {
     ],
     takeaway: 'KEV entries group into two dense regions, which is why Granite embeddings add signal to the ranking.',
   },
+}
+
+// Bug types page: one bubble per CWE (Figma "Weakness bubbles" plot, 804×439 design px).
+// x = CVE count (log), y = share reaching KEV, size = KEV count.
+export const bugTypes = {
+  title: 'Some weakness types are exploited far beyond their volume',
+  subtitle: 'One bubble per CWE · x = CVE count (log), y = share reaching KEV, size = KEV count',
+  // Gridlines: [label, line top]
+  yTicks: [['0%', 389.11], ['1%', 295.58], ['2%', 202.04], ['3%', 108.5], ['4%', 14.97]],
+  // [label, left]
+  xTicks: [['1,000', 32.02], ['3,000', 245.92], ['10k', 486.33], ['30k', 700.22]],
+  average: { label: 'All CWEs 0.6%', top: 332.99, labelLeft: 673.76, labelTop: 310.03 },
+  // file: bubble/outline SVG pair; [left, top, size]; label [left, top]; key = highlighted (teal, bold label)
+  bubbles: [
+    { cwe: 'CWE-79', file: 'cwe79', box: [698.01, 366.54, 26.432], label: [638.93, 371.76] },
+    { cwe: 'CWE-89', file: 'cwe89', box: [462.81, 337.7, 28], label: [504.06, 343.7] },
+    { cwe: 'CWE-787', file: 'cwe787', box: [407.01, 218.58, 41.749], label: [464.46, 231.45] },
+    { cwe: 'CWE-20', file: 'cwe20', box: [381.85, 288.91, 32.045], label: [427.6, 296.93] },
+    { cwe: 'CWE-125', file: 'cwe79', box: [349.16, 319.78, 26.432], label: [281.18, 324.99] },
+    { cwe: 'CWE-416', file: 'cwe416', box: [299.86, 164.26, 38.142], label: [353.3, 175.33] },
+    { cwe: 'CWE-22', file: 'cwe20', box: [325.84, 260.85, 32.045], label: [371.59, 268.87] },
+    { cwe: 'CWE-78', file: 'cwe78', box: [208.59, 52.26, 37.659], label: [261.49, 63.34], key: true },
+    { cwe: 'CWE-352', file: 'cwe352', box: [372.41, 371.24, 17.036], label: [402.36, 371.76] },
+    { cwe: 'CWE-434', file: 'cwe434', box: [171.04, 245.22, 25.875], label: [103.13, 250.16] },
+    { cwe: 'CWE-862', file: 'cwe862', box: [309.19, 355.99, 19.487], label: [241.99, 357.73] },
+    { cwe: 'CWE-287', file: 'cwe287', box: [113.6, 131.55, 28.735], label: [45.36, 137.92] },
+    { cwe: 'CWE-502', file: 'cwe502', box: [70.52, 94.5, 28], label: [113.69, 100.75], key: true },
+    { cwe: 'CWE-94', file: 'cwe94', box: [149.69, 197.62, 27.544], label: [90.49, 203.39] },
+    { cwe: 'CWE-918', file: 'cwe918', box: [89.7, 285.17, 20.817], label: [73.11, 313.03] },
+  ],
+  callout: { title: 'OS command injection', value: '3.4% reach KEV', left: 281.34, top: 5.18 },
+  takeaway:
+    'OS command injection and deserialization are rare, yet they reach KEV over 30× as often as cross-site scripting, the most common weakness.',
 }
