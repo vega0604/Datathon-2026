@@ -6,8 +6,8 @@ export const coverage = {
 }
 
 export const kpis = [
-  { id: 'benchmark', icon: 'insights/kpi-queue', chip: 'solid', label: 'Benchmark CVEs', value: '72,670', pill: 'Top 500 submitted' },
-  { id: 'nist', icon: 'insights/kpi-eye', chip: 'soft', label: 'Not reviewed by NIST', value: '51,046', pill: '55% of 2026' },
+  { id: 'benchmark', icon: 'insights/kpi-queue', label: 'Benchmark CVEs', value: '72,670', pill: 'Top 500 submitted' },
+  { id: 'nist', icon: 'insights/kpi-eye', label: 'Not reviewed by NIST', value: '51,046', pill: '55% of 2026' },
 ]
 
 export const versusPublic = [
@@ -31,3 +31,18 @@ export const insightsNav = [
   { id: 'bug-types', label: 'Bug types', icon: 'insights/sub-eye', chip: 'bg-blue-soft' },
   { id: 'model', label: 'Model check', icon: 'insights/sub-shield', chip: 'bg-blue-soft' },
 ]
+
+// Catch rate page (chart values are sample data for now).
+export const catchRate = {
+  headline: 'Our model catches more exploited CVEs at every queue size',
+  // Share of exploited CVEs caught after fixing 5k CVEs, by ranking.
+  series: [
+    { label: 'Our model', value: 62, legend: 'legend-our-model', legendHeight: 3 },
+    { label: 'Exploit + EPSS', value: 26, legend: 'legend-exploit-epss', legendHeight: 2 },
+    { label: 'EPSS', value: 22, legend: 'legend-epss', legendHeight: 2 },
+    { label: 'Highest CVSS', value: 18, legend: 'legend-highest-cvss', legendHeight: 2 },
+  ],
+  top500: { label: 'Fix 500 (0.7%)', value: 'Catch 24% of exploited CVEs' },
+  takeaway:
+    'Fixing just 0.7% of the queue, our top 500, catches about a quarter of the CVEs that went on to be exploited, roughly 4× the best public baseline.',
+}

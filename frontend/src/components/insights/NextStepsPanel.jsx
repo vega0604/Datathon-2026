@@ -1,14 +1,32 @@
 import { Icon } from '../../lib/Icon'
 
-function FactBox({ title, icon, chipClass, boxClass, titleClass, rows }) {
+/** Right-hand column shared by the Insights pages. */
+export function SidePanel({ children }) {
   return (
-    <div className={`flex w-full shrink-0 flex-col gap-2 rounded-[20px] p-4 xl:gap-2.5 xl:p-5 short:gap-1.5 short:p-3.5 ${boxClass}`}>
-      <div className="flex items-center gap-2.5">
-        <span className={`flex size-7 shrink-0 items-center justify-center rounded-lg ${chipClass}`}>
-          <Icon name={icon} className="size-[15px]" />
-        </span>
-        <p className={`text-base leading-6 font-semibold whitespace-nowrap ${titleClass}`}>{title}</p>
-      </div>
+    <aside className="flex h-full w-[272px] shrink-0 flex-col gap-4 overflow-y-auto rounded-3xl bg-card p-4 shadow-float xl:w-[300px] xl:gap-5 xl:p-5 2xl:w-[320px] 2xl:p-6 short:gap-3 short:p-4">
+      {children}
+    </aside>
+  )
+}
+
+function BoxHead({ title, icon, chipClass, titleClass }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className={`flex size-7 shrink-0 items-center justify-center rounded-lg ${chipClass}`}>
+        <Icon name={icon} className="size-[15px]" />
+      </span>
+      <p className={`text-base leading-6 font-semibold whitespace-nowrap ${titleClass}`}>{title}</p>
+    </div>
+  )
+}
+
+const boxBase = 'flex w-full shrink-0 flex-col gap-2 rounded-[20px] p-4 xl:gap-2.5 xl:p-5 short:gap-1.5 short:p-3.5'
+
+/** A titled box with label/value rows. */
+export function FactBox({ title, icon, chipClass, boxClass, titleClass, rows }) {
+  return (
+    <div className={`${boxBase} ${boxClass}`}>
+      <BoxHead title={title} icon={icon} chipClass={chipClass} titleClass={titleClass} />
       {rows.map(([label, value]) => (
         <div key={label} className="type-body flex w-full items-center gap-2">
           <span className="min-w-px flex-1 text-ink-muted">{label}</span>
@@ -19,8 +37,18 @@ function FactBox({ title, icon, chipClass, boxClass, titleClass, rows }) {
   )
 }
 
-// Compact "What to do" call to action.
-function WhatToDoCard({ onOpenFixFirst }) {
+/** A titled box with a short paragraph. */
+export function NoteBox({ title, icon, chipClass, boxClass, titleClass, children }) {
+  return (
+    <div className={`${boxBase} ${boxClass}`}>
+      <BoxHead title={title} icon={icon} chipClass={chipClass} titleClass={titleClass} />
+      <p className="type-body text-ink">{children}</p>
+    </div>
+  )
+}
+
+/** Compact "What to do" call to action. */
+export function WhatToDoCard({ onOpenFixFirst, children }) {
   return (
     <div className="relative flex w-full shrink-0 flex-col items-start gap-3 overflow-hidden rounded-3xl bg-blue p-4">
       <Icon name="insights/todo-deco-1" className="absolute top-[-170px] left-[140px] size-[260px]" />
@@ -29,9 +57,7 @@ function WhatToDoCard({ onOpenFixFirst }) {
       <span className="type-label relative rounded-full border border-white px-3 py-1 whitespace-nowrap text-white">
         What to do
       </span>
-      <p className="type-body relative text-white">
-        Start at the top of your Fix first list. Our top 500 catch about a quarter of what gets exploited.
-      </p>
+      <p className="type-body relative text-white">{children}</p>
       <button
         type="button"
         onClick={onOpenFixFirst}
@@ -43,10 +69,28 @@ function WhatToDoCard({ onOpenFixFirst }) {
   )
 }
 
+export function AboutDataBox({ rows }) {
+  return (
+    <FactBox
+      title="About this data"
+      icon="insights/about-queue"
+      boxClass="border border-line bg-subtle"
+      chipClass="bg-blue-soft"
+      titleClass="text-ink"
+      rows={rows}
+    />
+  )
+}
+
+/** Right-hand panel for the Summary page. */
 export function NextStepsPanel({ versusPublic, aboutData, onOpenFixFirst }) {
   return (
-    <aside className="flex h-full w-[272px] shrink-0 flex-col gap-4 overflow-y-auto rounded-3xl bg-card p-4 shadow-float xl:w-[300px] xl:gap-5 xl:p-5 2xl:w-[320px] 2xl:p-6 short:gap-3 short:p-4">
-      <WhatToDoCard onOpenFixFirst={onOpenFixFirst} />
+    <SidePanel>
+      <WhatToDoCard onOpenFixFirst={onOpenFixFirst}>
+        Start at the top of your Fix first list. Our top 500 catch about a quarter of what gets exploited.
+      </WhatToDoCard>
+      {/* Spacer pushes the fact boxes to the bottom of the panel. */}
+      <div className="min-h-0 flex-1" />
       <FactBox
         title="Versus public scores"
         icon="insights/versus-target"
@@ -55,21 +99,7 @@ export function NextStepsPanel({ versusPublic, aboutData, onOpenFixFirst }) {
         titleClass="text-green-ink"
         rows={versusPublic}
       />
-      <FactBox
-        title="About this data"
-        icon="insights/about-queue"
-        boxClass="border border-line bg-subtle"
-        chipClass="bg-blue-soft"
-        titleClass="text-ink"
-        rows={aboutData}
-      />
-      <div className="min-h-0 flex-1" />
-      <button
-        type="button"
-        className="w-full shrink-0 cursor-pointer rounded-full border border-line-strong bg-card py-2.5 text-base leading-6 font-semibold text-ink hover:bg-page xl:py-3 short:py-2"
-      >
-        Download this chart
-      </button>
-    </aside>
+      <AboutDataBox rows={aboutData} />
+    </SidePanel>
   )
 }
