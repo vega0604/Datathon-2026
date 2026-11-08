@@ -205,6 +205,24 @@ def add_keywords_sql(src: str, vulns: str = "vulnerabilities") -> str:
     """
 
 
+# --- SHE-33: banned-column guard -----------------------------------------------------
+
+# Columns that give the answer away for 2026 (see the SHE-6 summary): never features.
+BANNED_COLUMNS = {"nvd_status", "n_affected_cpes", "n_references", "cvss3_source", "last_modified"}
+BANNED_PREFIXES = ("ref_",)  # anything derived from references.csv
+
+
+def check_columns(columns: list[str], audit: bool = False) -> list[str]:
+    """Return the banned columns present. Raise unless this is the leakage audit."""
+    banned = sorted(c for c in columns if c in BANNED_COLUMNS or c.startswith(BANNED_PREFIXES))
+    if banned and not audit:
+        raise ValueError(
+            f"Banned (leaky) columns in features: {', '.join(banned)}. "
+            "Only the leakage audit (SHE-54) may build them, with audit=True."
+        )
+    return banned
+
+
 # Applied in order to the population. Each step keeps one row per population row.
 FEATURE_STEPS = [
     ("signals", signals_at_snapshot_sql),
@@ -216,7 +234,7 @@ FEATURE_STEPS = [
 ]
 
 
-def build_features(con: duckdb.DuckDBPyConnection, log: dict[str, int]) -> int:
+def build_features(con: duckdb.DuckDBPyConnection, log: dict[str, int], audit: bool = False) -> int:
     con.execute(
         f"CREATE OR REPLACE TEMP TABLE features AS SELECT * FROM {features_parquet('population')}"
     )
@@ -227,6 +245,7 @@ def build_features(con: duckdb.DuckDBPyConnection, log: dict[str, int]) -> int:
         con.execute("ALTER TABLE features_next RENAME TO features")
         log[f"after_{name}"] = count(con, "features")
     columns = [row[0] for row in con.execute("DESCRIBE features").fetchall()]
+    log["banned_columns"] = len(check_columns(columns, audit))
     log["columns"] = len(columns)
     return write_parquet(con, "SELECT * FROM features ORDER BY fold, cve_id", "features")
 

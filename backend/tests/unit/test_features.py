@@ -188,3 +188,18 @@ def test_keywords(con):
         "SELECT cve_id, kw_unauthenticated, kw_remote_code_execution, kw_sql_injection "
         f"FROM ({sql}) ORDER BY cve_id",
     ) == [("CVE-A", 1, 1, 0), ("CVE-B", 0, 0, 1), ("CVE-S", 0, 0, 0)]
+
+
+# --- SHE-33 ---
+
+
+def test_banned_columns_raise():
+    with pytest.raises(ValueError, match="nvd_status"):
+        features.check_columns(["epss", "nvd_status"])
+    with pytest.raises(ValueError, match="ref_news_links"):
+        features.check_columns(["ref_news_links"])
+
+
+def test_banned_columns_allowed_in_audit():
+    assert features.check_columns(["epss", "nvd_status"], audit=True) == ["nvd_status"]
+    assert features.check_columns(["epss", "days_to_cutoff"]) == []

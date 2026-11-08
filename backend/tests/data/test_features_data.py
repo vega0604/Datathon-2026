@@ -113,3 +113,10 @@ def test_keywords_are_flags(con):
     assert len(keywords) == 11
     for column in keywords:
         assert con.execute(f"SELECT max({column}) FROM {FEATURES}").fetchone()[0] in (0, 1)
+
+
+# --- SHE-33 ---
+
+
+def test_no_banned_columns(log):
+    assert log["banned_columns"] == 0
