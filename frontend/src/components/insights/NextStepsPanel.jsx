@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { Icon } from '../../lib/Icon'
 import { useFitHeight } from '../../lib/useFitHeight'
+import { BlueCard } from '../software/SoftwareParts'
 import { KpiSummary } from './KpiSummary'
 
 /** Right-hand column shared by the Insights pages. */
@@ -53,25 +54,16 @@ export function NoteBox({ title, icon, chipClass, boxClass, titleClass, children
   )
 }
 
-/** Compact "What to do" call to action. */
+/**
+ * "What to do" call to action. Same full-height card as the Your software screens
+ * (Figma: Card · What to do · blue): it grows to fill the spare height of the side
+ * panel, text at the top, button at the bottom.
+ */
 export function WhatToDoCard({ onOpenFixFirst, children }) {
   return (
-    <div className="relative flex w-full shrink-0 flex-col items-start gap-3 overflow-hidden rounded-3xl bg-brand p-4">
-      <Icon name="insights/todo-deco-1" className="absolute top-[-170px] left-[140px] size-[260px]" />
-      <Icon name="insights/todo-deco-4" className="absolute top-[22px] left-[200px] size-1.5" />
-
-      <span className="type-label relative rounded-full border border-white px-3 py-1 whitespace-nowrap text-white">
-        What to do
-      </span>
-      <p className="type-body relative text-white">{children}</p>
-      <button
-        type="button"
-        onClick={onOpenFixFirst}
-        className="relative cursor-pointer rounded-full bg-on-brand px-4 py-2 text-sm leading-5 font-semibold whitespace-pre text-primary-strong hover:bg-on-brand-hover"
-      >
-        {'Open Fix first  →'}
-      </button>
-    </div>
+    <BlueCard action={'Open Fix first  →'} onAction={onOpenFixFirst}>
+      {children}
+    </BlueCard>
   )
 }
 
