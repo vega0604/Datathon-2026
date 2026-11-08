@@ -8,6 +8,7 @@ the percentile of assigner_kev_prior within the fold. The weights were picked on
 only and then reported on 2025:
 
     uv run python -m backend.modeling.safety            # grid on 2024, report 2025
+    uv run python -m backend.modeling.safety --submit   # also write top500.csv for 2026
 """
 
 import argparse
@@ -87,7 +88,9 @@ def write_csv(rows: list[dict], name: str) -> None:
 
 
 def main() -> None:
-    argparse.ArgumentParser(description=__doc__).parse_args()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--submit", action="store_true", help="write top500.csv for 2026")
+    args = parser.parse_args()
     con = connect()
     results = run_grid(con)
     write_csv(results, "safety.csv")
@@ -126,6 +129,21 @@ def main() -> None:
     print(f"2025 hits@{report['k']} {report['hits_at_k']}, hits@500 {report['hits_at_500']}")
     if (best["w_code"], best["w_vendor"]) != (W_CODE, W_VENDOR):
         print("NOTE: module constants differ from the grid choice; update W_CODE/W_VENDOR.")
+    if args.submit:
+        print(json.dumps(submit(con), indent=2))
+
+
+def scores_2026(con) -> pd.DataFrame:
+    """Safety scores for every fold-2026 (scoreboard) vulnerability."""
+    df = load(con, (2026,))
+    return df.assign(score=safety_score(df))[["cve_id", "score"]]
+
+
+def submit(con) -> dict:
+    """SHE-50: the fallback submission, written through the validated writer."""
+    from backend.modeling.submission import write_submission
+
+    return write_submission(con, scores_2026(con))
 
 
 if __name__ == "__main__":
