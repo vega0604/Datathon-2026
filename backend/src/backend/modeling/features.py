@@ -55,6 +55,34 @@ FEATURE_GROUPS: dict[str, list[str]] = {
 }
 FEATURES: list[str] = [c for group in FEATURE_GROUPS.values() for c in group]
 CATEGORICAL: list[str] = [*CVSS3_METRICS, "cwe_primary"]
+
+# SHE-113: features whose score may only go up as they go up (+1). Everything else is 0.
+MONOTONE: dict[str, int] = {
+    "epss_pct": 1,
+    "exploitdb": 1,
+    "metasploit": 1,
+    "nuclei": 1,
+    "poc_github": 1,
+    "any_exploit_code": 1,
+    "assigner_kev_prior": 1,
+    "assigner_kev_rate": 1,
+    "kev_sim_max": 1,
+    "kev_sim_top5": 1,
+}
+# SHE-113 "core" feature set: the groups that hold up with few positives.
+CORE: list[str] = [
+    *FEATURE_GROUPS["signals"],
+    *FEATURE_GROUPS["assigner_history"],
+    *FEATURE_GROUPS["similarity"],
+]
+FEATURE_SETS: dict[str, list[str]] = {"all": FEATURES, "core": CORE}
+
+
+def monotone_vector(features: list[str]) -> list[int]:
+    """LightGBM's monotone_constraints, in feature order."""
+    return [MONOTONE.get(f, 0) for f in features]
+
+
 # Categorical only in the leakage audit (SHE-54); never in FEATURES.
 AUDIT_CATEGORICAL: list[str] = ["nvd_status"]
 OTHER = "other"

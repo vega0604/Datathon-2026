@@ -53,9 +53,20 @@ def load_params() -> dict:
     return dict(DEFAULT_PARAMS)
 
 
+# Our own settings in a params dict, not passed to LightGBM as such.
+NOT_LIGHTGBM = ("n_estimators", "max_pos_weight", "monotone", "feature_set")
+
+
+def features_for(params: dict, features: list[str] = mf.FEATURES) -> list[str]:
+    """The feature list a params dict asks for (SHE-113 feature_set), else `features`."""
+    if "feature_set" in params:
+        return list(mf.FEATURE_SETS[params["feature_set"]])
+    return features
+
+
 def lgb_params(params: dict, seed: int, scale_pos_weight: float) -> tuple[dict, int]:
     """LightGBM's own parameter dict and the number of boosting rounds."""
-    p = {k: v for k, v in params.items() if k not in ("n_estimators", "max_pos_weight")}
+    p = {k: v for k, v in params.items() if k not in NOT_LIGHTGBM}
     p.update(
         objective="binary",
         scale_pos_weight=scale_pos_weight,
@@ -85,6 +96,9 @@ def fit(
     cap = params.get("max_pos_weight", MAX_POS_WEIGHT)
     weight = min((len(y) - positives) / positives, cap)
     p, rounds = lgb_params(params, seed, weight)
+    if params.get("monotone"):
+        p["monotone_constraints"] = mf.monotone_vector(list(X.columns))
+        p["monotone_constraints_method"] = "advanced"
     booster = lgb.train(p, lgb.Dataset(X, y, free_raw_data=False), num_boost_round=rounds)
     return booster, categories
 
@@ -134,6 +148,7 @@ def backtest(
     Evaluation always uses the benchmark label in population.parquet."""
     train_df = data[data["fold"].isin(train_folds)]
     test_df = data[data["fold"] == test_fold]
+    features = features_for(params, features)
     if label_mode == "long":
         if label_end is None:
             raise ValueError("label_mode 'long' needs a label_end")
