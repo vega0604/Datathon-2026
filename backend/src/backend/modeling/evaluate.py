@@ -73,3 +73,22 @@ def evaluate(
         "precision_at_500": hits_500 / BENCHMARK_PICKS,
         "recall_at_k": hits_k / positives if positives else 0.0,
     }
+
+
+def evaluate_frame(
+    con: duckdb.DuckDBPyConnection,
+    fold: int,
+    scores,
+    order_by: str = "score DESC NULLS LAST",
+    population: str | None = None,
+) -> dict:
+    """Score a pandas DataFrame with cve_id and the columns in `order_by` (higher first),
+    holding one fold's rows. Ties fall to cve_id, as in ranked_sql."""
+    cursor = con.cursor()  # its own registration, closed with it
+    try:
+        cursor.register("_scores_frame", scores.assign(fold=fold))
+        return evaluate(
+            cursor, fold, ranked_sql("_scores_frame", fold, order_by), population=population
+        )
+    finally:
+        cursor.close()
