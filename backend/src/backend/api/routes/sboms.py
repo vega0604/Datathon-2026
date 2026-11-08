@@ -3,18 +3,21 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, UploadFile
 
 from backend.api.deps import Db
+from backend.core import config
 from backend.schemas.queue import QueueOut
 from backend.schemas.sbom import SbomComponentsOut, SbomOut, SbomSummary
 from backend.services import sbom as sbom_service
+from backend.services.description_match import match_descriptions
+from backend.services.match_verify import verify_description_matches
 from backend.services.matching import match_sbom
-from backend.services.queue import build_queue
+from backend.services.queue import build_queue, predictions_source
 from backend.services.sbom import MAX_BYTES, SbomError
 
 router = APIRouter(prefix="/api/sboms", tags=["sboms"])
 
 
-@router.post("", status_code=201, response_model=SbomOut)
-def upload_sbom(file: UploadFile, db: Db):
+def _ingest(file: UploadFile, db) -> str:
+    """Parse, store and match an uploaded CycloneDX SBOM; return its id."""
     raw = file.file.read(MAX_BYTES + 1)
     try:
         name, components = sbom_service.parse_cyclonedx(raw)
@@ -24,7 +27,25 @@ def upload_sbom(file: UploadFile, db: Db):
         db, name or file.filename or "SBOM", file.filename, components
     )
     match_sbom(db, sbom_id)
-    return sbom_service.load_sbom(db, sbom_id)
+    match_descriptions(db, sbom_id)  # vulnerabilities NIST hasn't analysed (no product list)
+    if config.GRANITE_MATCH_CHECK:
+        verify_description_matches(db, sbom_id, predictions=predictions_source())
+    return sbom_id
+
+
+@router.post("", status_code=201, response_model=SbomOut)
+def upload_sbom(file: UploadFile, db: Db):
+    return sbom_service.load_sbom(db, _ingest(file, db))
+
+
+@router.post("/fix-first", status_code=201, response_model=QueueOut)
+def upload_and_rank(
+    file: UploadFile,
+    db: Db,
+    limit: Annotated[int, Query(ge=1, le=1000)] = 100,
+):
+    """Upload an SBOM and get its Fix-First queue in one request."""
+    return build_queue(db, _ingest(file, db), limit=limit)
 
 
 @router.get("", response_model=list[SbomSummary])

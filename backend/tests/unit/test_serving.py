@@ -1,4 +1,4 @@
-"""Unit tests for the SHE-110 serving table: precedence, latest month, NULLs, percentiles."""
+"""Unit tests for the serving table: which rows, at which month, and how groups combine."""
 
 import duckdb
 import numpy as np
@@ -7,72 +7,60 @@ import pandas as pd
 from backend.modeling import serving
 
 
-def group(confidence, ids, scores, order=None):
-    df = pd.DataFrame(
-        {"cve_id": ids, "confidence": confidence, "score_raw": scores,
-         "reasons": [[f"{confidence} reason"] for _ in ids], "as_of": "2026-01"}
+def test_kev_wins_and_columns():
+    exploited = pd.DataFrame(
+        {"cve_id": ["A"], "confidence": "exploited", "basis": "kev", "score": 1.0,
+         "score_pct": 1.0, "reasons": [["On KEV"]], "as_of": "2025-01"}
     )  # fmt: skip
-    if order is not None:
-        df["order"] = order
-    return df
-
-
-def test_precedence_kev_then_model_then_lower():
-    exploited = group("exploited", ["A"], [1.0])
-    model = group("model", ["A", "B"], [0.9, 0.8], order=[1.0, 0.5])
-    lower = group("lower", ["A", "B", "C"], [3.0, 2.0, 1.0])
-    unscored = group("lower", ["D"], [np.nan]).assign(reasons=[[]])
-    out = serving.combine(exploited, model, lower, unscored).set_index("cve_id")
+    scored = pd.DataFrame(
+        {"cve_id": ["B", "A"], "confidence": "model", "basis": "latest_signals",
+         "score": [0.4, 0.9], "score_pct": [0.5, 1.0], "reasons": [[], []], "as_of": "2025-12"}
+    )  # fmt: skip
+    out = serving.combine(exploited, scored).set_index("cve_id")
     assert out.loc["A", "confidence"] == "exploited"
     assert out.loc["B", "confidence"] == "model"
-    assert out.loc["C", "confidence"] == "lower"
-    assert list(out.index) == ["A", "B", "C", "D"]
-    assert list(out.columns) == serving.COLUMNS[1:]
+    assert list(out.reset_index().columns) == serving.COLUMNS
 
 
-def test_null_scores_stay_null_and_percentiles_are_within_groups():
-    exploited = group("exploited", ["K1", "K2"], [1.0, 1.0])
-    model = group("model", ["M1", "M2"], [0.7, 0.7], order=[0.9, 0.4])  # tie broken by order
-    lower = group("lower", ["L1", "L2", "L3"], [0.1, 0.5, 0.9])
-    unscored = group("lower", ["N1"], [np.nan]).assign(reasons=[[]])
-    out = serving.combine(exploited, model, lower, unscored).set_index("cve_id")
-    assert out.loc[["K1", "K2"], "score_pct"].tolist() == [1.0, 1.0]
-    assert out.loc[["M1", "M2"], "score_pct"].tolist() == [1.0, 0.5]
-    assert out.loc[["L1", "L2", "L3"], "score_pct"].tolist() == [1 / 3, 2 / 3, 1.0]
-    assert np.isnan(out.loc["N1", "score_pct"])
-    assert np.isnan(out.loc["N1", "score_raw"])
-    assert out.loc["N1", "reasons"] == []
+def test_percentiles_share_the_top_rank_on_ties():
+    assert serving.pct(pd.Series([0.1, 0.5, 0.5, 0.9])).tolist() == [0.25, 0.75, 0.75, 1.0]
 
 
-def test_latest_signal_month_is_used():
+def test_serve_rows_months_and_cutoffs():
     con = duckdb.connect()
+    con.execute("CREATE SCHEMA clean")
     con.execute(
-        """
-        CREATE TABLE sig AS SELECT * FROM (VALUES
-            ('CVE-1', '2025-03', 0.2::DOUBLE, 0, 0, 0, 0),
-            ('CVE-1', '2025-11', 0.8::DOUBLE, 0, 1, 0, 0),
-            ('CVE-2', '2024-06', 0.5::DOUBLE, 0, 0, 0, 0)
-        ) AS t(cve_id, month, epss_pct, exploitdb, metasploit, nuclei, poc_github)
-        """
+        "CREATE TABLE vulnerabilities AS SELECT * FROM (VALUES "
+        "('OLD', DATE '2019-05-01'), ('SIG', DATE '2024-02-10'), ('NEW', DATE '2026-10-03'), "
+        "('KEV', DATE '2023-01-01'), ('BOARD', DATE '2026-03-01')) AS t(cve_id, published)"
+    )
+    con.execute("CREATE TABLE scoreboard_2026 AS SELECT 'BOARD' AS cve_id")
+    con.execute("CREATE TABLE clean.kev AS SELECT 'KEV' AS cve_id")
+    con.execute(
+        "CREATE TABLE sig AS SELECT * FROM (VALUES ('SIG', '2024-03'), ('SIG', '2025-07')) "
+        "AS t(cve_id, month)"
     )
     rows = con.execute(
-        f"SELECT cve_id, month, epss_pct, any_exploit_code, snapshot_end "
-        f"FROM ({serving.latest_signals_sql('sig')}) ORDER BY cve_id"
+        f"SELECT cve_id, snapshot_month, CAST(cutoff AS VARCHAR), has_signals, fold "
+        f"FROM ({serving.serve_rows_sql('sig')}) ORDER BY cve_id"
     ).fetchall()
-    assert [(r[0], r[1], r[2], r[3]) for r in rows] == [
-        ("CVE-1", "2025-11", 0.8, 1),
-        ("CVE-2", "2024-06", 0.5, 0),
-    ]
-    assert str(rows[0][4]) == "2025-11-30"
+    assert rows == [
+        ("NEW", "2026-10", "2026-11-04", False, serving.SERVE_FOLD),  # publish month
+        ("OLD", "2025-12", "2026-11-04", False, serving.SERVE_FOLD),  # no signals: Dec 2025
+        ("SIG", "2025-07", "2025-11-04", True, serving.SERVE_FOLD),  # latest signal month
+    ]  # KEV and scoreboard rows are scored elsewhere
 
 
-def test_rule_reasons():
-    row = {"metasploit": 1, "nuclei": 0, "exploitdb": 0, "poc_github": 0, "epss_pct": 0.95,
-           "assigner": "psirt@example.com", "assigner_kev_prior": 4}  # fmt: skip
-    assert serving.rule_reasons(row) == [
-        "Public exploit code exists (Metasploit)",
-        "EPSS is higher than 95% of vulnerabilities that month",
-        "psirt@example.com has had 4 vulnerabilities added to KEV before",
-    ]
-    quiet = {**row, "metasploit": 0, "epss_pct": 0.4, "assigner_kev_prior": 0}
-    assert serving.rule_reasons(quiet) == []
+def test_mean_probability_averages_seeds():
+    class Booster:
+        def __init__(self, value):
+            self.value = value
+
+        def predict(self, X):
+            return np.full(len(X), self.value)
+
+    df = pd.DataFrame({"epss_pct": [0.1, 0.2]})
+    models = [(0, Booster(0.2), {}), (1, Booster(0.4), {})]
+    assert serving.mean_probability(models, df, ["epss_pct"]).tolist() == [
+        0.30000000000000004, 0.30000000000000004,
+    ]  # fmt: skip

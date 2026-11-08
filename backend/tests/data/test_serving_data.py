@@ -1,4 +1,4 @@
-"""SHE-110: predictions.parquet covers every vulnerability with the right groups."""
+"""predictions.parquet scores every vulnerability on one scale (SHE-110, revised)."""
 
 import pytest
 
@@ -22,25 +22,22 @@ def test_one_row_per_vulnerability(con):
     assert rows == distinct == expected
 
 
-def test_groups(con):
-    assert con.execute(f"SELECT count(*) FROM {P} WHERE confidence = 'exploited'").fetchone()[0] == 1_484
-    not_model = con.execute(
+def test_groups_and_basis(con):
+    groups = dict(con.execute(f"SELECT confidence, count(*) FROM {P} GROUP BY 1").fetchall())
+    assert groups["exploited"] == 1_484
+    assert set(groups) == {"exploited", "model"}
+    board = con.execute(
         f"""
         SELECT count(*) FROM scoreboard_2026 AS s JOIN {P} AS p USING (cve_id)
-        WHERE p.confidence <> 'model'
-          AND s.cve_id NOT IN (SELECT cve_id FROM clean.kev)
+        WHERE p.basis <> 'snapshot_2026'
         """
     ).fetchone()[0]
-    assert not_model == 0
-    assert {r[0] for r in con.execute(f"SELECT DISTINCT confidence FROM {P}").fetchall()} == {
-        "exploited", "model", "lower",
-    }  # fmt: skip
+    assert board == 0  # no scoreboard vulnerability is on KEV
 
 
-def test_percentiles_within_groups(con):
-    low, high = con.execute(f"SELECT min(score_pct), max(score_pct) FROM {P}").fetchone()
-    assert 0 <= low <= high <= 1
-    nulls = con.execute(
-        f"SELECT count(*) FROM {P} WHERE (score_raw IS NULL) <> (score_pct IS NULL)"
-    ).fetchone()[0]
+def test_every_vulnerability_has_a_score(con):
+    nulls, low, high = con.execute(
+        f"SELECT count(*) FILTER (WHERE score IS NULL), min(score_pct), max(score_pct) FROM {P}"
+    ).fetchone()
     assert nulls == 0
+    assert 0 < low <= high <= 1

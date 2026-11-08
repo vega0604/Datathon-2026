@@ -46,6 +46,21 @@ def init_store(con: duckdb.DuckDBPyConnection) -> None:
         )
         """
     )
+    # Granite's verdict on description-only matches (optional, GRANITE_MATCH_CHECK).
+    con.execute(
+        """
+        CREATE TABLE IF NOT EXISTS app.match_checks (
+            sbom_id VARCHAR,
+            component_id INTEGER,
+            cve_id VARCHAR,
+            affected VARCHAR,
+            confidence VARCHAR,
+            reason VARCHAR,
+            error BOOLEAN,
+            PRIMARY KEY (sbom_id, component_id, cve_id)
+        )
+        """
+    )
 
 
 def open_database(app_db: str | None = None) -> duckdb.DuckDBPyConnection:

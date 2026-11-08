@@ -56,6 +56,26 @@ Data pipeline, ranking model, Granite enrichment and dashboard for **Before the 
 
 Always add packages with `uv add`, never `pip install`, so `pyproject.toml` and `uv.lock` stay in sync. Commit both files whenever they change.
 
+## Fix-First queue for an SBOM
+
+One request uploads a CycloneDX SBOM (JSON) and returns its ranked queue:
+
+```bash
+uv run uvicorn backend.api.app:app --reload
+curl -F "file=@demo/acme_sbom.cdx.json" "http://127.0.0.1:8000/api/sboms/fix-first?limit=20"
+```
+
+PowerShell: `curl.exe -F "file=@demo/acme_sbom.cdx.json" "http://127.0.0.1:8000/api/sboms/fix-first?limit=20"`.
+Later pages: `GET /api/sboms/{sbom_id}/queue?limit=20&offset=20`.
+
+How it works:
+
+1. **Matching.** Components match vulnerabilities through NIST's product lists (CPE or purl, with version ranges), and, for vulnerabilities NIST hasn't analysed yet (no product list), through their description (`match_methods: ["description"]`, version unverified). Set `GRANITE_MATCH_CHECK=true` to let Granite on watsonx confirm or drop description matches (at most `MAX_MATCH_CHECKS` per upload).
+2. **Ranking.** Vulnerabilities on CISA KEV first, then `score`: the submitted ranking (LightGBM rank-blended with the safety ranker) from `data/features/predictions.parquet`, on one scale for every vulnerability. Each item has up to 3 `reasons`, `p_exploit` (the model's rough chance), `basis` and `as_of` (the month the scores describe) and `stale` (older than `SCORE_STALE_DAYS`).
+3. **Freshness.** `EPSS_LIVE=true` fetches today's EPSS for the matched CVEs from FIRST (`api.first.org`) and re-ranks with `score_live`. To refresh everything after new monthly signal files arrive: rerun `pipeline.clean`, `pipeline.features`, then `uv run python -m backend.modeling.serving`.
+
+Without `predictions.parquet` the queue falls back to a placeholder ranking (KEV, EPSS, CVSS): build it with `uv run python -m backend.modeling.select` (or `serving`).
+
 ## Dependency groups
 
 | Group | What it's for | Story |
