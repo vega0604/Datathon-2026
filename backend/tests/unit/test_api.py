@@ -14,3 +14,9 @@ def test_cors_allows_vite():
     with TestClient(create_app()) as client:
         r = client.get("/api/health", headers={"Origin": "http://localhost:5173"})
     assert r.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+def test_meta(client):
+    r = client.get("/api/meta")
+    assert r.status_code == 200
+    assert r.json() == {"data_backend": "duckdb", "vulnerabilities": 1}
