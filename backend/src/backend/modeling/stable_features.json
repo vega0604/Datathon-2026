@@ -1,0 +1,105 @@
+{
+  "rule": "auc_dir >= 0.55 in 2024 and 2025 with the same direction",
+  "features": [
+    {
+      "feature": "cvss4_score",
+      "direction": "+",
+      "mean_auc_dir": 0.9142
+    },
+    {
+      "feature": "assigner_kev_rate",
+      "direction": "+",
+      "mean_auc_dir": 0.8059
+    },
+    {
+      "feature": "kev_sim_max",
+      "direction": "+",
+      "mean_auc_dir": 0.7316
+    },
+    {
+      "feature": "kev_sim_top5",
+      "direction": "+",
+      "mean_auc_dir": 0.7203
+    },
+    {
+      "feature": "cvss3_score",
+      "direction": "+",
+      "mean_auc_dir": 0.702
+    },
+    {
+      "feature": "any_exploit_code",
+      "direction": "+",
+      "mean_auc_dir": 0.6913
+    },
+    {
+      "feature": "assigner_cves_prior",
+      "direction": "-",
+      "mean_auc_dir": 0.6768
+    },
+    {
+      "feature": "cwe_primary",
+      "direction": "+",
+      "mean_auc_dir": 0.6703
+    },
+    {
+      "feature": "poc_github",
+      "direction": "+",
+      "mean_auc_dir": 0.6679
+    },
+    {
+      "feature": "assigner_kev_prior",
+      "direction": "+",
+      "mean_auc_dir": 0.6627
+    },
+    {
+      "feature": "epss_pct",
+      "direction": "+",
+      "mean_auc_dir": 0.6394
+    },
+    {
+      "feature": "kw_unauthenticated",
+      "direction": "+",
+      "mean_auc_dir": 0.6311
+    },
+    {
+      "feature": "integrity_impact",
+      "direction": "+",
+      "mean_auc_dir": 0.6155
+    },
+    {
+      "feature": "confidentiality_impact",
+      "direction": "+",
+      "mean_auc_dir": 0.6111
+    },
+    {
+      "feature": "user_interaction",
+      "direction": "+",
+      "mean_auc_dir": 0.6028
+    },
+    {
+      "feature": "availability_impact",
+      "direction": "+",
+      "mean_auc_dir": 0.5993
+    },
+    {
+      "feature": "attack_complexity",
+      "direction": "+",
+      "mean_auc_dir": 0.5902
+    },
+    {
+      "feature": "nuclei",
+      "direction": "+",
+      "mean_auc_dir": 0.5823
+    },
+    {
+      "feature": "scope",
+      "direction": "+",
+      "mean_auc_dir": 0.5706
+    },
+    {
+      "feature": "privileges_required",
+      "direction": "+",
+      "mean_auc_dir": 0.5676
+    }
+  ]
+}

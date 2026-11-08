@@ -29,7 +29,9 @@ from backend.modeling.train import load_params, run_protocol
 
 COMPARISON = OUTPUTS_DIR / "comparison.csv"
 DIRECTIONS = {"primary": 2025, "time_reversed": 2024}
-CURRENT_SUBMISSION = ("lgbm_she8", "benchmark")  # variant and labels behind top500.csv
+# Variant and labels behind the committed top500.csv: submission v2 (SHE-116). It was
+# ("lgbm_she8", "benchmark") for v1.
+CURRENT_SUBMISSION = ("blend_a0.25", "benchmark")
 COLUMNS = [
     "variant", "labels", "direction", "test_fold", "k",
     "hits_at_k_mean", "hits_at_k_min", "hits_at_k_max",

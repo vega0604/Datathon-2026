@@ -172,6 +172,29 @@ score. Longer training labels didn't help any model here. Caveat: the blend trad
 hits deeper in the list for hits near the top: its 2024 hits@500 (9.0) is lower than the
 v1 model's (11.8), while the rule scores hits at K, the benchmark's own pick rate.
 
+## Lean feature sets (after SHE-117)
+
+The univariate report (`modeling/feature_report.py`, SHE-117) was used to prune features
+with a rule fixed before any backtest: AUC (best direction) at least 0.55 in every
+selection year with the same direction, at least 5 positives with a value (drops
+`cvss4_score`, which has 1 and 6), one feature per pair with |Spearman rho| >= 0.85, and
+monotone constraints in each kept numeric feature's direction. Same constrained
+parameters as above, benchmark labels, 5 seeds.
+
+| Variant | 2025 hits@243 | 2025 hits@500 | 2024 hits@198 (reversed) | 2024 hits@500 | Primary score |
+| --- | --- | --- | --- | --- | --- |
+| Lean, selected on both years (16 features) | 13.0 [13-13] | 15.0 | 10.0 [10-10] | 13.8 | 23.0 |
+| Lean, selected on the training year only | 13.0 [13-13] | 14.6 | 8.2 [8-9] | 12.8 | 21.2 |
+| Blend alpha 0.25 with lean (both years) | 15.4 [15-16] | 17.4 | 9.0 [9-9] | 9.0 | 24.4 |
+| Blend alpha 0.25 with lean (training year only) | 15.4 [15-16] | 18.0 | 9.0 [9-9] | 9.0 | 24.4 |
+| Current submission (blend alpha 0.25, full constrained model) | 15.4 [15-16] | 18.0 | 8.6 [8-9] | 9.0 | 24.0 |
+
+Pruning helps the model on its own (23.0 vs 20.8 for the full constrained model), but
+once blended with the safety ranker the gain is +0.4, far below the +3 needed to replace
+the submission, so `top500.csv` is unchanged. The "both years" selection saw the test
+year's labels, so its backtest is optimistic; the training-year-only ("nested") version
+is the honest one and reaches the same blended score.
+
 ## Known limits
 
 - **Few positives.** 27 and 48 positives per fold: single-seed results swing by about

@@ -1,0 +1,159 @@
+{
+  "rule": "- the feature's auc_dir is at least 0.55 in every selection fold, with the same direction;\n- at least 5 positives have a value in every selection fold (drops cvss4_score: 1 and 6);\n- of each pair with |Spearman rho| >= 0.85, only the one with the higher mean auc_dir\n  stays (whitelist order on a tie);\n- numeric features are constrained monotone in their direction (+1 or -1); categorical\n  ones are unconstrained.",
+  "base_params": {
+    "num_leaves": 3,
+    "min_child_samples": 100,
+    "learning_rate": 0.02,
+    "n_estimators": 400,
+    "feature_fraction": 0.8,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 1,
+    "lambda_l2": 1.0,
+    "max_pos_weight": 1,
+    "max_depth": 3,
+    "monotone": true,
+    "feature_set": "all"
+  },
+  "variants": {
+    "lean_stable": {
+      "primary": {
+        "features": [
+          "epss_pct",
+          "nuclei",
+          "any_exploit_code",
+          "assigner_cves_prior",
+          "assigner_kev_rate",
+          "cvss3_score",
+          "attack_complexity",
+          "privileges_required",
+          "user_interaction",
+          "scope",
+          "confidentiality_impact",
+          "integrity_impact",
+          "availability_impact",
+          "cwe_primary",
+          "kw_unauthenticated",
+          "kev_sim_max"
+        ],
+        "directions": {
+          "epss_pct": 1,
+          "nuclei": 1,
+          "any_exploit_code": 1,
+          "assigner_cves_prior": -1,
+          "assigner_kev_rate": 1,
+          "cvss3_score": 1,
+          "kw_unauthenticated": 1,
+          "kev_sim_max": 1
+        }
+      },
+      "time_reversed": {
+        "features": [
+          "epss_pct",
+          "nuclei",
+          "any_exploit_code",
+          "assigner_cves_prior",
+          "assigner_kev_rate",
+          "cvss3_score",
+          "attack_complexity",
+          "privileges_required",
+          "user_interaction",
+          "scope",
+          "confidentiality_impact",
+          "integrity_impact",
+          "availability_impact",
+          "cwe_primary",
+          "kw_unauthenticated",
+          "kev_sim_max"
+        ],
+        "directions": {
+          "epss_pct": 1,
+          "nuclei": 1,
+          "any_exploit_code": 1,
+          "assigner_cves_prior": -1,
+          "assigner_kev_rate": 1,
+          "cvss3_score": 1,
+          "kw_unauthenticated": 1,
+          "kev_sim_max": 1
+        }
+      },
+      "best_alpha": 0.25
+    },
+    "lean_nested": {
+      "primary": {
+        "features": [
+          "epss_pct",
+          "nuclei",
+          "any_exploit_code",
+          "assigner_cves_prior",
+          "assigner_kev_rate",
+          "cvss3_score",
+          "attack_vector",
+          "attack_complexity",
+          "privileges_required",
+          "user_interaction",
+          "scope",
+          "confidentiality_impact",
+          "integrity_impact",
+          "availability_impact",
+          "cwe_primary",
+          "n_cwes",
+          "kw_unauthenticated",
+          "kw_auth_bypass",
+          "kw_privilege_escalation",
+          "kev_sim_max",
+          "days_to_cutoff"
+        ],
+        "directions": {
+          "epss_pct": 1,
+          "nuclei": 1,
+          "any_exploit_code": 1,
+          "assigner_cves_prior": -1,
+          "assigner_kev_rate": 1,
+          "cvss3_score": 1,
+          "n_cwes": 1,
+          "kw_unauthenticated": 1,
+          "kw_auth_bypass": 1,
+          "kw_privilege_escalation": 1,
+          "kev_sim_max": 1,
+          "days_to_cutoff": -1
+        }
+      },
+      "time_reversed": {
+        "features": [
+          "epss_pct",
+          "nuclei",
+          "any_exploit_code",
+          "assigner_cves_prior",
+          "assigner_kev_rate",
+          "cvss3_score",
+          "attack_vector",
+          "attack_complexity",
+          "privileges_required",
+          "user_interaction",
+          "scope",
+          "confidentiality_impact",
+          "integrity_impact",
+          "availability_impact",
+          "cvss4_score",
+          "cwe_primary",
+          "kw_unauthenticated",
+          "kw_remote_code_execution",
+          "kev_sim_top5"
+        ],
+        "directions": {
+          "epss_pct": 1,
+          "nuclei": 1,
+          "any_exploit_code": 1,
+          "assigner_cves_prior": -1,
+          "assigner_kev_rate": 1,
+          "cvss3_score": 1,
+          "cvss4_score": 1,
+          "kw_unauthenticated": 1,
+          "kw_remote_code_execution": 1,
+          "kev_sim_top5": 1
+        }
+      },
+      "best_alpha": 0.25
+    }
+  }
+}
