@@ -20,10 +20,11 @@ export const chartText = {
 }
 
 /** Shrinks its child plot to fit both the available width and height. */
-export function PlotFrame({ children }) {
-  // min-h keeps labels legible on short screens (the panel scrolls instead of squashing the chart).
+export function PlotFrame({ children, minH = 'min-h-[240px]' }) {
+  // min-h keeps labels legible on short screens. Summary passes a smaller one: its
+  // grid shrinks as a whole (useFitHeight) instead of scrolling.
   return (
-    <div className="flex min-h-[240px] w-full flex-1 items-center justify-center [container-type:size]">{children}</div>
+    <div className={`flex w-full flex-1 items-center justify-center [container-type:size] ${minH}`}>{children}</div>
   )
 }
 
@@ -45,23 +46,24 @@ export function PlotSurface({ width, height, children }) {
 }
 
 /** Figma-exported chart graphic. */
-export function ChartImg({ file, style }) {
-  return <img alt="" src={iconUrl(file)} className="absolute block max-w-none" style={style} />
+export function ChartImg({ file, style, className = '' }) {
+  return <img alt="" src={iconUrl(file)} className={`absolute block max-w-none ${className}`} style={style} />
 }
 
 /**
  * "Insights/Takeaway": the one-sentence takeaway that closes every insight chart.
  * tone: 'blue' (default), 'purple' (soft purple box) or 'ai' (white box on a purple card).
  */
-export function Takeaway({ tone = 'blue', children }) {
+// size 'sm' is the compact version used on Summary, where several charts share the page.
+export function Takeaway({ tone = 'blue', size = 'md', children }) {
   const bg = { blue: 'bg-blue-soft', purple: 'bg-purple-soft', ai: 'bg-card' }[tone]
   const ai = tone === 'ai'
   return (
-    <div className={`flex w-full shrink-0 items-start gap-3 rounded-xl p-4 short:p-3 ${bg}`}>
+    <div className={`flex w-full shrink-0 items-start gap-3 rounded-xl ${size === 'sm' ? 'p-3.5' : 'p-4 short:p-3'} ${bg}`}>
       <Icon name={ai ? 'insights/model/takeaway-idea-purple' : 'insights/catch-rate/takeaway-idea'} className="size-4" />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className={`type-label ${ai ? 'text-purple-ink' : 'text-blue-ink'}`}>Takeaway</span>
-        <p className="text-base leading-6 text-ink short:text-sm short:leading-5">{children}</p>
+        <p className={size === 'sm' ? 'text-sm leading-5 text-ink' : 'text-base leading-6 text-ink short:text-sm short:leading-5'}>{children}</p>
       </div>
     </div>
   )

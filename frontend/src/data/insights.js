@@ -3,11 +3,17 @@ export const user = { name: 'Jane Doe', role: 'Security lead' }
 
 export const coverage = {
   caughtPct: 24, // share of exploited CVEs caught by fixing our top 500
+  // Footer bar under the gauge (Figma Summary). 4× = vs the best public baseline (see Catch rate).
+  footer: 'Fixing 0.7% of the queue beats every public baseline',
+  footerPill: '↗ 4× baseline',
 }
 
 export const kpis = [
-  { id: 'benchmark', icon: 'insights/kpi-queue', label: 'Benchmark CVEs', value: '72,670', pill: 'Top 500 submitted' },
-  { id: 'nist', icon: 'insights/kpi-eye', label: 'Not reviewed by NIST', value: '51,046', pill: '55% of 2026' },
+  { id: 'benchmark', icon: 'insights/kpi-queue', label: 'Benchmark CVEs', value: '72,670', pill: 'Top 500 submitted',
+    // Share bar: the 500 we submit out of all 72,670 scored.
+    share: { pct: (500 / 72670) * 100, caption: '500 of 72,670 picked · 0.7%', tone: 'bg-chart-1' } },
+  { id: 'nist', icon: 'insights/kpi-eye', label: 'Not reviewed by NIST', value: '51,046', pill: '55% of 2026',
+    share: { pct: 55, caption: '55% of 2026 CVEs still unreviewed', tone: 'bg-ai' } },
 ]
 
 export const versusPublic = [
@@ -26,12 +32,9 @@ export const insightsNav = [
   // V5 sub-nav: each chip has its own tint (Figma "Insights sub-nav").
   { id: 'summary', label: 'Summary', icon: 'nav-v5/sub-summary', chip: 'bg-blue-soft' },
   { id: 'catch-rate', label: 'Catch rate', icon: 'nav-v5/sub-catch-rate', chip: 'bg-green-soft' },
-  { id: 'severity', label: 'Severity', icon: 'nav-v5/sub-severity', chip: 'bg-purple-soft' },
   // Hidden for now: no Time to attack page yet.
   // { id: 'timing', label: 'Time to attack', icon: 'nav-v5/sub-timing', chip: 'bg-blue-soft' },
-  { id: 'vendors', label: 'Vendors', icon: 'nav-v5/sub-vendors', chip: 'bg-blue-soft' },
-  { id: 'bug-types', label: 'Bug types', icon: 'nav-v5/sub-bug-types', chip: 'bg-green-soft' },
-  { id: 'model', label: 'Model check', icon: 'nav-v5/sub-model', chip: 'bg-purple-soft' },
+  { id: 'vendors', label: 'Vendors', icon: 'nav-v5/sub-vendors', chip: 'bg-purple-soft' },
 ]
 
 // Catch rate page (chart values are sample data for now).
@@ -49,7 +52,7 @@ export const catchRate = {
     'Fixing just 0.7% of the queue, our top 500, catches about a quarter of the CVEs that went on to be exploited, roughly 4× the best public baseline.',
 }
 
-// Severity page (chart values are sample data for now).
+// Severity vs exploitation, shown on Summary (chart values are sample data for now).
 export const severity = {
   bands: {
     title: 'Severity alone misses most attacks',
@@ -61,20 +64,6 @@ export const severity = {
       { key: 'low', label: 'Low', range: '0.1 to 3.9', value: '0.04%' },
     ],
     takeaway: 'Critical CVEs reach KEV about 10× as often as Medium ones, yet 98% of them are never exploited.',
-  },
-  leadTime: {
-    title: 'We flag most exploited CVEs weeks before CISA',
-    subtitle: '2025 KEV entries, by days between our top-K flag and the KEV listing',
-    buckets: [
-      { label: 'After listing', count: 9 },
-      { label: '0 to 7 days', count: 14 },
-      { label: '8 to 30 days', count: 22 },
-      { label: '31 to 90 days', count: 18 },
-      { label: 'Over 90 days', count: 7 },
-    ],
-    peak: { label: 'Peak · median 19 days early', value: '22 CVEs' },
-    takeaway:
-      'Our model raised the flag before CISA for about 9 in 10 of the KEV entries it caught, a median of 19 days early.',
   },
 }
 
@@ -114,13 +103,6 @@ export const vendors = {
 }
 
 export const model = {
-  leakage: {
-    headline: 'Banned columns would have tripled our score',
-    status: 'Audit passed, none used',
-    banned: { label: 'With banned columns (not allowed)', value: 61 },
-    submitted: { label: 'Submitted model', value: 23 },
-    takeaway: 'Columns that leak the future nearly triple the hit count, so the submitted model uses none of them.',
-  },
   embedding: {
     title: 'Exploited CVEs cluster in Granite’s text space',
     clusters: [
@@ -131,7 +113,7 @@ export const model = {
   },
 }
 
-// Bug types page: one bubble per CWE (Figma "Weakness bubbles" plot, 804×439 design px).
+// Weakness types, shown on Summary: one bubble per CWE (Figma "Weakness bubbles" plot, 804×439 design px).
 // x = CVE count (log), y = share reaching KEV, size = KEV count.
 export const bugTypes = {
   title: 'Some weakness types are exploited far beyond their volume',

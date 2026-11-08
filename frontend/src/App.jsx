@@ -19,6 +19,8 @@ function initialTheme() {
 
 export default function App() {
   const [page, setPage] = useState('insights')
+  // Bumped by the logo: remounts Insights so it opens on Summary (the home page).
+  const [homeKey, setHomeKey] = useState(0)
   // Lives here, not in a view, so switching it only reskins the page: the open
   // view keeps its state (selected row, filters, search, sort, open panel).
   const [theme, setTheme] = useState(initialTheme)
@@ -60,6 +62,10 @@ export default function App() {
   const nav = {
     onOpenFixFirst: () => setPage('fixFirst'),
     onOpenInsights: () => setPage('insights'),
+    onHome: () => {
+      setPage('insights')
+      setHomeKey((k) => k + 1)
+    },
     // Saved uploads, listed in the sidebar on every page. Highlighted only on the software page.
     software: {
       library,
@@ -92,5 +98,5 @@ export default function App() {
         onScreen={setSwScreen}
       />
     )
-  return page === 'insights' ? <InsightsSummary {...nav} /> : <FixFirstQueue {...nav} />
+  return page === 'insights' ? <InsightsSummary key={homeKey} {...nav} /> : <FixFirstQueue {...nav} />
 }

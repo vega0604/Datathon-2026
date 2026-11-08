@@ -13,7 +13,7 @@ import { BlueCard, FactRow, FitMain, FoundBy, PageTitle, SevMix, SevPill, SidePa
 const fmtDate = (d) => new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 const fmtTime = (d) => d.toLocaleTimeString('en-GB', { hour12: false })
 
-export function YourSoftware({ sbom, library = [], onSbom, onSelect, onRemove, screen, onScreen, onOpenFixFirst, onOpenInsights, theme = 'light', onThemeChange }) {
+export function YourSoftware({ onHome, sbom, library = [], onSbom, onSelect, onRemove, screen, onScreen, onOpenFixFirst, onOpenInsights, theme = 'light', onThemeChange }) {
   const dark = theme === 'dark'
   const [job, setJob] = useState(null) // the upload in progress
   const [error, setError] = useState(null)
@@ -56,7 +56,7 @@ export function YourSoftware({ sbom, library = [], onSbom, onSelect, onRemove, s
   return (
     <IconDarkContext.Provider value={dark}>
       <div className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[560px] min-w-[1024px] flex-col bg-page font-sans`}>
-        <AppHeader iconDir="fixfirst" theme={theme} onThemeChange={onThemeChange} />
+        <AppHeader iconDir="fixfirst" theme={theme} onThemeChange={onThemeChange} onHome={onHome} />
         <div className="flex min-h-0 w-full flex-1 items-start gap-4 overflow-hidden p-4 wide:gap-5 wide:p-5 compact:py-3">
           <Sidebar
             current="software"

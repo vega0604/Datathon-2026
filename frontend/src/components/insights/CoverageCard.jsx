@@ -16,7 +16,7 @@ function SegmentedGauge({ pct }) {
       viewBox="0 0 420 292"
       role="img"
       aria-label={`${pct}% of exploited CVEs caught by fixing our top 500`}
-      className="block h-full max-h-[440px] w-full font-sans"
+      className="block h-full max-h-[360px] w-full font-sans"
     >
       {Array.from({ length: SEGMENTS }, (_, i) => {
         const deg = -SWEEP / 2 + (i * SWEEP) / (SEGMENTS - 1)
@@ -32,40 +32,52 @@ function SegmentedGauge({ pct }) {
             height="46"
             rx="6.5"
             transform={`rotate(${deg} ${x} ${y})`}
-            className={i < filled ? 'fill-chart-1' : 'fill-subtle'}
+            className={i < filled ? 'gauge-fill fill-chart-1' : 'fill-subtle'}
+            style={{ '--i': i }}
           />
         )
       })}
-      <text x={CX} y="175" textAnchor="middle" dominantBaseline="central" className="fill-ink text-[72px] font-light">
+      <text x={CX} y="196" textAnchor="middle" dominantBaseline="central" className="fill-ink text-[88px] font-light">
         {pct}%
-      </text>
-      <text x={CX} textAnchor="middle" className="fill-ink-muted text-sm tracking-body">
-        <tspan x={CX} y="234">of exploited CVEs caught</tspan>
-        <tspan x={CX} y="254">by fixing our top 500</tspan>
       </text>
     </svg>
   )
 }
 
+// Gauge (with the percent) on the left; what it means, the key and how it compares on the right.
 export function CoverageCard({ coverage }) {
   return (
-    <section className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden rounded-[28px] bg-card p-5 shadow-float xl:p-7">
+    <section className="flex w-full min-w-0 shrink-0 flex-col gap-4 rounded-[28px] bg-card p-6 shadow-float short:gap-2 short:p-5">
       <div className="flex w-full shrink-0 items-center gap-2.5">
         <Icon name="insights/card-target" className="size-5" />
-        <h2 className="min-w-px flex-1 text-lg leading-7 text-ink xl:text-xl">Coverage overview</h2>
+        <h2 className="min-w-px flex-1 text-lg leading-7 text-ink">Coverage overview</h2>
       </div>
-      <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-        <SegmentedGauge pct={coverage.caughtPct} />
-      </div>
-      <div className="flex w-full shrink-0 justify-center gap-4">
-        <span className="flex items-center gap-1.5">
-          <span className="h-3.5 w-2 rounded bg-chart-1" />
-          <span className="type-label whitespace-nowrap text-ink-muted">Caught (filled)</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-3.5 w-2 rounded border border-line-strong bg-subtle" />
-          <span className="type-label whitespace-nowrap text-ink-muted">Missed (empty)</span>
-        </span>
+      <div className="flex w-full items-center gap-6">
+        {/* Gauge height follows the window height so it stays large on big screens. */}
+        <div className="flex h-[clamp(120px,17vh,200px)] w-[46%] shrink-0 items-center justify-center">
+          <SegmentedGauge pct={coverage.caughtPct} />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-4 short:gap-2.5">
+          <p className="text-base leading-6 text-ink">of exploited CVEs caught by fixing our top 500</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <span className="flex items-center gap-1.5">
+              <span className="h-3.5 w-2 rounded bg-chart-1" />
+              <span className="type-label whitespace-nowrap text-ink-muted">Caught</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3.5 w-2 rounded border border-line-strong bg-subtle" />
+              <span className="type-label whitespace-nowrap text-ink-muted">Missed</span>
+            </span>
+          </div>
+          {coverage.footer && (
+            <div className="flex flex-col items-start gap-2 border-t border-line pt-3 short:gap-1.5 short:pt-2.5">
+              <span className="type-label rounded-full bg-blue px-2.5 py-1 font-semibold whitespace-nowrap text-white">
+                {coverage.footerPill}
+              </span>
+              <p className="type-label text-ink-muted">{coverage.footer}</p>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )

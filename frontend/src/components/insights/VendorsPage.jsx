@@ -7,14 +7,14 @@ import { aboutData, vendors } from '../../data/insights'
 function RankingRow({ vendor }) {
   return (
     <div className="flex w-full shrink-0 items-center gap-2.5 rounded-full bg-card py-1.5 pr-3.5 pl-1.5">
-      <span className="type-body-compact flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-soft font-semibold text-blue-ink">
+      <span className="type-body-compact flex size-9 shrink-0 items-center justify-center rounded-full bg-purple-soft font-semibold text-purple-ink">
         {vendor.name[0]}
       </span>
       <div className="flex min-w-0 flex-1 flex-col whitespace-nowrap">
         <span className="type-body-compact truncate font-semibold text-ink">{vendor.name}</span>
         <span className="type-label text-ink-muted">{vendor.cves}</span>
       </div>
-      <span className="type-body-compact shrink-0 rounded-full bg-blue-soft px-2.5 py-1 font-semibold text-blue-ink">
+      <span className="type-body-compact shrink-0 rounded-full bg-purple-soft px-2.5 py-1 font-semibold text-purple-ink">
         {vendor.kev}
       </span>
     </div>
@@ -83,7 +83,7 @@ export function VendorsPage({ onOpenFixFirst }) {
           chipClass="bg-card"
           titleClass="text-green-ink"
         >
-          Bigger boxes mean more CVEs. Darker blue means a higher share of them get exploited.
+          Bigger boxes mean more CVEs. Darker purple means a higher share of them get exploited.
         </NoteBox>
         <AboutDataBox rows={aboutData} />
       </SidePanel>

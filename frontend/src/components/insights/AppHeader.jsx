@@ -1,20 +1,25 @@
+import logoLight from '../../assets/logolight.png'
+import logoDark from '../../assets/logodark.png'
 import { Icon, iconUrl } from '../../lib/Icon'
 import { user } from '../../data/insights'
 import { ThemeToggle } from './ThemeToggle'
 
 // iconDir picks the icon set: 'insights' (V4 colours) or 'fixfirst' (V5 colours).
-export function AppHeader({ iconDir = 'insights', theme, onThemeChange }) {
+export function AppHeader({ iconDir = 'insights', theme, onThemeChange, onHome }) {
   return (
     <header className="flex w-full shrink-0 items-center gap-4 border-b border-line bg-card px-6 py-3.5">
       <div className="flex items-center gap-3">
-        {/* Logo placeholder until the real logo is ready */}
-        <div className="flex h-10 items-center justify-center rounded-xl border-[1.5px] border-dashed border-blue-ink bg-blue-soft px-1.5">
-          <span className="text-[9px] leading-[14px] font-semibold text-blue-ink">Logo</span>
-        </div>
-        <div className="flex flex-col whitespace-nowrap">
-          <p className="text-base leading-[22px] font-semibold text-ink">Before the Breach</p>
-          <p className="text-xs leading-[17px] text-ink-muted">Vulnerability triage</p>
-        </div>
+        {/* Wordmark: the dark-outlined version on light backgrounds, the light-outlined one in dark mode. */}
+        {/* Clicking the logo goes home (Insights → Summary). */}
+        <button
+          type="button"
+          onClick={onHome}
+          aria-label="hunch, go to home"
+          title="Home"
+          className="shrink-0 cursor-pointer rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue"
+        >
+          <img src={theme === 'dark' ? logoDark : logoLight} alt="" width="473" height="138" className="block h-9 w-auto" />
+        </button>
       </div>
 
       <div className="h-px min-w-px flex-1" />

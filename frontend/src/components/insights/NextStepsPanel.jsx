@@ -82,19 +82,11 @@ export function AboutDataBox({ rows, chipClass = 'bg-card' }) {
 }
 
 /** Right-hand panel for the Summary page. */
-export function NextStepsPanel({ kpis, versusPublic, aboutData }) {
+export function NextStepsPanel({ kpis, aboutData }) {
   return (
     // Sized to fit down to the 640px minimum height, so no scrolling.
     <SidePanel>
       <KpiSummary kpis={kpis} />
-      <FactBox
-        title="Versus public scores"
-        icon="insights/versus-target"
-        boxClass="bg-green-soft"
-        chipClass="bg-card"
-        titleClass="text-green-ink"
-        rows={versusPublic}
-      />
       <AboutDataBox rows={aboutData} chipClass="bg-card" />
     </SidePanel>
   )

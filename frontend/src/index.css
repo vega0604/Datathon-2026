@@ -56,10 +56,10 @@
   --color-green-ink: #005d5d;
   --color-crit: #c42652;
   /* Sequential blue scale for "share reaching KEV" shading */
-  --color-seq-1: #d0e2ff;
-  --color-seq-2: #a6c8ff;
-  --color-seq-4: #4589ff;
-  --color-seq-5: #0f62fe;
+  --color-seq-1: #e8daff;
+  --color-seq-2: #d4bbff;
+  --color-seq-4: #a56eff;
+  --color-seq-5: #8a3ffc;
   --color-ink-on-light: #10213f;
   --color-context: #a7afbf; /* chart context series (e.g. "flagged after KEV") */
 
@@ -190,6 +190,59 @@
 }
 @utility bg-brand {
   background: var(--brand-surface, var(--color-blue));
+}
+
+/* Chart entrance animations (Insights), matching the Vendors treemap's feel:
+   a quick spring-ish pop, staggered ~30ms per item via --i. They play once when
+   a chart mounts (opening a page/section) and are off for reduced motion. */
+@keyframes chart-pop {
+  from { opacity: 0; transform: scale(0.6); }
+}
+@keyframes chart-grow-y {
+  from { transform: scaleY(0); }
+}
+@keyframes chart-grow-x {
+  from { transform: scaleX(0); }
+}
+@keyframes chart-draw {
+  from { clip-path: inset(0 100% 0 0); }
+}
+@keyframes chart-fade {
+  from { opacity: 0; }
+}
+@keyframes gauge-fill {
+  from { fill: var(--color-subtle); }
+}
+.chart-pop {
+  animation: chart-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(min(var(--i, 0), 30) * 30ms + 120ms);
+}
+.chart-grow-y {
+  transform-origin: bottom;
+  animation: chart-grow-y 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms + 120ms);
+}
+.chart-grow-x {
+  transform-origin: left;
+  animation: chart-grow-x 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 120ms + 120ms);
+}
+.chart-draw {
+  animation: chart-draw 900ms cubic-bezier(0.65, 0, 0.35, 1) both;
+  animation-delay: calc(var(--i, 0) * 90ms + 100ms);
+}
+.chart-fade {
+  animation: chart-fade 400ms ease-out both;
+  animation-delay: calc(var(--i, 0) * 60ms + 450ms);
+}
+.gauge-fill {
+  animation: gauge-fill 320ms ease-out both;
+  animation-delay: calc(var(--i, 0) * 45ms + 150ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-pop, .chart-grow-y, .chart-grow-x, .chart-draw, .chart-fade, .gauge-fill {
+    animation: none;
+  }
 }
 
 html,

@@ -1,4 +1,5 @@
 import { iconUrl } from '../../lib/Icon'
+import { useThemedIcon } from '../../lib/iconTheme'
 
 // Coverage curve from the Figma "Catch rate" frame. The lines, area, grid and
 // markers are the exported Figma SVGs, placed on the design's 804×419 plot and
@@ -8,7 +9,6 @@ const H = 419
 const PLOT_X = 49.02
 const PLOT_W = 593.195
 
-const src = (name) => iconUrl(`insights/catch-rate/${name}`)
 
 /** Absolute box in design pixels → percentage style. */
 function box(x, y, w, h) {
@@ -53,6 +53,9 @@ const BASELINES = [
 const label = 'absolute text-[1em] leading-[1.333em] tracking-label whitespace-nowrap text-ink-muted'
 
 export function CatchRateChart({ series, top500 }) {
+  // Our-model line, area and marker are teal (the Catch rate colour) with dark-mode twins.
+  const themed = useThemedIcon()
+  const src = (name) => iconUrl(themed(`insights/catch-rate/${name}`))
   return (
     <div className="relative aspect-[804/419] w-[min(100cqw,calc(100cqh*804/419))] [container-type:inline-size]">
       <div className="absolute inset-0 text-[clamp(8px,1.4925cqw,12px)]">
@@ -74,10 +77,10 @@ export function CatchRateChart({ series, top500 }) {
       </span>
 
       {/* Our model: shaded area + line */}
-      <img alt="" src={src('area-our-model')} className="absolute block max-w-none" style={box(PLOT_X - PLOT_W * 0.0013, 96.41 - 282.59 * 0.0018, PLOT_W * 1.0013, 282.59 * 1.0036)} />
-      <img alt="" src={src('line-our-model')} className="absolute block max-w-none" style={inset(PLOT_X, 96.41, PLOT_W, 282.59, 0.0025, 0.0053)} />
-      {BASELINES.map(([file, y, h, dy, dx]) => (
-        <img key={file} alt="" src={src(file)} className="absolute block max-w-none" style={inset(PLOT_X, y, PLOT_W, h, dx, dy)} />
+      <img alt="" src={src('area-our-model')} className="chart-draw absolute block max-w-none" style={box(PLOT_X - PLOT_W * 0.0013, 96.41 - 282.59 * 0.0018, PLOT_W * 1.0013, 282.59 * 1.0036)} />
+      <img alt="" src={src('line-our-model')} className="chart-draw absolute block max-w-none" style={inset(PLOT_X, 96.41, PLOT_W, 282.59, 0.0025, 0.0053)} />
+      {BASELINES.map(([file, y, h, dy, dx], i) => (
+        <img key={file} alt="" src={src(file)} className="chart-draw absolute block max-w-none" style={{ ...inset(PLOT_X, y, PLOT_W, h, dx, dy), '--i': i + 1 }} />
       ))}
 
       {/* End-of-line labels */}
@@ -92,9 +95,9 @@ export function CatchRateChart({ series, top500 }) {
 
       {/* Top-500 reference line, marker and callout */}
       <img alt="" src={src('ref-top500')} className="absolute block max-w-none" style={box(107.84, 12 - 0.514, 1, 368.03)} />
-      <img alt="" src={src('marker-top500')} className="absolute block max-w-none" style={box(101.34, 260.09, 14, 14)} />
+      <img alt="" src={src('marker-top500')} className="chart-pop absolute block max-w-none" style={box(101.34, 260.09, 14, 14)} />
       <div
-        className="absolute flex flex-col gap-[0.167em] rounded-[1em] bg-blue-soft px-[1em] py-[0.667em] whitespace-nowrap text-blue-ink"
+        className="absolute flex flex-col gap-[0.167em] rounded-[1em] bg-green-soft px-[1em] py-[0.667em] whitespace-nowrap text-green-ink"
         style={box(149.87, 29.37)}
       >
         <span className="text-[1em] leading-[1.333em] tracking-label">{top500.label}</span>

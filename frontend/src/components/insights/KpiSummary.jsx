@@ -5,7 +5,7 @@ import { Icon } from '../../lib/Icon'
 // flex-1: the two cards share whatever height the fact boxes leave free.
 function KpiCard({ kpi }) {
   return (
-    <div className="flex w-full flex-1 flex-col justify-center gap-1.5 rounded-[20px] border border-line px-4 py-3 xl:gap-2 xl:px-5 xl:py-4 short:gap-1 short:px-4 short:py-3 tiny:px-3.5 tiny:py-2.5">
+    <div className="flex w-full flex-1 flex-col justify-between gap-1.5 rounded-[20px] border border-line px-4 py-3 xl:gap-2 xl:px-5 xl:py-4 short:gap-1 short:px-4 short:py-3 tiny:px-3.5 tiny:py-2.5">
       <div className="flex items-center gap-2.5">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-soft">
           <Icon name={kpi.icon} className="size-[18px]" />
@@ -17,6 +17,18 @@ function KpiCard({ kpi }) {
         <p className="text-[clamp(26px,2.3vw,34px)] leading-[1.1] font-light whitespace-nowrap text-ink tiny:text-2xl">{kpi.value}</p>
         <span className="type-label rounded-full bg-blue-soft px-2.5 py-0.5 whitespace-nowrap text-blue-ink tiny:px-2">{kpi.pill}</span>
       </div>
+      {/* Share bar from the same numbers; hidden on very short windows to save height. */}
+      {kpi.share && (
+        <div className="flex flex-col gap-1.5">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-track">
+            <div
+              className={`chart-grow-x h-full min-w-2 rounded-full ${kpi.share.tone}`}
+              style={{ width: `${kpi.share.pct}%` }}
+            />
+          </div>
+          <p className="type-label text-ink-muted">{kpi.share.caption}</p>
+        </div>
+      )}
     </div>
   )
 }

@@ -21,7 +21,7 @@ function matches(item, q) {
   return item.cveId.toLowerCase().includes(s) || item.component.toLowerCase().includes(s)
 }
 
-export function FixFirstQueue({ onOpenInsights, onUpload, software, theme = 'light', onThemeChange }) {
+export function FixFirstQueue({ onHome, onOpenInsights, onUpload, software, theme = 'light', onThemeChange }) {
   const dark = theme === 'dark'
   // The queue never scrolls or clips: on short windows it shrinks slightly to fit.
   const mainRef = useRef(null)
@@ -59,7 +59,7 @@ export function FixFirstQueue({ onOpenInsights, onUpload, software, theme = 'lig
   return (
     <IconDarkContext.Provider value={dark}>
     <div className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[560px] min-w-[1024px] flex-col bg-page font-sans`}>
-      <AppHeader iconDir="fixfirst" theme={theme} onThemeChange={onThemeChange} />
+      <AppHeader iconDir="fixfirst" theme={theme} onThemeChange={onThemeChange} onHome={onHome} />
 
       <div className="flex min-h-0 w-full flex-1 items-start gap-4 overflow-hidden p-4 wide:gap-5 wide:p-5 compact:py-3">
         <Sidebar current="fixFirst" onOpenInsights={onOpenInsights} onUpload={onUpload} software={software} />
