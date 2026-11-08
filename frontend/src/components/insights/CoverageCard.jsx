@@ -16,7 +16,7 @@ function SegmentedGauge({ pct }) {
       viewBox="0 0 420 292"
       role="img"
       aria-label={`${pct}% of exploited CVEs caught by fixing our top 500`}
-      className="block h-full max-h-[292px] w-full max-w-[420px] font-sans"
+      className="block h-full max-h-[440px] w-full font-sans"
     >
       {Array.from({ length: SEGMENTS }, (_, i) => {
         const deg = -SWEEP / 2 + (i * SWEEP) / (SEGMENTS - 1)

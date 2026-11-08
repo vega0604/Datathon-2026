@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { AppHeader } from '../components/insights/AppHeader'
 import { InsightsSidebar } from '../components/insights/InsightsSidebar'
 import { CoverageCard } from '../components/insights/CoverageCard'
-import { SideColumn } from '../components/insights/SideColumn'
 import { NextStepsPanel } from '../components/insights/NextStepsPanel'
 import { CatchRatePage } from '../components/insights/CatchRatePage'
 import { aboutData, coverage, kpis, versusPublic } from '../data/insights'
@@ -18,7 +17,7 @@ export function InsightsSummary({ onOpenFixFirst }) {
         <InsightsSidebar section={section} onSectionChange={setSection} onOpenFixFirst={onOpenFixFirst} />
 
         {section === 'summary' ? (
-          <SummaryContent onOpenFixFirst={onOpenFixFirst} />
+          <SummaryContent />
         ) : section === 'catch-rate' ? (
           <CatchRatePage onOpenFixFirst={onOpenFixFirst} />
         ) : (
@@ -30,8 +29,8 @@ export function InsightsSummary({ onOpenFixFirst }) {
   )
 }
 
-// The Summary section: coverage gauge, KPIs and the next-steps panel.
-function SummaryContent({ onOpenFixFirst }) {
+// The Summary section: coverage gauge and the right panel (KPIs and facts).
+function SummaryContent() {
   return (
     <>
       <main className="flex h-full min-w-0 flex-1 flex-col gap-4 xl:gap-5 xl:pt-2">
@@ -42,13 +41,12 @@ function SummaryContent({ onOpenFixFirst }) {
           </p>
         </div>
 
-        <div className="flex min-h-0 w-full flex-1 items-start gap-4 xl:gap-5">
+        <div className="flex min-h-0 w-full flex-1">
           <CoverageCard coverage={coverage} />
-          <SideColumn kpis={kpis} />
         </div>
       </main>
 
-      <NextStepsPanel versusPublic={versusPublic} aboutData={aboutData} onOpenFixFirst={onOpenFixFirst} />
+      <NextStepsPanel kpis={kpis} versusPublic={versusPublic} aboutData={aboutData} />
     </>
   )
 }

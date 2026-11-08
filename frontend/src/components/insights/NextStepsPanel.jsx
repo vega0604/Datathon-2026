@@ -1,9 +1,10 @@
 import { Icon } from '../../lib/Icon'
+import { KpiSummary } from './KpiSummary'
 
 /** Right-hand column shared by the Insights pages. */
-export function SidePanel({ children }) {
+export function SidePanel({ children, scroll = true }) {
   return (
-    <aside className="flex h-full w-[272px] shrink-0 flex-col gap-4 overflow-y-auto rounded-3xl bg-card p-4 shadow-float xl:w-[300px] xl:gap-5 xl:p-5 2xl:w-[320px] 2xl:p-6 short:gap-3 short:p-4">
+    <aside className={`flex h-full w-[272px] shrink-0 flex-col gap-4 ${scroll ? 'overflow-y-auto' : 'overflow-hidden'} rounded-3xl bg-card p-4 shadow-float xl:w-[300px] xl:gap-5 xl:p-5 2xl:w-[320px] 2xl:p-6 short:gap-3 short:p-4`}>
       {children}
     </aside>
   )
@@ -83,14 +84,11 @@ export function AboutDataBox({ rows }) {
 }
 
 /** Right-hand panel for the Summary page. */
-export function NextStepsPanel({ versusPublic, aboutData, onOpenFixFirst }) {
+export function NextStepsPanel({ kpis, versusPublic, aboutData }) {
   return (
-    <SidePanel>
-      <WhatToDoCard onOpenFixFirst={onOpenFixFirst}>
-        Start at the top of your Fix first list. Our top 500 catch about a quarter of what gets exploited.
-      </WhatToDoCard>
-      {/* Spacer pushes the fact boxes to the bottom of the panel. */}
-      <div className="min-h-0 flex-1" />
+    // Sized to fit down to the 640px minimum height, so no scrolling.
+    <SidePanel scroll={false}>
+      <KpiSummary kpis={kpis} />
       <FactBox
         title="Versus public scores"
         icon="insights/versus-target"

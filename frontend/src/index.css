@@ -3,6 +3,9 @@
 /* Laptop screens with little vertical room (e.g. 13" MacBooks) */
 @custom-variant short (@media (max-height: 820px));
 
+/* Very short windows (near the 640px minimum height) */
+@custom-variant tiny (@media (max-height: 700px));
+
 /* Carbon (G10) tokens used by the Figma design */
 @theme {
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
