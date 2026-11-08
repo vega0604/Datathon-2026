@@ -18,3 +18,4 @@ LOGS_DIR = OUTPUTS_DIR / "logs"
 load_dotenv(BACKEND_DIR / ".env")
 DATA_BACKEND = os.getenv("DATA_BACKEND", "duckdb")  # "duckdb" now; "tiger" arrives with SHE-10
 APP_DB_PATH = Path(os.getenv("APP_DB_PATH", DATA_DIR / "app.duckdb"))  # uploaded SBOMs
+DEMO_DIR = BACKEND_DIR / "demo"
