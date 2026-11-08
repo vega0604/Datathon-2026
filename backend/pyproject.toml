@@ -24,6 +24,10 @@ dependencies = [
     # Config and HTTP (Linear API, X-Force)
     "python-dotenv",
     "httpx",
+    "fastapi>=0.162.2",
+    "uvicorn[standard]>=0.54.0",
+    "python-multipart>=0.0.33",
+    "packaging>=26.3",
 ]
 
 [dependency-groups]
@@ -40,9 +44,7 @@ granite = [
     "accelerate",
 ]
 # Dashboard (SHE-11)
-app = [
-    "streamlit",
-]
+app = []
 # Tiger Data backend (SHE-10)
 tiger = [
     "psycopg[binary]",
