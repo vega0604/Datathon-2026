@@ -7,17 +7,19 @@ import pandas as pd
 from backend.modeling import serving
 
 
-def test_kev_wins_and_columns():
-    exploited = pd.DataFrame(
-        {"cve_id": ["A"], "confidence": "exploited", "basis": "kev", "score": 1.0,
-         "score_pct": 1.0, "reasons": [["On KEV"]], "as_of": "2025-01"}
-    )  # fmt: skip
+def test_kev_rows_score_one_and_keep_their_reasons():
+    bar = [{"kind": "exploit", "label": "Public exploit code (Nuclei)", "value": 0.3}]
     scored = pd.DataFrame(
         {"cve_id": ["B", "A"], "confidence": "model", "basis": "latest_signals",
-         "score": [0.4, 0.9], "score_pct": [0.5, 1.0], "reasons": [[], []], "as_of": "2025-12"}
+         "score": [0.4, np.nan], "score_pct": [0.5, np.nan], "p_exploit": [0.01, 0.2],
+         "reasons": [[], bar], "signal": [None, "exploit_code"], "as_of": "2025-12"}
     )  # fmt: skip
-    out = serving.combine(exploited, scored).set_index("cve_id")
+    kev = pd.DataFrame({"cve_id": ["A"], "date_added": pd.to_datetime(["2025-01-15"])})
+    out = serving.combine(scored, kev).set_index("cve_id")
     assert out.loc["A", "confidence"] == "exploited"
+    assert (out.loc["A", "score"], out.loc["A", "score_pct"]) == (1.0, 1.0)
+    assert out.loc["A", "as_of"] == "2025-01"
+    assert out.loc["A", "reasons"] == bar  # still explained by the model
     assert out.loc["B", "confidence"] == "model"
     assert list(out.reset_index().columns) == serving.COLUMNS
 
@@ -45,10 +47,11 @@ def test_serve_rows_months_and_cutoffs():
         f"FROM ({serving.serve_rows_sql('sig')}) ORDER BY cve_id"
     ).fetchall()
     assert rows == [
+        ("KEV", "2025-12", "2026-11-04", False, serving.SERVE_FOLD),  # scored for its reasons
         ("NEW", "2026-10", "2026-11-04", False, serving.SERVE_FOLD),  # publish month
         ("OLD", "2025-12", "2026-11-04", False, serving.SERVE_FOLD),  # no signals: Dec 2025
         ("SIG", "2025-07", "2025-11-04", True, serving.SERVE_FOLD),  # latest signal month
-    ]  # KEV and scoreboard rows are scored elsewhere
+    ]  # scoreboard rows are scored at their snapshot, from features.parquet
 
 
 def test_mean_probability_averages_seeds():

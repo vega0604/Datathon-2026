@@ -1,18 +1,24 @@
-"""CycloneDX parsing and SBOM storage. Plain functions; no FastAPI imports."""
+"""CycloneDX parsing (JSON or XML) and SBOM storage. Plain functions; no FastAPI imports."""
 
 import json
 import uuid
+import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
 from urllib.parse import unquote
 
 import pandas as pd
 
-MAX_BYTES = 5_000_000
+MAX_BYTES = 10_000_000
 _TLD_PREFIXES = {"org", "com", "io", "net", "dev"}
+NOT_CYCLONEDX = "This file isn't a CycloneDX SBOM."
 
 
 class SbomError(ValueError):
     """Raised with a message that is safe to show to the user."""
+
+
+class SbomTooLarge(SbomError):
+    """The upload is over MAX_BYTES (HTTP 413)."""
 
 
 def _clean(value: str | None) -> str | None:
@@ -81,18 +87,81 @@ def _text(value) -> str | None:
     return value.strip() if isinstance(value, str) and value.strip() else None
 
 
-def parse_cyclonedx(raw: bytes) -> tuple[str | None, list[dict]]:
+def _local(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1]
+
+
+def _child_text(elem, name: str) -> str | None:
+    for child in elem:
+        if _local(child.tag) == name:
+            return (child.text or "").strip() or None
+    return None
+
+
+def _xml_component(elem) -> dict:
+    """A CycloneDX XML <component> in the JSON layout parse_cyclonedx reads."""
+    out = {
+        k: _child_text(elem, k) for k in ("name", "version", "group", "purl", "cpe", "publisher")
+    }
+    for child in elem:
+        tag = _local(child.tag)
+        if tag == "supplier":
+            out["supplier"] = {"name": _child_text(child, "name")}
+        elif tag == "components":
+            out["components"] = [_xml_component(c) for c in child if _local(c.tag) == "component"]
+    return {k: v for k, v in out.items() if v is not None}
+
+
+def _xml_document(raw: bytes) -> dict:
+    """CycloneDX XML as the equivalent JSON document (bomFormat, specVersion, metadata,
+    components)."""
+    try:
+        root = ET.fromstring(raw)
+    except ET.ParseError as e:
+        raise SbomError(NOT_CYCLONEDX) from e
+    namespace = root.tag[1:].split("}")[0] if root.tag.startswith("{") else ""
+    if _local(root.tag) != "bom" or "cyclonedx.org/schema/bom" not in namespace:
+        raise SbomError(NOT_CYCLONEDX)
+    doc: dict = {"bomFormat": "CycloneDX", "specVersion": namespace.rsplit("/", 1)[-1]}
+    for child in root:
+        tag = _local(child.tag)
+        if tag == "components":
+            doc["components"] = [_xml_component(c) for c in child if _local(c.tag) == "component"]
+        elif tag == "metadata":
+            for part in child:
+                if _local(part.tag) == "component":
+                    doc["metadata"] = {"component": _xml_component(part)}
+    return doc
+
+
+def _document(raw: bytes) -> dict:
     if len(raw) > MAX_BYTES:
-        raise SbomError(f"File is too large (limit {MAX_BYTES // 1_000_000} MB).")
+        raise SbomTooLarge(f"That file is over {MAX_BYTES // 1_000_000} MB.")
+    if raw.lstrip()[:1] == b"<":
+        return _xml_document(raw)
     try:
         doc = json.loads(raw)
     except ValueError as e:
-        raise SbomError("File is not valid JSON.") from e
-    if not isinstance(doc, dict):
-        raise SbomError("SBOM must be a JSON object.")
-    if doc.get("bomFormat") != "CycloneDX":
-        raise SbomError('Only CycloneDX JSON is supported (bomFormat must be "CycloneDX").')
+        raise SbomError(NOT_CYCLONEDX) from e
+    if not isinstance(doc, dict) or doc.get("bomFormat") != "CycloneDX":
+        raise SbomError(NOT_CYCLONEDX)
+    return doc
 
+
+def parse_sbom(raw: bytes) -> tuple[str | None, list[dict], str | None]:
+    """(SBOM name, components, CycloneDX spec version) from CycloneDX JSON or XML."""
+    doc = _document(raw)
+    name, components = _components(doc)
+    spec = doc.get("specVersion")
+    return name, components, spec if isinstance(spec, str) else None
+
+
+def parse_cyclonedx(raw: bytes) -> tuple[str | None, list[dict]]:
+    name, components, _ = parse_sbom(raw)
+    return name, components
+
+
+def _components(doc: dict) -> tuple[str | None, list[dict]]:
     flat: list[dict] = []
     if isinstance(doc.get("components"), list):
         _walk(doc["components"], flat)
@@ -130,7 +199,7 @@ def parse_cyclonedx(raw: bytes) -> tuple[str | None, list[dict]]:
             }
         )
     if not components:
-        raise SbomError("SBOM has no usable components.")
+        raise SbomError("This SBOM doesn't list any components.")
 
     meta = doc.get("metadata")
     main = meta.get("component") if isinstance(meta, dict) else None
@@ -138,13 +207,40 @@ def parse_cyclonedx(raw: bytes) -> tuple[str | None, list[dict]]:
     return sbom_name, components
 
 
-def store_sbom(con, name: str, filename: str | None, components: list[dict]) -> str:
+SBOM_TABLES = ("matches", "match_checks", "queue_status", "tickets", "components")
+
+
+def delete_sbom(con, sbom_id: str) -> bool:
+    """Remove an SBOM with its components, matches, statuses and tickets."""
+    if con.execute("SELECT 1 FROM app.sboms WHERE sbom_id = ?", [sbom_id]).fetchone() is None:
+        return False
+    for table in SBOM_TABLES:
+        con.execute(f"DELETE FROM app.{table} WHERE sbom_id = ?", [sbom_id])
+    con.execute("DELETE FROM app.sboms WHERE sbom_id = ?", [sbom_id])
+    return True
+
+
+def store_sbom(
+    con,
+    name: str,
+    filename: str | None,
+    components: list[dict],
+    spec_version: str | None = None,
+) -> str:
+    """Store a parsed SBOM. An earlier upload with the same filename is replaced."""
+    if filename:
+        for (old,) in con.execute(
+            "SELECT sbom_id FROM app.sboms WHERE filename = ?", [filename]
+        ).fetchall():
+            delete_sbom(con, old)
     sbom_id = uuid.uuid4().hex[:12]
     now = datetime.now(UTC).replace(tzinfo=None)
     con.execute(
-        "INSERT INTO app.sboms VALUES ($id, $name, $filename, $ts, $n)",
-        {"id": sbom_id, "name": name, "filename": filename, "ts": now, "n": len(components)},
-    )
+        "INSERT INTO app.sboms (sbom_id, name, filename, uploaded_at, component_count, "
+        "spec_version) VALUES ($id, $name, $filename, $ts, $n, $spec)",
+        {"id": sbom_id, "name": name, "filename": filename, "ts": now, "n": len(components),
+         "spec": spec_version},
+    )  # fmt: skip
     df = pd.DataFrame(
         [
             {

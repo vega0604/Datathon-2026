@@ -46,6 +46,43 @@ def init_store(con: duckdb.DuckDBPyConnection) -> None:
         )
         """
     )
+    # Older app.duckdb files predate spec_version.
+    con.execute("ALTER TABLE app.sboms ADD COLUMN IF NOT EXISTS spec_version VARCHAR")
+    # Queue status per SBOM and CVE (to_do / in_progress / done); missing = to_do.
+    con.execute(
+        """
+        CREATE TABLE IF NOT EXISTS app.queue_status (
+            sbom_id VARCHAR,
+            cve_id VARCHAR,
+            status VARCHAR,
+            updated_at TIMESTAMP,
+            PRIMARY KEY (sbom_id, cve_id)
+        )
+        """
+    )
+    # Linear issues created from the queue.
+    con.execute(
+        """
+        CREATE TABLE IF NOT EXISTS app.tickets (
+            sbom_id VARCHAR,
+            cve_id VARCHAR,
+            ticket_id VARCHAR,
+            url VARCHAR,
+            created_at TIMESTAMP,
+            PRIMARY KEY (sbom_id, cve_id)
+        )
+        """
+    )
+    # Granite-written explanations, cached per CVE (each costs tokens once).
+    con.execute(
+        """
+        CREATE TABLE IF NOT EXISTS app.explanations (
+            cve_id VARCHAR PRIMARY KEY,
+            text VARCHAR,
+            created_at TIMESTAMP
+        )
+        """
+    )
     # Granite's verdict on description-only matches (optional, GRANITE_MATCH_CHECK).
     con.execute(
         """

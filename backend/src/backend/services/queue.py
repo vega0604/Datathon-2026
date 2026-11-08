@@ -2,19 +2,24 @@
 
 With data/features/predictions.parquet (backend.modeling.serving): vulnerabilities on KEV
 first, then the submitted ranking's score (the LightGBM model rank-blended with the safety
-ranker), which is on one scale for every vulnerability; ties by CVSS, then CVE id. Each
-item carries its reasons, the month its scores describe (as_of, flagged stale when old),
-how it was matched, and Granite's verdict for description-only matches. EPSS_LIVE re-scores
-with today's EPSS from FIRST.
+ranker), which is on one scale for every vulnerability; ties by CVSS, then CVE id.
+
+Every row carries what the Fix first table and its detail panel show (see the frontend API
+handoff): the display component, severity, the warning sign, status and Linear ticket, an
+"in plain words" explanation, three reason bars, and the KEV / weakness facts. Counts
+cover the whole queue. EPSS_LIVE re-scores with today's EPSS from FIRST.
 
 Without predictions.parquet: the placeholder ranking (KEV, EPSS percentile, CVSS).
 """
 
 import json
+import re
 from datetime import date
 
 from backend.core import config
 from backend.services import epss_live
+
+DEFAULT_LIMIT = 1000
 
 _MATCHED = """
 matched AS (
@@ -22,7 +27,12 @@ matched AS (
            list_sort(list_distinct(list(c.name))) AS components,
            list_sort(list_distinct(list(m.method))) AS match_methods,
            CASE WHEN bool_or(m.version_status = 'in_range') THEN 'in_range'
-                ELSE 'unverified' END AS version_status
+                ELSE 'unverified' END AS version_status,
+           -- the component to show: a version-confirmed match first, then the lowest id
+           list_sort(list({'unconfirmed': m.version_status <> 'in_range',
+                           'id': c.component_id, 'name': c.name,
+                           'vendor': coalesce(c.vendor, c.group_name)}))[1] AS shown,
+           count(DISTINCT c.component_id) AS assets
     FROM app.matches m
     JOIN app.components c ON c.sbom_id = m.sbom_id AND c.component_id = m.component_id
     WHERE m.sbom_id = $sbom_id
@@ -62,41 +72,61 @@ scored AS (
     SELECT * FROM signal
 )"""
 
+# Fields every row gets in both modes: KEV and weakness facts, status, ticket, cached
+# Granite explanation.
+_COMMON = """
+           k.cve_id IS NOT NULL AS on_kev,
+           k.date_added AS kev_date_added,
+           k.name AS kev_name,
+           coalesce(k.known_ransomware_use = 'Known', false) AS known_ransomware,
+           coalesce(v.cvss3_score, v.cvss4_score) AS cvss_raw,
+           v.published,
+           v.description,
+           nullif(trim(split_part(coalesce(v.cwe_ids, ''), ';', 1)), '') AS cwe_id,
+           w.name AS cwe_name,
+           coalesce(qs.status, 'to_do') AS status,
+           t.ticket_id, t.url AS ticket_url,
+           e.text AS granite_explanation"""
+
+_JOINS = """
+    LEFT JOIN clean.kev k ON k.cve_id = m.cve_id
+    LEFT JOIN vulnerabilities v ON v.cve_id = m.cve_id
+    LEFT JOIN weakness_types w
+      ON w.cwe_id = nullif(trim(split_part(coalesce(v.cwe_ids, ''), ';', 1)), '')
+    LEFT JOIN app.queue_status qs ON qs.sbom_id = $sbom_id AND qs.cve_id = m.cve_id
+    LEFT JOIN app.tickets t ON t.sbom_id = $sbom_id AND t.cve_id = m.cve_id
+    LEFT JOIN app.explanations e ON e.cve_id = m.cve_id"""
+
+_RANKED = """
+ranked AS (
+    SELECT row_number() OVER (
+               ORDER BY on_kev DESC, score DESC NULLS LAST, cvss_raw DESC NULLS LAST, cve_id
+           ) AS rank,
+           row_number() OVER (ORDER BY cvss_raw DESC NULLS LAST, cve_id) AS cvss_rank,
+           *
+    FROM joined
+)
+SELECT * FROM ranked ORDER BY rank"""
+
 # Placeholder ranking (no predictions.parquet): KEV first, then the EPSS percentile of the
 # most recent signal, then CVSS, then CVE id for a stable order.
 _PLACEHOLDER_SQL = f"""
 WITH {_MATCHED}, {_SIGNALS},
 joined AS (
-    SELECT m.cve_id, m.components, m.match_methods, m.version_status,
-           k.cve_id IS NOT NULL AS on_kev,
-           k.date_added AS kev_date_added,
-           coalesce(k.known_ransomware_use = 'Known', false) AS known_ransomware,
+    SELECT m.cve_id, m.components, m.match_methods, m.version_status, m.shown, m.assets,
            s.epss_pct AS score,
            s.epss,
            coalesce(s.exploit_code, false) AS exploit_code,
-           coalesce(v.cvss3_score, v.cvss4_score) AS cvss_score,
-           v.published,
-           v.description
+           {_COMMON}
     FROM matched m
     LEFT JOIN scored s ON s.cve_id = m.cve_id
-    LEFT JOIN clean.kev k ON k.cve_id = m.cve_id
-    LEFT JOIN vulnerabilities v ON v.cve_id = m.cve_id
+    {_JOINS}
 ),
-ranked AS (
-    SELECT row_number() OVER (
-               ORDER BY on_kev DESC, score DESC NULLS LAST, cvss_score DESC NULLS LAST, cve_id
-           ) AS rank,
-           row_number() OVER (ORDER BY cvss_score DESC NULLS LAST, cve_id) AS cvss_rank,
-           count(*) OVER () AS total,
-           *
-    FROM joined
-)
-SELECT * FROM ranked ORDER BY rank LIMIT $limit OFFSET $offset
+{_RANKED}
 """
 
 
-def _model_sql(predictions: str, paged: bool) -> str:
-    page = "LIMIT $limit OFFSET $offset" if paged else ""
+def _model_sql(predictions: str) -> str:
     return f"""
 WITH {_MATCHED}, {_SIGNALS},
 checks AS (
@@ -107,36 +137,24 @@ checks AS (
     FROM app.match_checks WHERE sbom_id = $sbom_id GROUP BY cve_id
 ),
 joined AS (
-    SELECT m.cve_id, m.components, m.match_methods, m.version_status,
-           k.cve_id IS NOT NULL AS on_kev,
-           k.date_added AS kev_date_added,
-           coalesce(k.known_ransomware_use = 'Known', false) AS known_ransomware,
+    SELECT m.cve_id, m.components, m.match_methods, m.version_status, m.shown, m.assets,
            p.score, p.score_pct, p.p_exploit, p.model_pct, p.confidence, p.basis, p.as_of,
-           p.similarity_used, coalesce(p.reasons, []) AS reasons,
+           p.similarity_used, p.reasons, p.signal,
            s.epss,
            coalesce(s.exploit_code, p.any_exploit_code = 1, false) AS exploit_code,
-           coalesce(v.cvss3_score, v.cvss4_score) AS cvss_score,
-           v.published,
-           v.description,
-           c.granite_verdict, c.granite_reason
+           c.granite_verdict, c.granite_reason,
+           {_COMMON}
     FROM matched m
     LEFT JOIN {predictions} p ON p.cve_id = m.cve_id
     LEFT JOIN scored s ON s.cve_id = m.cve_id
-    LEFT JOIN clean.kev k ON k.cve_id = m.cve_id
-    LEFT JOIN vulnerabilities v ON v.cve_id = m.cve_id
     LEFT JOIN checks c ON c.cve_id = m.cve_id
+    {_JOINS}
 ),
-ranked AS (
-    SELECT row_number() OVER (
-               ORDER BY on_kev DESC, score DESC NULLS LAST, cvss_score DESC NULLS LAST, cve_id
-           ) AS rank,
-           row_number() OVER (ORDER BY cvss_score DESC NULLS LAST, cve_id) AS cvss_rank,
-           count(*) OVER () AS total,
-           *
-    FROM joined
-)
-SELECT * FROM ranked ORDER BY rank {page}
+{_RANKED}
 """
+
+
+# --- predictions and freshness ---------------------------------------------------------------
 
 
 def predictions_source() -> str | None:
@@ -158,7 +176,8 @@ def safety_distribution(con, predictions: str) -> list[float]:
     key = f"{predictions}:{config.PREDICTIONS_PATH.stat().st_mtime}"
     if key not in _SAFETY_CACHE:
         values = con.execute(
-            f"SELECT safety_raw FROM {predictions} WHERE safety_raw IS NOT NULL ORDER BY 1"
+            f"SELECT safety_raw FROM {predictions} "
+            "WHERE safety_raw IS NOT NULL AND confidence <> 'exploited' ORDER BY 1"
         ).fetchall()
         _SAFETY_CACHE.clear()
         _SAFETY_CACHE[key] = [v[0] for v in values]
@@ -181,48 +200,204 @@ def mark_stale(rows: list[dict], today: date) -> None:
         r["stale"] = old and not r.get("on_kev")
 
 
+# --- presentation (pure, unit-tested) --------------------------------------------------------
+
+
+def severity(cvss: float | None) -> str:
+    """NVD's CVSS v3 bands."""
+    if cvss is None or cvss <= 0:
+        return "none"
+    if cvss >= 9.0:
+        return "critical"
+    if cvss >= 7.0:
+        return "high"
+    if cvss >= 4.0:
+        return "medium"
+    return "low"
+
+
+_VENDOR_NAMES: dict[int, dict[str, str]] = {}  # per connection
+
+
+VENDOR_NAMES_SQL = """
+    SELECT vendor_key, mode(vendor) FROM clean.kev
+    WHERE vendor_key IS NOT NULL AND vendor IS NOT NULL GROUP BY 1
+"""
+
+
+def vendor_names(con) -> dict[str, str]:
+    """Vendor key -> the display name CISA's KEV list uses ("paloaltonetworks" -> "Palo
+    Alto Networks"). KEV vendor keys use the same normalisation as CPE vendor keys.
+    Loaded once."""
+    key = id(con)
+    if key not in _VENDOR_NAMES:
+        try:
+            rows = con.execute(VENDOR_NAMES_SQL).fetchall()
+        except Exception:  # noqa: BLE001 - no KEV table: fall back to tidied keys
+            rows = []
+        _VENDOR_NAMES[key] = {k: v for k, v in rows if k and v}
+    return _VENDOR_NAMES[key]
+
+
+def display_vendor(vendor: str | None, names: dict[str, str]) -> str | None:
+    if not vendor:
+        return None
+    key = re.sub(r"[^a-z0-9]", "", vendor.lower())
+    if key in names:
+        return names[key]
+    if vendor.islower() or "_" in vendor:  # a CPE id such as "palo_alto" or "apache"
+        return " ".join(w.capitalize() for w in re.split(r"[_\s]+", vendor) if w)
+    return vendor
+
+
+def initials(name: str | None) -> str | None:
+    """Two letters for the avatar: first letters of two words, or of a CamelCase word
+    ("WatchGuard" -> "WG"), else its first two letters."""
+    if not name:
+        return None
+    words = [w for w in re.split(r"[\s\-_/.]+", name) if w]
+    if len(words) >= 2:
+        return (words[0][0] + words[1][0]).upper()
+    capitals = re.findall(r"[A-Z]", words[0][1:])
+    if capitals:
+        return (words[0][0] + capitals[0]).upper()
+    return words[0][:2].upper()
+
+
+def plain_explanation(row: dict) -> str:
+    """1-2 sentences under 200 characters from NVD and CISA KEV facts."""
+    description = " ".join((row.get("description") or "").split())
+    first = re.split(r"(?<=[.!?])\s+", description, maxsplit=1)[0] if description else ""
+    if row.get("on_kev"):
+        status = "CISA confirms attackers are using it"
+        status += ", including in ransomware." if row.get("known_ransomware") else "."
+    elif row.get("exploit_code"):
+        status = "Public attack code exists, but no confirmed attacks yet."
+    else:
+        status = "No public attack code or confirmed attacks yet."
+    room = 199 - len(status) - 1
+    if len(first) > room:
+        first = first[: max(0, room - 1)].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+    return f"{first} {status}".strip()
+
+
+def present_row(r: dict, names: dict[str, str]) -> dict:
+    """The raw SQL row as the frontend reads it."""
+    shown = r.pop("shown") or {}
+    component = shown.get("name") or (r["components"][0] if r["components"] else r["cve_id"])
+    vendor = display_vendor(shown.get("vendor"), names)
+    assets = int(r.pop("assets") or 1)
+    cvss = r.pop("cvss_raw")
+    r["component"] = component
+    r["cvss_score"] = round(float(cvss), 1) if cvss is not None else 0.0
+    r["severity"] = severity(cvss)
+    r["vendor_initials"] = initials(vendor or component)
+    r["subtitle"] = " · ".join(
+        [x for x in (vendor, component) if x] + [f"{assets} SBOM asset{'s' if assets != 1 else ''}"]
+    )
+    ticket_id, ticket_url = r.pop("ticket_id"), r.pop("ticket_url")
+    r["ticket"] = {"id": ticket_id, "url": ticket_url} if ticket_id else None
+    granite = r.pop("granite_explanation")
+    r["explanation"] = granite or plain_explanation(r)
+    r["explanation_source"] = "granite" if granite else "nvd"
+    r["reasons"] = [dict(x) for x in (r.get("reasons") or [])]
+    r["reasons_are_sample"] = not r["reasons"]
+    r["xforce"] = None  # no X-Force integration: the panel shows the KEV facts
+    r.setdefault("signal", None)
+    if r.get("score") is None and r.get("on_kev"):
+        r["score"] = 1.0
+    return r
+
+
+def counts(rows: list[dict]) -> dict:
+    return {
+        "open": len(rows),
+        "critical": sum(1 for r in rows if r["severity"] == "critical"),
+        "not_in_linear": sum(1 for r in rows if r["ticket"] is None),
+        "warning_signs": sum(1 for r in rows if r.get("signal") is not None),
+    }
+
+
+# --- the queue -------------------------------------------------------------------------------
+
+
 def _rows(cur) -> list[dict]:
     cols = [d[0] for d in cur.description]
     return [dict(zip(cols, r, strict=True)) for r in cur.fetchall()]
 
 
-def build_queue(
-    con,
-    sbom_id: str,
-    limit: int = 100,
-    offset: int = 0,
-    live: bool | None = None,
-    today: date | None = None,
-    fetch=None,
+def full_queue(
+    con, sbom_id: str, live: bool | None = None, today: date | None = None, fetch=None
 ) -> dict:
-    """One page of the SBOM's Fix-First queue. `fetch` replaces the FIRST call in tests."""
+    """Every row of the SBOM's queue, ranked and presented, with counts."""
     predictions = predictions_source()
-    params = {"sbom_id": sbom_id, "limit": limit, "offset": offset}
+    params = {"sbom_id": sbom_id}
     if predictions is None:
         rows = _rows(con.execute(_PLACEHOLDER_SQL, params))
         out = {"ranking": "epss_placeholder", "scores": {}}
     else:
         live = config.EPSS_LIVE if live is None else live
         meta = predictions_meta()
-        if not live:
-            rows = _rows(con.execute(_model_sql(predictions, paged=True), params))
-            ranking = "model"
-        else:
-            rows = _rows(con.execute(_model_sql(predictions, paged=False), {"sbom_id": sbom_id}))
+        rows = _rows(con.execute(_model_sql(predictions), params))
+        ranking = "model"
+        if live:
             rows = _rerank_live(con, rows, predictions, float(meta.get("alpha", 1.0)), fetch)
-            rows = rows[offset : offset + limit]
             ranking = "model_live_epss"
-        mark_stale(rows, today or date.today())
         out = {"ranking": ranking, "scores": meta}
-    if rows:
-        total = rows[0]["total"]
-    else:  # a page past the end has no rows to read the total from
-        total = con.execute(
-            "SELECT count(DISTINCT cve_id) FROM app.matches WHERE sbom_id = ?", [sbom_id]
-        ).fetchone()[0]
-    for r in rows:
-        r.pop("total", None)
-    return {"sbom_id": sbom_id, "total": total, "items": rows, **out}
+    names = vendor_names(con)
+    rows = [present_row(r, names) for r in rows]
+    if predictions is not None:
+        mark_stale(rows, today or date.today())
+    if config.GRANITE_EXPLANATIONS and rows:
+        from backend.services.granite_explain import ensure_explanations
+
+        ensure_explanations(con, rows[: config.GRANITE_EXPLAIN_TOP])
+    return {"sbom_id": sbom_id, "total": len(rows), "counts": counts(rows), "items": rows, **out}
+
+
+def build_queue(
+    con,
+    sbom_id: str,
+    limit: int = DEFAULT_LIMIT,
+    offset: int = 0,
+    live: bool | None = None,
+    today: date | None = None,
+    fetch=None,
+) -> dict:
+    """One page of the SBOM's Fix-First queue (counts cover the whole queue). `fetch`
+    replaces the FIRST call in tests."""
+    queue = full_queue(con, sbom_id, live=live, today=today, fetch=fetch)
+    queue["items"] = queue["items"][offset : offset + limit]
+    return queue
+
+
+STATUSES = ("to_do", "in_progress", "done")
+
+
+def in_queue(con, sbom_id: str, cve_id: str) -> bool:
+    return (
+        con.execute(
+            "SELECT 1 FROM app.matches WHERE sbom_id = ? AND cve_id = ? LIMIT 1", [sbom_id, cve_id]
+        ).fetchone()
+        is not None
+    )
+
+
+def set_status(con, sbom_id: str, cve_id: str, status: str) -> None:
+    from datetime import UTC, datetime
+
+    con.execute(
+        "INSERT OR REPLACE INTO app.queue_status VALUES (?, ?, ?, ?)",
+        [sbom_id, cve_id, status, datetime.now(UTC).replace(tzinfo=None)],
+    )
+
+
+def queue_row(con, sbom_id: str, cve_id: str) -> dict | None:
+    """One presented row (with its rank in the full queue), or None if not in the queue."""
+    for row in full_queue(con, sbom_id)["items"]:
+        if row["cve_id"] == cve_id:
+            return row
+    return None
 
 
 def _rerank_live(con, rows: list[dict], predictions: str, alpha: float, fetch) -> list[dict]:
@@ -240,7 +415,7 @@ def _rerank_live(con, rows: list[dict], predictions: str, alpha: float, fetch) -
         return (
             not r["on_kev"],
             -(score if score is not None else -1.0),
-            -(r["cvss_score"] if r["cvss_score"] is not None else -1.0),
+            -(r["cvss_raw"] if r["cvss_raw"] is not None else -1.0),
             r["cve_id"],
         )
 

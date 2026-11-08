@@ -4,7 +4,8 @@
 
 Writes data/features/predictions.parquet, one row per cve_id in vulnerabilities:
 
-- exploited: on CISA KEV. score 1; reasons say since when (and ransomware use).
+- exploited: on CISA KEV. score 1 and as_of the month it was added; it is still run through
+  the model so its reason bars explain what the model sees.
 - model: every other vulnerability, scored by the submitted ranking (models/final/
   config.json: the final LightGBM, rank-blended with the safety ranker at its alpha):
     score = alpha * pct(p_exploit) + (1 - alpha) * pct(safety)
@@ -17,6 +18,10 @@ Writes data/features/predictions.parquet, one row per cve_id in vulnerabilities:
   Features are built with the same pipeline steps as training. Only vulnerabilities with
   a Granite embedding (the 2024-26 population and KEV) have KEV similarity; the rest are
   scored by a twin model trained without the similarity group (similarity_used = false).
+
+reasons are up to 3 bars {kind: exploit|exposure|vendor, label (< 45 chars), value (summed
+SHAP contribution, log-odds)}. signal is the first warning sign that applies at as_of:
+exploit_code, vendor_attacked or score_jump (see warning_signals).
 
 p_exploit is the model's mean probability over its 5 seeds: unweighted training, so a rough
 chance of a KEV addition within the label window, not a calibrated forecast. 2024-25
@@ -50,17 +55,22 @@ SERVE_FOLD = 9999  # marks serving rows in the feature SQL; never a training fol
 LATEST_HISTORY_MONTH = "2025-12"
 COLUMNS = [
     "cve_id", "confidence", "basis", "score", "score_pct", "p_exploit", "model_pct",
-    "safety_raw", "epss_pct", "any_exploit_code", "similarity_used", "reasons", "as_of",
+    "safety_raw", "epss_pct", "any_exploit_code", "similarity_used", "reasons", "signal",
+    "as_of",
 ]  # fmt: skip
+# Warning signs, checked in this order (the first that applies is sent).
+SIGNAL_WINDOW_DAYS = 30
+EPSS_JUMP = 0.1
 
 
 # --- which rows, at which month ------------------------------------------------------------
 
 
 def serve_rows_sql(signals: str = "clean.exploit_signals") -> str:
-    """Every vulnerability not on KEV and not on the scoreboard, at its latest signal month
-    (or its publish month / Dec 2025 when it has no signals), in the population layout the
-    feature steps expect."""
+    """Every vulnerability not on the scoreboard, at its latest signal month (or its publish
+    month / Dec 2025 when it has no signals), in the population layout the feature steps
+    expect. KEV entries are included so their reason bars come from the model too; their
+    score is then set to 1."""
     return f"""
         WITH latest AS (SELECT cve_id, max(month) AS month FROM {signals} GROUP BY cve_id),
         rows AS (
@@ -71,7 +81,6 @@ def serve_rows_sql(signals: str = "clean.exploit_signals") -> str:
             FROM vulnerabilities AS v
             LEFT JOIN latest AS l USING (cve_id)
             WHERE v.cve_id NOT IN (SELECT cve_id FROM scoreboard_2026)
-              AND v.cve_id NOT IN (SELECT cve_id FROM clean.kev)
         ),
         dated AS (
             SELECT *, last_day(CAST(snapshot_month || '-01' AS DATE)) AS snapshot_end FROM rows
@@ -150,32 +159,98 @@ def pct(values: pd.Series) -> pd.Series:
 # --- assembly --------------------------------------------------------------------------------
 
 
-def exploited_rows(con) -> pd.DataFrame:
-    df = con.execute(
-        "SELECT cve_id, date_added, known_ransomware_use FROM clean.kev ORDER BY cve_id"
-    ).df()
-    dates = pd.to_datetime(df["date_added"])
-    reasons = []
-    for d, ransomware in zip(dates, df["known_ransomware_use"], strict=True):
-        r = [f"On CISA's Known Exploited Vulnerabilities list since {d:%Y-%m-%d}"]
-        if ransomware == "Known":
-            r.append("Known to be used in ransomware campaigns")
-        reasons.append(r)
-    return pd.DataFrame(
-        {"cve_id": df["cve_id"], "confidence": "exploited", "basis": "kev", "score": 1.0,
-         "score_pct": 1.0, "reasons": reasons, "as_of": dates.dt.strftime("%Y-%m")}
-    )  # fmt: skip
+def kev_dates(con) -> pd.DataFrame:
+    return con.execute("SELECT cve_id, date_added FROM clean.kev ORDER BY cve_id").df()
 
 
-def score_rows(con, rows: pd.DataFrame, config: dict) -> pd.DataFrame:
-    """Model + safety blend for the non-KEV rows, with reasons from the model part."""
+def warning_signals(con, rows: pd.DataFrame) -> list[str | None]:
+    """The first warning sign that applies to each row, as of its snapshot month:
+    exploit_code    - public exploit code appeared that month (absent the month before);
+    vendor_attacked - another vulnerability in one of the same vulnerable products (NIST's
+                      product lists) was added to KEV in the 30 days up to the snapshot's
+                      end. Same-vendor alone fires for 40% of CVEs (big vendors get a KEV
+                      entry most months), so the product must match;
+    score_jump      - EPSS rose by 0.1 or more since the month before."""
+    frame = pd.DataFrame(
+        {
+            "_i": range(len(rows)),
+            "cve_id": rows["cve_id"].to_numpy(),
+            "month": rows["snapshot_month"].to_numpy(),
+            "snapshot_end": pd.to_datetime(rows["snapshot_end"]).to_numpy(),
+            "code": rows["any_exploit_code"].fillna(0).astype(int).to_numpy(),
+            "epss": rows["epss"].to_numpy(),
+            "assigner": rows["assigner"].to_numpy(),
+        }
+    )
+    cur = con.cursor()
+    try:
+        cur.register("_sig_rows", frame)
+        out = cur.execute(
+            f"""
+            WITH f AS (
+                SELECT *, strftime(CAST(month || '-01' AS DATE) - INTERVAL 1 MONTH, '%Y-%m')
+                          AS prev_month
+                FROM _sig_rows
+            ),
+            prev AS (
+                SELECT s.cve_id, s.month, s.epss,
+                       greatest(s.exploitdb, s.metasploit, s.nuclei, s.poc_github) AS code
+                FROM clean.exploit_signals AS s
+                SEMI JOIN f ON f.cve_id = s.cve_id AND f.prev_month = s.month
+            ),
+            products AS (
+                SELECT DISTINCT cve_id, vendor_key, lower(product) AS product
+                FROM clean.affected_products WHERE vulnerable = 'Y'
+            ),
+            kev_products AS (
+                SELECT p.vendor_key, p.product, k.cve_id AS kev_cve, k.date_added
+                FROM known_exploited AS k JOIN products AS p USING (cve_id)
+            ),
+            attacked AS (
+                -- another CVE sharing a vulnerable product went onto KEV in the window
+                SELECT DISTINCT f._i
+                FROM f
+                JOIN products AS p ON p.cve_id = f.cve_id
+                JOIN kev_products AS kp
+                  ON kp.vendor_key = p.vendor_key AND kp.product = p.product
+                 AND kp.kev_cve <> f.cve_id
+                 AND kp.date_added > CAST(f.snapshot_end AS DATE) - INTERVAL {SIGNAL_WINDOW_DAYS} DAY
+                 AND kp.date_added <= CAST(f.snapshot_end AS DATE)
+            )
+            SELECT f._i,
+                   f.code = 1 AND coalesce(p.code, 0) = 0 AS new_code,
+                   a._i IS NOT NULL AS vendor,
+                   coalesce(f.epss - p.epss >= {EPSS_JUMP}, false) AS jump
+            FROM f
+            LEFT JOIN prev AS p ON p.cve_id = f.cve_id AND p.month = f.prev_month
+            LEFT JOIN attacked AS a ON a._i = f._i
+            ORDER BY f._i
+            """
+        ).fetchall()
+    finally:
+        cur.close()
+    signals: list[str | None] = []
+    for _, new_code, vendor, jump in out:
+        signals.append(
+            "exploit_code" if new_code else "vendor_attacked" if vendor else
+            "score_jump" if jump else None
+        )  # fmt: skip
+    return signals
+
+
+def score_rows(
+    con, rows: pd.DataFrame, config: dict, kev_ids: set[str] = frozenset()
+) -> pd.DataFrame:
+    """Model + safety blend for every row, with reason bars from the model part. Percentiles
+    are taken over the non-KEV rows (KEV rows are set to 1 afterwards by apply_kev)."""
     rows = rows.reset_index(drop=True)
     has_sim = rows["kev_sim_max"].notna().to_numpy()
     sim_models, sim_features = load_final_models(), list(config["features"])
     twin_models, twin_features = nosim_models(con, config)
     p = np.full(len(rows), np.nan)
-    reasons: list[list[str]] = [[] for _ in range(len(rows))]
+    reasons: list[list[dict]] = [[] for _ in range(len(rows))]
     cwe_names = explain.load_cwe_names(con)
+    org_names = explain.load_org_names(con)
     for mask, models, features in (
         (has_sim, sim_models, sim_features),
         (~has_sim, twin_models, twin_features),
@@ -185,12 +260,16 @@ def score_rows(con, rows: pd.DataFrame, config: dict) -> pd.DataFrame:
             continue
         p[mask] = mean_probability(models, part, features)
         contrib, names = contributions(models, part, features)
-        part_reasons = explain.reasons_from_contributions(contrib, names, part, 3, cwe_names)
+        part_reasons = explain.bars_from_contributions(
+            contrib, names, part, 3, cwe_names, org_names
+        )
         for i, r in zip(np.flatnonzero(mask), part_reasons, strict=True):
             reasons[i] = r
     alpha = float(config.get("alpha", 1.0))
     safety = safety_score(rows)
-    model_pct, safety_pct = pct(pd.Series(p)), pct(safety)
+    ranked = ~rows["cve_id"].isin(kev_ids)
+    model_pct = pd.Series(p).where(ranked).pipe(pct)
+    safety_pct = safety.where(ranked).pipe(pct)
     score = alpha * model_pct + (1 - alpha) * safety_pct
     basis = np.where(
         rows["fold"] == 2026,
@@ -211,14 +290,27 @@ def score_rows(con, rows: pd.DataFrame, config: dict) -> pd.DataFrame:
             "any_exploit_code": rows["any_exploit_code"].astype(int).to_numpy(),
             "similarity_used": has_sim,
             "reasons": reasons,
+            "signal": warning_signals(con, rows),
             "as_of": rows["snapshot_month"].to_numpy(),
         }
     )
 
 
-def combine(exploited: pd.DataFrame, scored: pd.DataFrame) -> pd.DataFrame:
-    out = pd.concat([exploited, scored], ignore_index=True)
-    out = out.drop_duplicates("cve_id", keep="first")  # KEV wins
+def apply_kev(scored: pd.DataFrame, kev: pd.DataFrame) -> pd.DataFrame:
+    """KEV entries: confidence exploited, score 1, as_of the month they were added. Their
+    model fields (p_exploit, reasons) stay, so the panel can still explain them."""
+    out = scored.set_index("cve_id")
+    added = kev.set_index("cve_id")["date_added"]
+    ids = out.index.intersection(added.index)
+    out.loc[ids, "confidence"] = "exploited"
+    out.loc[ids, "basis"] = "kev"
+    out.loc[ids, ["score", "score_pct"]] = 1.0
+    out.loc[ids, "as_of"] = pd.to_datetime(added.loc[ids]).dt.strftime("%Y-%m").to_numpy()
+    return out.reset_index()
+
+
+def combine(scored: pd.DataFrame, kev: pd.DataFrame) -> pd.DataFrame:
+    out = apply_kev(scored.drop_duplicates("cve_id", keep="first"), kev)
     return out.reindex(columns=COLUMNS).sort_values("cve_id").reset_index(drop=True)
 
 
@@ -251,7 +343,8 @@ def main() -> None:
     others = add_similarity(con, build_serve_features(con))
     rows = pd.concat([board, others], ignore_index=True)
     print(f"scoring {len(rows):,} vulnerabilities ...", flush=True)
-    out = combine(exploited_rows(con), score_rows(con, rows, config))
+    kev = kev_dates(con)
+    out = combine(score_rows(con, rows, config, set(kev["cve_id"])), kev)
     out.to_parquet(OUTPUT, index=False, compression="zstd")
     log = {
         "rows": len(out),
@@ -262,6 +355,7 @@ def main() -> None:
         "similarity_used": int(out["similarity_used"].eq(True).sum()),
         "null_scores": int(out["score"].isna().sum()),
         "no_reasons": int((out["reasons"].map(len) == 0).sum()),
+        "signals": {str(k): int(v) for k, v in out["signal"].value_counts().items()},
     }
     write_meta(out, config)
     LOGS_DIR.mkdir(parents=True, exist_ok=True)

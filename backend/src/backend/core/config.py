@@ -31,6 +31,23 @@ EPSS_LIVE = os.getenv("EPSS_LIVE", "false").lower() == "true"
 GRANITE_MATCH_CHECK = os.getenv("GRANITE_MATCH_CHECK", "false").lower() == "true"
 MAX_MATCH_CHECKS = int(os.getenv("MAX_MATCH_CHECKS", "25"))  # per SBOM upload
 
+# Opt-in: Granite rewrites the "In plain words" explanation of the top rows of each queue
+# (cached per CVE, so each one costs tokens once).
+GRANITE_EXPLANATIONS = os.getenv("GRANITE_EXPLANATIONS", "false").lower() == "true"
+GRANITE_EXPLAIN_TOP = int(os.getenv("GRANITE_EXPLAIN_TOP", "10"))
+
+# Benchmark-wide numbers for the Insights pages (backend.modeling.insights writes it).
+INSIGHTS_PATH = Path(os.getenv("INSIGHTS_PATH", FEATURES_DIR / "insights.json"))
+
+# Push to Linear. The key stays on the backend; never commit it.
+LINEAR_API_KEY = os.getenv("LINEAR_API_KEY", "")
+LINEAR_TEAM_KEY = os.getenv("LINEAR_TEAM_KEY", "")  # e.g. "SHE"
+
+# The signed-in user shown in the header (there is no login yet).
+ME_NAME = os.getenv("ME_NAME", "Jane Doe")
+ME_ROLE = os.getenv("ME_ROLE", "Security lead")
+ME_AVATAR_URL = os.getenv("ME_AVATAR_URL") or None
+
 # Granite (SHE-7). Credentials come only from backend/.env; never commit them.
 WATSONX_APIKEY = os.getenv("WATSONX_APIKEY", "")
 WATSONX_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID", "")

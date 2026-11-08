@@ -37,7 +37,7 @@ def test_upload_demo_sbom(client):
 def test_upload_garbage_is_422(client):
     r = client.post("/api/sboms", files={"file": ("x.json", b"garbage")})
     assert r.status_code == 422
-    assert "JSON" in r.json()["detail"]
+    assert r.json()["detail"] == "This file isn't a CycloneDX SBOM."
 
 
 def test_unknown_sbom_is_404(client):
@@ -64,6 +64,10 @@ def test_components_endpoint_counts(client, db):
     r = client.post("/api/sboms", files={"file": ("b.json", json.dumps(bom).encode())})
     sid = r.json()["sbom_id"]
     body = client.get(f"/api/sboms/{sid}/components").json()
-    counts = [(c["name"], c["matched_cves"], c["kev_cves"]) for c in body["components"]]
+    counts = [
+        (c["name"], c["risk"]["cve_count"], len(c["risk"]["kev"])) for c in body["components"]
+    ]
     assert counts == [("w", 2, 1), ("nothing", 0, 0)]
+    assert body["components"][0]["part"] == "application"
+    assert [c["rank"] for c in body["components"]] == [1, 2]
     assert client.get("/api/sboms/nope/components").status_code == 404

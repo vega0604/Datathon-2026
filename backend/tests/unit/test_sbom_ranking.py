@@ -23,7 +23,8 @@ def sbom(db, components):
 
 def add_vuln(db, cve, description, cvss=None):
     db.execute(
-        "INSERT INTO vulnerabilities VALUES (?, DATE '2026-03-01', ?, ?, NULL)",
+        "INSERT INTO vulnerabilities (cve_id, published, description, cvss3_score) "
+        "VALUES (?, DATE '2026-03-01', ?, ?)",
         [cve, description, cvss],
     )
 
@@ -133,6 +134,10 @@ def test_granite_check_limit(db):
 # --- the model-ranked queue ------------------------------------------------------------------
 
 
+def bar(kind, label, value):
+    return {"kind": kind, "label": label, "value": value}
+
+
 @pytest.fixture
 def ranked(db, tmp_path, monkeypatch):
     sid = sbom(db, [{"name": "zeta"}])
@@ -149,7 +154,13 @@ def ranked(db, tmp_path, monkeypatch):
             "epss_pct": [None, 0.9, 0.2, 0.5],
             "any_exploit_code": [None, 1, 0, 0],
             "similarity_used": [None, True, True, False],
-            "reasons": [["On KEV"], ["Public exploit code exists (Nuclei)"], [], ["x"]],
+            "reasons": [
+                [bar("vendor", "Its vendor: 3 earlier KEV entries", 0.2)],
+                [bar("exploit", "Public exploit code (Nuclei)", 0.31)],
+                [],
+                [bar("exposure", "Weakness: Out-of-bounds Write", -0.04)],
+            ],
+            "signal": [None, "exploit_code", None, "score_jump"],
             "as_of": ["2025-01", "2026-09", "2026-09", "2025-12"],
         }
     )
@@ -169,7 +180,9 @@ def test_queue_uses_predictions(db, ranked):
     assert q["ranking"] == "model"
     assert [i["cve_id"] for i in q["items"]] == ["K", "HI", "OLD", "LO"]  # KEV, then score
     hi = q["items"][1]
-    assert hi["reasons"] == ["Public exploit code exists (Nuclei)"]
+    assert hi["reasons"] == [bar("exploit", "Public exploit code (Nuclei)", 0.31)]
+    assert not hi["reasons_are_sample"] and hi["signal"] == "exploit_code"
+    assert q["counts"]["warning_signs"] == 2
     assert hi["exploit_code"] and hi["basis"] == "snapshot_2026"
     assert q["scores"]["alpha"] == 0.25
 

@@ -8,7 +8,8 @@ from backend.services.sbom import parse_cyclonedx, store_sbom
 
 def add_cve(db, cve, cvss=None, epss=None, month="2026-09", kev=False):
     db.execute(
-        "INSERT INTO vulnerabilities VALUES (?, DATE '2026-01-01', ?, ?, NULL)",
+        "INSERT INTO vulnerabilities (cve_id, published, description, cvss3_score) "
+        "VALUES (?, DATE '2026-01-01', ?, ?)",
         [cve, f"desc {cve}", cvss],
     )
     if epss is not None:
@@ -103,7 +104,12 @@ def test_queue_endpoint(client, db, sid):
     match(db, sid, "A", 1, "unverified")
     body = client.get(f"/api/sboms/{sid}/queue?limit=5").json()
     assert body["total"] == 1 and body["items"][0]["version_status"] == "unverified"
-    assert body["items"][0]["reasons"] == [] and body["items"][0]["explanation"] is None
+    item = body["items"][0]
+    assert item["reasons"] == [] and item["reasons_are_sample"]  # placeholder: no model
+    assert item["explanation"] == "desc A No public attack code or confirmed attacks yet."
+    assert item["explanation_source"] == "nvd"
+    assert item["severity"] == "low" and item["status"] == "to_do" and item["ticket"] is None
+    assert body["counts"] == {"open": 1, "critical": 0, "not_in_linear": 1, "warning_signs": 0}
     assert client.get(f"/api/sboms/{sid}/queue?limit=0").status_code == 422
     assert client.get(f"/api/sboms/{sid}/queue?limit=1001").status_code == 422
     assert client.get("/api/sboms/nope/queue").status_code == 404
