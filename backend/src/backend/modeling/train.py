@@ -54,7 +54,7 @@ def load_params() -> dict:
 
 def lgb_params(params: dict, seed: int, scale_pos_weight: float) -> tuple[dict, int]:
     """LightGBM's own parameter dict and the number of boosting rounds."""
-    p = {k: v for k, v in params.items() if k != "n_estimators"}
+    p = {k: v for k, v in params.items() if k not in ("n_estimators", "max_pos_weight")}
     p.update(
         objective="binary",
         scale_pos_weight=scale_pos_weight,
@@ -80,7 +80,9 @@ def fit(
     positives = int(y.sum())
     if positives == 0:
         raise ValueError("no positive labels in the training data")
-    weight = min((len(y) - positives) / positives, MAX_POS_WEIGHT)
+    # scale_pos_weight = negatives/positives, capped (SHE-52 tunes the cap).
+    cap = params.get("max_pos_weight", MAX_POS_WEIGHT)
+    weight = min((len(y) - positives) / positives, cap)
     p, rounds = lgb_params(params, seed, weight)
     booster = lgb.train(p, lgb.Dataset(X, y, free_raw_data=False), num_boost_round=rounds)
     return booster, categories

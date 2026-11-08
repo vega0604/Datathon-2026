@@ -1,0 +1,11 @@
+{
+  "num_leaves": 15,
+  "min_child_samples": 100,
+  "learning_rate": 0.03,
+  "n_estimators": 600,
+  "feature_fraction": 0.8,
+  "bagging_fraction": 0.8,
+  "bagging_freq": 1,
+  "lambda_l2": 1.0,
+  "max_pos_weight": 1
+}
