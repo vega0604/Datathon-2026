@@ -3,7 +3,16 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.api.app import create_app
+from backend.core import config
 from backend.db.store import init_store
+
+
+@pytest.fixture(autouse=True)
+def isolated_settings(monkeypatch, tmp_path):
+    """Unit tests never read the real predictions or call FIRST / watsonx unless they ask."""
+    monkeypatch.setattr(config, "PREDICTIONS_PATH", tmp_path / "no_predictions.parquet")
+    monkeypatch.setattr(config, "EPSS_LIVE", False)
+    monkeypatch.setattr(config, "GRANITE_MATCH_CHECK", False)
 
 
 @pytest.fixture

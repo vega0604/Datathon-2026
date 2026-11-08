@@ -21,6 +21,16 @@ DATA_BACKEND = os.getenv("DATA_BACKEND", "duckdb")  # "duckdb" now; "tiger" arri
 APP_DB_PATH = Path(os.getenv("APP_DB_PATH", DATA_DIR / "app.duckdb"))  # uploaded SBOMs
 DEMO_DIR = BACKEND_DIR / "demo"
 
+# SBOM queue scoring (predictions.parquet from backend.modeling.serving).
+PREDICTIONS_PATH = Path(os.getenv("PREDICTIONS_PATH", FEATURES_DIR / "predictions.parquet"))
+# A queue item whose scores describe a month older than this many days is marked stale.
+SCORE_STALE_DAYS = int(os.getenv("SCORE_STALE_DAYS", "62"))
+# Opt-in: fetch today's EPSS from FIRST (api.first.org) for matched CVEs and re-score.
+EPSS_LIVE = os.getenv("EPSS_LIVE", "false").lower() == "true"
+# Opt-in: let Granite on watsonx confirm description-only matches (uses tokens).
+GRANITE_MATCH_CHECK = os.getenv("GRANITE_MATCH_CHECK", "false").lower() == "true"
+MAX_MATCH_CHECKS = int(os.getenv("MAX_MATCH_CHECKS", "25"))  # per SBOM upload
+
 # Granite (SHE-7). Credentials come only from backend/.env; never commit them.
 WATSONX_APIKEY = os.getenv("WATSONX_APIKEY", "")
 WATSONX_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID", "")

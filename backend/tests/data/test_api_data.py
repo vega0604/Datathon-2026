@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from backend.api.app import create_app
 from backend.core.config import CLEAN_DIR, DEMO_DIR
 from backend.db.store import open_database
+from backend.services.queue import predictions_source
 
 pytestmark = pytest.mark.skipif(
     not (CLEAN_DIR / "affected_products.parquet").exists(),
@@ -62,7 +63,7 @@ def test_queue_kev_first_and_total(con, uploaded):
     distinct = con.execute(
         "SELECT count(DISTINCT cve_id) FROM app.matches WHERE sbom_id = ?", [sbom_id]
     ).fetchone()[0]
-    assert body["ranking"] == "epss_placeholder"
+    assert body["ranking"] == ("model" if predictions_source() else "epss_placeholder")
     assert body["total"] == distinct
     assert len(body["items"]) == 20
     assert all(i["on_kev"] for i in body["items"])
