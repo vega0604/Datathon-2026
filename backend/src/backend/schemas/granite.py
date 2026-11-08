@@ -14,6 +14,7 @@ class MatchVerdict(BaseModel):
     versions: str | None = Field(None, description="Affected versions or ranges, as written")
     confidence: Literal["low", "medium", "high"]
     reason: str = Field(description=f"{MAX_REASON_WORDS} words or fewer")
+    error: bool = Field(False, description="True when the model never gave valid JSON")
 
     @field_validator("reason")
     @classmethod
