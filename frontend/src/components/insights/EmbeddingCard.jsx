@@ -1,18 +1,20 @@
 import { iconUrl } from '../../lib/Icon'
+import { embeddingText } from '../../data/ui'
 import { ChartImg, PlotFrame, PlotSurface, Takeaway, chartText, plotBox } from './ChartParts'
-import { model } from '../../data/insights'
-// modelEmbedding.js is generated model output. It's loaded optionally so a copy
-// of the repo without it still runs: the map then shows a note instead of points.
-const embedding = Object.values(import.meta.glob('../../data/modelEmbedding.js', { eager: true }))[0]
-const kevPoints = embedding?.kevPoints ?? []
-const otherPoints = embedding?.otherPoints ?? []
 
 const ICON = 'insights/model'
 
-// ---- Embedding map: 2-D projection of CVE text embeddings, 362×367 design plot ----
+// ---- Embedding map: 2-D projection of Granite description embeddings, 362×367 design plot ----
+// The API sends x and y from 0 to 1 (y = 0 at the top); markers are placed so they
+// stay inside the plot.
 const MAP_W = 362
 const MAP_H = 367
 const mapBox = plotBox(MAP_W, MAP_H)
+const PAD = 14
+const DOT = 6
+const KEV_W = 12
+const KEV_H = 19.1478
+const at = (v, size, extent) => PAD + v * (extent - 2 * PAD - size)
 
 function LegendPill({ file, size, children }) {
   return (
@@ -23,31 +25,33 @@ function LegendPill({ file, size, children }) {
   )
 }
 
-function EmbeddingMap({ clusters }) {
+function EmbeddingMap({ points, clusters }) {
+  const kev = points.filter((p) => p.on_kev)
+  const other = points.filter((p) => !p.on_kev)
   return (
     <PlotFrame minH="min-h-[140px]">
       <PlotSurface width={MAP_W} height={MAP_H}>
         <div
           className="absolute inset-0 rounded-[18px] bg-card"
           role="img"
-          aria-label={`Map of ${otherPoints.length + kevPoints.length} CVEs; ${kevPoints.length} KEV entries, shown as diamonds, form two clusters.`}
+          aria-label={`Map of ${points.length} CVE descriptions; ${kev.length} KEV entries are shown as diamonds.`}
         >
-          {otherPoints.map(([x, y], i) => (
-            <ChartImg key={`p${i}`} file={`${ICON}/pt`} className="chart-pop" style={{ ...mapBox(x, y, 6, 6), '--i': i % 30 }} />
+          {other.map((p, i) => (
+            <ChartImg key={p.cve_id} file={`${ICON}/pt`} className="chart-pop" style={{ ...mapBox(at(p.x, DOT, MAP_W), at(p.y, DOT, MAP_H), DOT, DOT), '--i': i % 30 }} />
           ))}
-          {kevPoints.map(([x, y], i) => (
-            <ChartImg key={`k${i}`} file={`${ICON}/kev`} className="chart-pop" style={{ ...mapBox(x, y, 12, 19.1478), '--i': 10 + (i % 20) }} />
+          {kev.map((p, i) => (
+            <ChartImg key={p.cve_id} file={`${ICON}/kev`} className="chart-pop" style={{ ...mapBox(at(p.x, KEV_W, MAP_W), at(p.y, KEV_H, MAP_H), KEV_W, KEV_H), '--i': 10 + (i % 20) }} />
           ))}
-          {!embedding && (
+          {!points.length && (
             <p className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-ink-muted">
-              The embedding data (src/data/modelEmbedding.js) isn’t in this copy of the project yet.
+              The backend has no description embeddings yet.
             </p>
           )}
-          {embedding && clusters.map((c) => (
+          {clusters.map((c, i) => (
             <span
-              key={c.label}
-              className={`absolute rounded-full bg-blue-soft px-[0.833em] py-[0.333em] text-blue-ink ${chartText.label}`}
-              style={mapBox(c.x, c.y)}
+              key={`${c.label}-${i}`}
+              className={`absolute -translate-x-1/2 rounded-full bg-blue-soft px-[0.833em] py-[0.333em] text-blue-ink ${chartText.label}`}
+              style={mapBox(at(c.x, 0, MAP_W), at(c.y, 0, MAP_H))}
             >
               {c.label}
             </span>
@@ -58,19 +62,18 @@ function EmbeddingMap({ clusters }) {
   )
 }
 
-// "Exploited CVEs cluster in Granite’s text space" (from the former Model check page),
-// shown on the Model overview page.
-export function EmbeddingCard() {
-  const e = model.embedding
+// "Exploited CVEs cluster in Granite’s text space", on the Model overview page
+// (GET /api/insights/catch-rate `embedding`).
+export function EmbeddingCard({ embedding, takeaway }) {
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
-      <h2 className="shrink-0 text-lg leading-7 text-ink xl:text-xl">{e.title}</h2>
+      <h2 className="shrink-0 text-lg leading-7 text-ink xl:text-xl">{embeddingText.title}</h2>
       <div className="flex shrink-0 flex-wrap gap-2">
         <LegendPill file="legend-dot" size={7}>Not on KEV (dot)</LegendPill>
         <LegendPill file="legend-diamond" size={11}>On KEV (diamond)</LegendPill>
       </div>
-      <EmbeddingMap clusters={e.clusters} />
-      <Takeaway>{e.takeaway}</Takeaway>
+      <EmbeddingMap points={embedding?.points ?? []} clusters={embedding?.clusters ?? []} />
+      {takeaway && <Takeaway>{takeaway}</Takeaway>}
     </div>
   )
 }

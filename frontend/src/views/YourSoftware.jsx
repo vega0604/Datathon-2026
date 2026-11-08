@@ -3,7 +3,8 @@ import { AppHeader } from '../components/insights/AppHeader'
 import { Sidebar } from '../components/Sidebar'
 import { Icon } from '../lib/Icon'
 import { IconDarkContext } from '../lib/iconTheme'
-import { DEMO_URL, MAX_BYTES, parseSbom, rankComponents, riskChecked, summarize, toCsv, worstSeverity } from '../lib/sbom'
+import { DEMO_FILE, DEMO_URL, MAX_BYTES, previewSbom, rankComponents, summarize, toCsv, worstSeverity } from '../lib/sbom'
+import { uploadSbom, useSbom } from '../lib/api'
 import { BlueCard, FactRow, FitMain, FoundBy, PageTitle, SevMix, SevPill, SidePanel, SideBox, Tabs, sevBar, sevText } from '../components/software/SoftwareParts'
 
 // "Your software" flow (Figma V5): Empty → Uploading → Overview ⇄ All components
@@ -13,40 +14,62 @@ import { BlueCard, FactRow, FitMain, FoundBy, PageTitle, SevMix, SevPill, SidePa
 const fmtDate = (d) => new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 const fmtTime = (d) => d.toLocaleTimeString('en-GB', { hour12: false })
 
-export function YourSoftware({ onHome, sbom, library = [], onSbom, onSelect, onRemove, screen, onScreen, onOpenFixFirst, onOpenInsights, theme = 'light', onThemeChange }) {
+export function YourSoftware({ onHome, sbomId, library = [], onUploaded, onSelect, onRemove, screen, onScreen, onOpenFixFirst, onOpenInsights, software, totals, theme = 'light', onThemeChange }) {
   const dark = theme === 'dark'
   const [job, setJob] = useState(null) // the upload in progress
   const [error, setError] = useState(null)
+  // The selected SBOM with every component and its risk (cached per SBOM).
+  const detail = useSbom(sbomId)
+  const sbom = detail.data ?? null
 
-  const start = async (getText, fileName, size) => {
+  // Reads the file for the preview, then uploads it. The preview animation and the
+  // request run together; the Uploading screen finishes when both are done.
+  const start = async (file) => {
     setError(null)
     try {
-      if (size > MAX_BYTES) throw new Error('That file is over 10 MB.')
-      const parsed = parseSbom(await getText(), fileName)
-      setJob({ sbom: { ...parsed, sizeKB: Math.max(1, Math.round(size / 1024)), uploadedAt: new Date().toISOString() }, startedAt: new Date() })
+      if (file.size > MAX_BYTES) throw new Error('That file is over 10 MB.')
+      const preview = previewSbom(await file.text(), file.name)
+      const id = Date.now()
+      setJob({
+        id,
+        sbom: { ...preview, sizeKB: Math.max(1, Math.round(file.size / 1024)), uploadedAt: new Date().toISOString(), componentCount: preview.components.length },
+        startedAt: new Date(),
+        request: uploadSbom(file),
+      })
       onScreen({ name: 'uploading' })
     } catch (e) {
       setError(e instanceof SyntaxError ? 'We couldn’t read that file. Is it CycloneDX JSON or XML?' : e.message)
     }
   }
-  const chooseFile = (file) => file && start(() => file.text(), file.name, file.size)
-  const tryDemo = () =>
-    start(async () => {
+  const chooseFile = (file) => file && start(file)
+  const tryDemo = async () => {
+    try {
       const res = await fetch(DEMO_URL)
-      return res.text()
-    }, 'acme_sbom.cdx.json', 4579)
+      const blob = await res.blob()
+      start(new File([blob], DEMO_FILE, { type: 'application/json' }))
+    } catch {
+      setError('We couldn’t load the demo file.')
+    }
+  }
 
-  const finish = () => {
-    onSbom(job.sbom)
+  const finish = (uploaded) => {
     setJob(null)
+    onUploaded(uploaded.id)
     onScreen({ name: 'overview' })
+  }
+  const fail = (message) => {
+    setJob(null)
+    setError(message)
+    onScreen({ name: 'empty' })
   }
 
   const ranked = useMemo(() => (sbom ? rankComponents(sbom.components) : []), [sbom])
   const open = (c) => onScreen({ name: 'component', id: c.id })
 
   let content
-  if (screen.name === 'uploading' && job) content = <Uploading key={job.startedAt.getTime()} job={job} onDone={finish} onCancel={() => (setJob(null), onScreen({ name: 'empty' }))} onOpenFixFirst={onOpenFixFirst} />
+  if (screen.name === 'uploading' && job) content = <Uploading key={job.id} job={job} onDone={finish} onFail={fail} onCancel={() => (setJob(null), onScreen({ name: 'empty' }))} onOpenFixFirst={onOpenFixFirst} />
+  else if (screen.name !== 'empty' && screen.name !== 'uploading' && sbomId && !sbom)
+    content = <Loading error={detail.error} onRetry={detail.reload} />
   else if (!sbom || screen.name === 'empty' || screen.name === 'uploading') content = <Empty onFile={chooseFile} onDemo={tryDemo} error={error} />
   else if (screen.name === 'all') content = <AllComponents sbom={sbom} ranked={ranked} onScreen={onScreen} onOpen={open} />
   else if (screen.name === 'component') content = <ComponentDetail sbom={sbom} ranked={ranked} id={screen.id} onScreen={onScreen} onOpenFixFirst={onOpenFixFirst} />
@@ -63,12 +86,34 @@ export function YourSoftware({ onHome, sbom, library = [], onSbom, onSelect, onR
             onOpenFixFirst={onOpenFixFirst}
             onOpenInsights={onOpenInsights}
             onUpload={() => onScreen({ name: 'empty' })}
-            software={{ library, currentId: sbom?.id, uploading: job?.sbom, onSelect, onRemove }}
+            totals={totals}
+            software={{ ...software, library, currentId: sbomId, uploading: job?.sbom, onSelect, onRemove }}
           />
           {content}
         </div>
       </div>
     </IconDarkContext.Provider>
+  )
+}
+
+/* ── Loading a saved SBOM ──────────────────────────────────────────────── */
+function Loading({ error, onRetry }) {
+  return (
+    <FitMain className="items-center justify-center">
+      <div className="flex flex-col items-center gap-3 rounded-[28px] bg-card p-10 text-center shadow-float" role="status">
+        {error ? (
+          <>
+            <p className="text-lg text-ink">We couldn’t load this SBOM</p>
+            <p className="text-sm text-ink-muted">{error.message}</p>
+            <button type="button" onClick={onRetry} className="cursor-pointer rounded-full bg-blue px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-strong">
+              Try again
+            </button>
+          </>
+        ) : (
+          <p className="text-sm text-ink-muted">Loading your software…</p>
+        )}
+      </div>
+    </FitMain>
   )
 }
 
@@ -145,11 +190,23 @@ function Empty({ onFile, onDemo, error }) {
   )
 }
 
-/* ── Uploading: steps through the real file ────────────────────────────── */
-function Uploading({ job, onDone, onCancel, onOpenFixFirst }) {
+/* ── Uploading: steps through the real file while the server matches it ── */
+function Uploading({ job, onDone, onFail, onCancel, onOpenFixFirst }) {
   const total = job.sbom.components.length
   const noCpe = job.sbom.components.filter((c) => !c.cpe)
   const [checked, setChecked] = useState(0)
+  const [result, setResult] = useState(null) // the stored SBOM once POST /api/sboms answers
+  useEffect(() => {
+    let live = true
+    job.request.then(
+      (sbom) => live && setResult(sbom),
+      (e) => live && onFail(e.message),
+    )
+    return () => {
+      live = false
+    }
+    // Runs once per upload job.
+  }, [job]) // eslint-disable-line react-hooks/exhaustive-deps
   // What happened while reading the file (all real: counts come from the file).
   const [log] = useState(() => {
     const t = job.startedAt
@@ -162,22 +219,27 @@ function Uploading({ job, onDone, onCancel, onOpenFixFirst }) {
     ]
   })
 
+  // Steps through the components; the last one waits for the server's answer.
   useEffect(() => {
     let n = 0
     const id = setInterval(() => {
-      n += 1
+      n = Math.min(n + 1, total - 1)
       setChecked(n)
-      if (n >= total) {
-        clearInterval(id)
-        setTimeout(onDone, 700)
-      }
+      if (n >= total - 1) clearInterval(id)
     }, 160)
     return () => clearInterval(id)
     // Runs once per upload job.
   }, [job]) // eslint-disable-line react-hooks/exhaustive-deps
+  // All steps shown and the server answered: complete, then hand over the result.
+  const done = Boolean(result) && checked >= total - 1
+  useEffect(() => {
+    if (!done) return
+    const t = setTimeout(() => onDone(result), 500)
+    return () => clearTimeout(t)
+  }, [done]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const pct = Math.round((checked / total) * 100)
-  const done = checked >= total
+  const step = done ? total : checked
+  const pct = Math.round((step / total) * 100)
   return (
     <>
       <FitMain className="gap-5">
@@ -199,13 +261,13 @@ function Uploading({ job, onDone, onCancel, onOpenFixFirst }) {
             <div className="flex flex-col gap-3.5 px-7 pt-6 pb-6">
               <div className="flex gap-1" aria-hidden="true">
                 {job.sbom.components.map((c, i) => (
-                  <span key={c.id} className={`h-3 min-w-0 flex-1 rounded-[3px] ${i < checked ? 'bg-blue' : 'bg-track'}`} />
+                  <span key={c.id} className={`h-3 min-w-0 flex-1 rounded-[3px] ${i < step ? 'bg-blue' : 'bg-track'}`} />
                 ))}
               </div>
               <Step state="done">File is a valid CycloneDX SBOM</Step>
               <Step state="done">Found {total} components</Step>
               <Step state={done ? 'done' : 'active'}>
-                Checking for known vulnerabilities · {Math.min(checked, total)} of {total}
+                Checking for known vulnerabilities · {step} of {total}
               </Step>
               {noCpe.length > 0 && (
                 <Step state="next">
@@ -273,7 +335,7 @@ function SoftwareHeader({ sbom, tab, onScreen }) {
         <span className="mt-0.5 flex items-center gap-2 rounded-full bg-card px-3 py-1.5">
           <Icon name="software/dot-blue" className="size-2" />
           <span className="text-xs text-ink-muted">
-            Components are from your file. CVEs from NIST NVD and CISA KEV, checked {fmtDate(riskChecked)}.
+            Components are from your file. CVEs from NIST NVD and CISA KEV, checked {fmtDate(sbom.riskChecked)}.
           </span>
         </span>
       </PageTitle>
@@ -304,7 +366,7 @@ function Overview({ sbom, ranked, onScreen, onOpen, onOpenFixFirst }) {
                 <span key={c.id} className={`h-3 w-[9px] rounded-[2px] ${c.risk?.cveCount ? 'bg-blue' : 'bg-track'}`} />
               ))}
             </span>
-            {s.total - s.checked > 0 && <p className="text-xs text-ink-muted">{s.total - s.checked} not checked (no CPE name)</p>}
+            {s.total - s.checked > 0 && <p className="text-xs text-ink-muted">{s.total - s.checked} not checked</p>}
           </div>
           <div className="flex min-h-[156px] min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-[22px] py-5">
             <p className="text-sm text-ink-muted">Known vulnerabilities (CVEs)</p>
@@ -367,17 +429,13 @@ function Overview({ sbom, ranked, onScreen, onOpen, onOpenFixFirst }) {
         </BlueCard>
         <SideBox tone="purple" icon="software/eye-purple" title="How we found them">
           <div className="flex flex-col gap-1.5">
-            <FactRow label="By product name in NIST’s list" value={<span className="text-base text-purple-ink">{s.cves.toLocaleString()}</span>} />
+            <FactRow label="Matched CVEs" value={<span className="text-base text-purple-ink">{s.cves.toLocaleString()}</span>} />
             <span className="h-2 overflow-hidden rounded bg-card">
               <span className="block h-2 w-full rounded bg-ai" />
             </span>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <FactRow label="By IBM Granite reading CVE text" value={<span className="text-base text-purple-ink">not run</span>} />
-            <span className="h-2 rounded bg-card" />
-          </div>
           <p className="text-[13px] leading-[19px] text-ink-muted">
-            {s.total - s.withCpe} component{s.total - s.withCpe === 1 ? '' : 's'} have no CPE name, so Granite would read CVE text for them. That step isn’t run in this demo.
+            Most come from the product and version in NIST’s list. Where NIST has no product list yet, we also match the CVE text, and IBM Granite can confirm those matches. Fix first shows how each CVE was matched.
           </p>
         </SideBox>
         <SideBox tone="grey" icon="software/target-blue" title="How to read colours">
@@ -476,7 +534,7 @@ function AllComponents({ sbom, ranked, onScreen, onOpen }) {
             <span className="shrink-0">
               <FoundBy component={{ cpe: null }} />
             </span>
-            <p className="text-[13px] leading-[18px] text-ink-muted">No CPE name. IBM Granite would read the CVE text. Dashed outline.</p>
+            <p className="text-[13px] leading-[18px] text-ink-muted">No CPE name. Matched by name and by CVE text; IBM Granite can confirm. Dashed outline.</p>
           </div>
         </SideBox>
         <button type="button" onClick={download} className="w-full shrink-0 cursor-pointer rounded-full border border-line-strong bg-card py-3.5 text-base font-semibold text-ink hover:bg-page">
@@ -509,7 +567,7 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
           <div className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-5 py-[18px]">
             <p className="text-[13px] text-ink-muted">Known CVEs</p>
             <p className="text-[40px] leading-tight font-light text-ink">{r ? r.cveCount.toLocaleString() : '—'}</p>
-            <p className="text-xs text-ink-muted">{r ? 'All matched by product name' : 'Not checked: no CPE name'}</p>
+            <p className="text-xs text-ink-muted">{r ? (c.cpe ? 'Matched by its CPE name' : 'Matched by name and CVE text') : 'Not checked'}</p>
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-5 py-[18px]">
             <p className="text-[13px] text-ink-muted">Worst severity</p>
@@ -540,8 +598,10 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
             </>
           ) : (
             <>
-              <MatchStep n={1}>Your SBOM has no CPE name for it, so NIST can’t match it by product name</MatchStep>
-              <MatchStep n={2}>IBM Granite would read CVE text to find the vendor and product. That step isn’t run in this demo</MatchStep>
+              <MatchStep n={1}>Your SBOM has no CPE name for it, so we match its package URL or name to NIST’s product list</MatchStep>
+              <MatchStep n={2}>
+                Where NIST has no product list yet, we also look for it in the CVE text{r ? ` (${r.cveCount.toLocaleString()} CVEs found in all)` : ''}. IBM Granite can confirm those matches
+              </MatchStep>
             </>
           )}
         </div>
@@ -613,7 +673,7 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
           <FactRow label="Vendor" value={c.vendor ?? '—'} />
           <FactRow label="Version" value={c.version} />
           <FactRow label="Fixed in" value={r?.fixedIn ?? 'See vendor advisory'} />
-          <FactRow label="Found by" value={c.cpe ? 'NIST list' : 'Needs Granite'} />
+          <FactRow label="Found by" value={c.cpe ? 'NIST list' : 'Name & CVE text'} />
         </SideBox>
       </SidePanel>
     </>

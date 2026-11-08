@@ -1,5 +1,5 @@
 import { Icon } from '../lib/Icon'
-import { signals, totals } from '../data/queue'
+import { signals } from '../data/ui'
 
 const COLS = {
   rank: 'w-12',
@@ -12,13 +12,23 @@ const COLS = {
   signal: 'w-[172px]',
 }
 
+// Status icon per severity: the Fix first set for Critical / High, the Insights set
+// (same shapes) for Medium / Low. No icon when NVD has no CVSS score.
+const SEVERITY_ICON = {
+  Critical: 'fixfirst/status-critical',
+  High: 'fixfirst/status-high',
+  Medium: 'insights/severity/status-medium',
+  Low: 'insights/severity/status-low',
+}
+
 // Carbon status tag: colour is always paired with a shape and a text label.
 export function SeverityTag({ cvss, severity }) {
+  const icon = SEVERITY_ICON[severity]
   return (
     <span className="flex items-center gap-1 rounded-xl bg-subtle px-2 py-1">
-      <Icon name={severity === 'Critical' ? 'fixfirst/status-critical' : 'fixfirst/status-high'} className="size-3" />
+      {icon && <Icon name={icon} className="size-3" />}
       <span className="type-label whitespace-nowrap text-ink">
-        {cvss.toFixed(1)} {severity}
+        {severity === 'None' ? 'No CVSS' : `${cvss.toFixed(1)} ${severity}`}
       </span>
     </span>
   )
@@ -96,13 +106,13 @@ function SortButton({ sort, onSortChange }) {
   )
 }
 
-const FILTERS = [
-  { id: 'all', label: 'All', count: totals.open },
-  { id: 'critical', label: 'Critical', count: totals.critical },
-  { id: 'notInLinear', label: 'Not sent', count: totals.notInLinear },
-]
-
-export function QueueTable({ items, view, onViewChange, query, onQueryChange, sort, onSortChange, selectedId, onSelect, onSeeAll }) {
+export function QueueTable({ items, totals, view, onViewChange, query, onQueryChange, sort, onSortChange, selectedId, onSelect, onSeeAll, more = 0, onShowMore, truncated = 0 }) {
+  // Counts cover the whole queue (API `counts`), not just the rendered rows.
+  const FILTERS = [
+    { id: 'all', label: 'All', count: totals?.open ?? 0 },
+    { id: 'critical', label: 'Critical', count: totals?.critical ?? 0 },
+    { id: 'notInLinear', label: 'Not sent', count: totals?.notInLinear ?? 0 },
+  ]
   return (
     <section className="flex min-h-px w-full flex-1 flex-col overflow-hidden rounded-[28px] bg-card px-4 pt-3.5 pb-4 shadow-float short:pt-3 short:pb-3">
       <div className="flex w-full shrink-0 items-center gap-2 pb-2.5">
@@ -129,7 +139,7 @@ export function QueueTable({ items, view, onViewChange, query, onQueryChange, so
                 active ? 'bg-blue-soft text-blue-ink' : 'border border-line text-ink hover:bg-page'
               }`}
             >
-              {`${f.label}  ${f.count}`}
+              {`${f.label}  ${f.count.toLocaleString('en-US')}`}
             </button>
           )
         })}
@@ -162,17 +172,27 @@ export function QueueTable({ items, view, onViewChange, query, onQueryChange, so
           {items.length === 0 && (
             <p className="type-body py-10 text-center text-ink-muted">No vulnerabilities match this view.</p>
           )}
+          {more > 0 && (
+            <button type="button" onClick={onShowMore} className="type-body shrink-0 cursor-pointer py-3 font-semibold text-blue-ink hover:underline">
+              Show {Math.min(more, 50)} more of {more.toLocaleString('en-US')}
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="shrink-0 pt-3 pl-2.5 short:pt-2">
+      <div className="flex shrink-0 items-center gap-3 pt-3 pl-2.5 short:pt-2">
         <button
           type="button"
           onClick={onSeeAll}
           className="cursor-pointer text-sm font-semibold whitespace-pre text-blue-ink hover:underline"
         >
-          {`See all ${totals.open}  ›`}
+          {`See all ${(totals?.open ?? 0).toLocaleString('en-US')}  ›`}
         </button>
+        {truncated > 0 && (
+          <span className="type-label text-ink-muted" title="The API returns at most 1,000 rows per request.">
+            Showing the top 1,000; {truncated.toLocaleString('en-US')} lower-ranked aren’t loaded.
+          </span>
+        )}
       </div>
     </section>
   )

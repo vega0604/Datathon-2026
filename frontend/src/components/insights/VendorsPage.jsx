@@ -1,9 +1,11 @@
 import { useRef } from 'react'
 import { useFitHeight } from '../../lib/useFitHeight'
+import { useVendors } from '../../lib/api'
+import { kevShade, pct, vendorsText } from '../../data/ui'
+import { InsightsState } from './InsightsState'
 import { Takeaway } from './ChartParts'
 import { VendorHeatmap } from './VendorHeatmap'
 import { SHADE } from './vendorShades'
-import { vendors } from '../../data/insights'
 
 function RankingRow({ vendor }) {
   return (
@@ -32,10 +34,32 @@ function LegendSwatch({ shade, children }) {
   )
 }
 
+/** API cells -> heatmap cells: `short` is the first letter, used when a box is narrow. */
+function toCells(data) {
+  return data.cells.map((c) => ({
+    name: c.vendor,
+    short: c.vendor === 'Other' ? null : c.vendor[0],
+    cves: c.cve_count,
+    kev: pct(c.kev_share),
+    shade: kevShade(c.kev_share),
+  }))
+}
+
+// Vendors: GET /api/insights/vendors.
 export function VendorsPage() {
+  const query = useVendors()
+  return <InsightsState query={query}>{(data) => <VendorsBody data={data} />}</InsightsState>
+}
+
+function VendorsBody({ data }) {
   // Never scrolls or clips: on short windows the card shrinks slightly to fit.
   const ref = useRef(null)
   useFitHeight(ref)
+  const cells = toCells(data)
+  const ranking = data.ranking
+    .map((name) => cells.find((c) => c.name === name))
+    .filter(Boolean)
+    .map((c) => ({ name: c.name, cves: `${c.cves.toLocaleString('en-US')} CVEs`, kev: c.kev }))
   return (
       <main ref={ref} className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden xl:gap-5 xl:pt-2 [&>*]:[zoom:var(--fit,1)]">
         <div className="flex shrink-0 flex-col items-start gap-1 xl:gap-2">
@@ -48,11 +72,11 @@ export function VendorsPage() {
         <section className="flex min-h-0 w-full flex-1 overflow-y-auto rounded-[32px] bg-card p-4 shadow-float xl:p-6 short:p-4">
           <div className="flex min-h-min w-full flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
             <div className="flex shrink-0 flex-col gap-1">
-              <h2 className="text-lg leading-7 text-ink xl:text-xl">{vendors.title}</h2>
-              <p className="type-body text-ink-muted">{vendors.subtitle}</p>
+              <h2 className="text-lg leading-7 text-ink xl:text-xl">{vendorsText.title}</h2>
+              <p className="type-body text-ink-muted">{vendorsText.subtitle}</p>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
-              {vendors.legend.map((l) => (
+              {vendorsText.legend.map((l) => (
                 <LegendSwatch key={l.shade} shade={l.shade}>
                   {l.label}
                 </LegendSwatch>
@@ -62,17 +86,17 @@ export function VendorsPage() {
             <div className="flex w-full flex-1 items-stretch gap-5">
               {/* Heatmap fills the space it gets; the layout is recomputed on resize */}
               <div className="min-h-[160px] w-[62%] shrink-0">
-                <VendorHeatmap cells={vendors.cells} />
+                <VendorHeatmap cells={cells} />
               </div>
               <div className="flex min-w-0 flex-1 flex-col justify-start gap-2.5 short:gap-2">
                 <p className="type-body-compact font-semibold text-ink-muted">Highest KEV rate</p>
-                {vendors.ranking.map((v) => (
+                {ranking.map((v) => (
                   <RankingRow key={v.name} vendor={v} />
                 ))}
               </div>
             </div>
 
-            <Takeaway>{vendors.takeaway}</Takeaway>
+            {data.takeaway && <Takeaway>{data.takeaway}</Takeaway>}
           </div>
         </section>
       </main>

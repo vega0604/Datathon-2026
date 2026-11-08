@@ -71,9 +71,11 @@ export function CoverageCard({ coverage }) {
           </div>
           {coverage.footer && (
             <div className="flex items-center gap-3 border-t border-line pt-3 short:pt-2.5">
-              <span className="type-label rounded-full bg-blue px-2.5 py-1 font-semibold whitespace-nowrap text-white">
-                {coverage.footerPill}
-              </span>
+              {coverage.footerPill && (
+                <span className="type-label rounded-full bg-blue px-2.5 py-1 font-semibold whitespace-nowrap text-white">
+                  {coverage.footerPill}
+                </span>
+              )}
               <p className="type-label text-ink-muted">{coverage.footer}</p>
             </div>
           )}

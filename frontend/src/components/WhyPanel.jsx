@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Icon } from '../lib/Icon'
 
 /**
@@ -15,6 +16,31 @@ function Stable({ items, current, render, className = '' }) {
         </div>
       ))}
     </div>
+  )
+}
+
+// Disabled while the request runs, so one click creates one issue; clickable again
+// if it fails.
+function LinearButton({ onPush }) {
+  const [busy, setBusy] = useState(false)
+  const push = async () => {
+    setBusy(true)
+    try {
+      await onPush()
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={push}
+      className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-full bg-blue pr-4 pl-[18px] hover:bg-primary-strong disabled:cursor-wait disabled:opacity-80"
+    >
+      <span className="type-body font-semibold whitespace-nowrap text-white">{busy ? 'Sending…' : 'Push to Linear'}</span>
+      {!busy && <Icon name="fixfirst/arrow-up-white" className="size-4" />}
+    </button>
   )
 }
 
@@ -94,11 +120,14 @@ function PlainWords({ item, items }) {
   )
 }
 
-// Same scale as the Figma bars: 0.31 fills 404px (≈1303px per 1.0 of SHAP value).
-const PX_PER_UNIT = 1303
+// Bar track width in the design. The API's values are SHAP contributions in log-odds
+// (often 1-3), so the largest value among the shown rows fills the track; the
+// design's fixed scale (0.31 = full) would clip almost every bar.
+const TRACK_PX = 404
 
 function Reasons({ item, items }) {
   const { rank, reasons } = item
+  const largest = Math.max(0.0001, ...items.flatMap((it) => (it.reasons ?? []).map((r) => Math.abs(r.value))))
   // Every reason label from every row, so all three reason rows share one height
   // (the tallest label anywhere): even spacing, and nothing moves between ranks.
   const allLabels = items.flatMap((it) => (it.reasons ?? []).map((r, k) => ({ cveId: `${it.cveId}#${k}`, label: r.label })))
@@ -106,13 +135,18 @@ function Reasons({ item, items }) {
     <div className="flex w-full shrink-0 flex-col gap-3">
       <div className="flex items-center gap-2">
         <p className="text-base leading-6 font-semibold text-ink">Why it ranks #{rank}</p>
-        <span
-          className="type-label rounded-full bg-subtle px-2 py-0.5 text-ink-muted"
-          title="Reasons are real facts about this CVE; the weights are sample values until the model ships."
-        >
-          Sample weights
-        </span>
+        {item.reasonsAreSample && (
+          <span
+            className="type-label rounded-full bg-subtle px-2 py-0.5 text-ink-muted"
+            title="The model's scores aren't built on the server yet, so there are no model reasons."
+          >
+            Sample ranking
+          </span>
+        )}
       </div>
+      {!reasons.length && (
+        <p className="type-body text-ink-muted">No model reasons yet: ranked by CISA KEV, EPSS and CVSS.</p>
+      )}
       {reasons.map((r, i) => (
         <div key={r.label} className="flex w-full items-center gap-2.5">
           <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-page">
@@ -130,7 +164,7 @@ function Reasons({ item, items }) {
               {/* Negative weights (factors that lower the rank) are grey, never colour alone: the value shows the sign. */}
               <span
                 className={`absolute top-0 left-0 h-2 rounded-full ${r.value < 0 ? 'bg-line-strong' : i === 0 ? 'bg-blue' : 'bg-chart-seq-4'}`}
-                style={{ width: Math.abs(r.value) * PX_PER_UNIT }}
+                style={{ width: (Math.abs(r.value) / largest) * TRACK_PX }}
               />
             </div>
           </div>
@@ -145,10 +179,22 @@ function Reasons({ item, items }) {
 }
 
 const formatDate = (iso) =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+  iso ? new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '—'
 
-// Teal fact box content: IBM X-Force (sample data from the design) or CISA KEV (real).
+// Teal fact box content: IBM X-Force (never sent by the backend today), CISA KEV for
+// CVEs on the list, otherwise the public facts we have (EPSS, weakness, exploit code).
 function factsFor(it) {
+  if (!it.xforce && !it.kev)
+    return {
+      title: 'Not on CISA KEV',
+      link: `https://nvd.nist.gov/vuln/detail/${it.cveId}`,
+      linkLabel: 'the NVD record',
+      facts: [
+        ['Chance of attack (EPSS)', it.facts.epss == null ? 'No score yet' : it.facts.epss.toFixed(2)],
+        ['Public exploit code', it.facts.exploitCode ? 'Yes' : 'Not seen'],
+        ['Weakness', it.facts.weakness ?? 'Not given'],
+      ],
+    }
   if (it.xforce)
     return {
       title: 'IBM X-Force',
@@ -166,7 +212,7 @@ function factsFor(it) {
     facts: [
       ['Added to KEV', formatDate(it.kev.added)],
       ['Used in ransomware', it.kev.ransomware ? 'Yes, per CISA' : 'Not known'],
-      ['Weakness', it.kev.weakness],
+      ['Weakness', it.kev.weakness ?? 'Not given'],
     ],
   }
 }
@@ -209,7 +255,7 @@ function FactContent({ title, link, linkLabel, facts }) {
   )
 }
 
-export function WhyPanel({ item, items, onClose, onStatusChange, onPushToLinear }) {
+export function WhyPanel({ item, items, error, onClose, onStatusChange, onPushToLinear }) {
   return (
     // Design sizes on every screen; on short windows the panel scrolls instead of squashing its sections.
     // `relative` keeps hidden link labels (sr-only) inside the panel so the window itself never scrolls.
@@ -254,18 +300,25 @@ export function WhyPanel({ item, items, onClose, onStatusChange, onPushToLinear 
           </select>
         </label>
         <div className="h-px min-w-px flex-1" />
-        <button
-          type="button"
-          disabled={!!item.ticket}
-          onClick={() => onPushToLinear(item.cveId)}
-          className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-full bg-blue pr-4 pl-[18px] hover:bg-primary-strong disabled:cursor-default disabled:bg-primary-strong"
-        >
-          <span className="type-body font-semibold whitespace-nowrap text-white">
-            {item.ticket ? `In Linear · ${item.ticket}` : 'Push to Linear'}
-          </span>
-          {!item.ticket && <Icon name="fixfirst/arrow-up-white" className="size-4" />}
-        </button>
+        {item.ticket ? (
+          // Already sent: links to the Linear issue.
+          <a
+            href={item.ticketUrl ?? undefined}
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-primary-strong pr-4 pl-[18px]"
+          >
+            <span className="type-body font-semibold whitespace-nowrap text-white">In Linear · {item.ticket}</span>
+          </a>
+        ) : (
+          <LinearButton key={item.cveId} onPush={() => onPushToLinear(item.cveId)} />
+        )}
       </div>
+      {error && (
+        <p role="alert" className="type-label w-full shrink-0 text-sev-critical">
+          {error}
+        </p>
+      )}
 
       <RankContrast item={item} />
 

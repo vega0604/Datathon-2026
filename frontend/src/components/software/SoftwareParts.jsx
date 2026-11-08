@@ -48,8 +48,8 @@ export const sevText = (sev, short = false) =>
 export function FoundBy({ component }) {
   if (!component.cpe)
     return (
-      <span className="rounded-full border border-dashed border-ai bg-purple-soft px-2 py-0.5 text-xs font-medium whitespace-nowrap text-purple-ink" title="No CPE name in your SBOM. Granite would read CVE text to find matches; that step isn’t run in this demo.">
-        ✦ Needs Granite
+      <span className="rounded-full border border-dashed border-ai bg-purple-soft px-2 py-0.5 text-xs font-medium whitespace-nowrap text-purple-ink" title="No CPE name in your SBOM: matched by package URL or name, and by CVE text where NIST has no product list (IBM Granite can confirm those).">
+        ✦ Name &amp; CVE text
       </span>
     )
   return <span className="rounded-full bg-blue-soft px-2 py-0.5 text-xs font-medium whitespace-nowrap text-blue-ink">NIST list</span>

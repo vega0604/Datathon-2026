@@ -2,10 +2,12 @@ import { useRef } from 'react'
 import { iconUrl } from '../../lib/Icon'
 import { useThemedIcon } from '../../lib/iconTheme'
 import { useFitHeight } from '../../lib/useFitHeight'
+import { useBenchmark, useCatchRate } from '../../lib/api'
+import { catchRateText } from '../../data/ui'
+import { InsightsState } from './InsightsState'
 import { EmbeddingCard } from './EmbeddingCard'
 import { Takeaway } from './ChartParts'
 import { CatchRateChart } from './CatchRateChart'
-import { catchRate } from '../../data/insights'
 
 function LegendPill({ file, height, children }) {
   const themed = useThemedIcon()
@@ -17,36 +19,60 @@ function LegendPill({ file, height, children }) {
   )
 }
 
-// Model overview: the catch-rate curve + the embedding map.
+// Model overview: the catch-rate curve + the embedding map (GET /api/insights/catch-rate).
 export function CatchRatePage() {
+  const query = useCatchRate()
+  return <InsightsState query={query}>{(data) => <CatchRateBody data={data} />}</InsightsState>
+}
+
+/** API curves -> the chart's series: % caught every 100 CVEs fixed (0 … 5,000), the
+ *  end value for its label, and where the marker rests (the top N, as a share of every
+ *  CVE scored; the benchmark facts are cached, falling back to the API's own share). */
+function toChart(data, benchmark) {
+  const series = data.curves.map((c) => {
+    const curve = c.points.map((p) => Math.round(p.caught_share * 1000) / 10)
+    return { label: c.label, value: Math.round(curve.at(-1)), curve }
+  })
+  const at = data.top_n?.fixed ?? 500
+  const queueSize = benchmark?.cves_scored ?? Math.round(at / (data.top_n?.share_of_queue || 0.0069))
+  return { series, top500: { at, queueSize } }
+}
+
+function CatchRateBody({ data }) {
+  const benchmark = useBenchmark().data
   // Never scrolls or clips: on short windows both cards shrink slightly to fit.
   const ref = useRef(null)
   useFitHeight(ref)
+  const backtest = data.backtest
   return (
       <main ref={ref} className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden xl:gap-5 xl:pt-2 [&>*]:[zoom:var(--fit,1)]">
         <div className="flex shrink-0 flex-col items-start gap-1 xl:gap-2">
           <h1 className="text-[clamp(30px,3vw,44px)] leading-[1.18] font-light text-ink">Model overview</h1>
           <p className="text-sm leading-5 text-ink-muted xl:text-base xl:leading-6">
             How many exploited bugs you catch as you fix more of the list, and why the model spots them.
+            {backtest && ` Trained on ${backtest.train_year}, tested on ${backtest.test_year} (${backtest.positives} exploited CVEs).`}
           </p>
         </div>
 
         <section className="flex min-h-0 w-full flex-1 gap-4 rounded-[32px] bg-card p-4 shadow-float xl:gap-5 xl:p-6 short:p-4">
           <div className="flex min-h-0 min-w-0 flex-[1.4] flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
-            <h2 className="shrink-0 text-lg leading-7 text-ink xl:text-xl">{catchRate.headline}</h2>
+            <h2 className="shrink-0 text-lg leading-7 text-ink xl:text-xl">{catchRateText.headline}</h2>
             <div className="flex shrink-0 flex-wrap gap-2">
-              {catchRate.series.map((s) => (
-                <LegendPill key={s.label} file={s.legend} height={s.legendHeight}>
-                  {s.label}
-                </LegendPill>
-              ))}
+              {data.curves.map((c) => {
+                const legend = catchRateText.legend[c.ranking] ?? catchRateText.legend.cvss
+                return (
+                  <LegendPill key={c.ranking} file={legend.file} height={legend.height}>
+                    {c.label}
+                  </LegendPill>
+                )
+              })}
             </div>
             <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
-              <CatchRateChart series={catchRate.series} top500={catchRate.top500} />
+              <CatchRateChart {...toChart(data, benchmark)} />
             </div>
-            <Takeaway>{catchRate.takeaway}</Takeaway>
+            {data.takeaways?.curves && <Takeaway>{data.takeaways.curves}</Takeaway>}
           </div>
-          <EmbeddingCard />
+          <EmbeddingCard embedding={data.embedding} takeaway={data.takeaways?.embedding} />
         </section>
       </main>
   )

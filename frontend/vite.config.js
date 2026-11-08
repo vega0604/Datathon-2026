@@ -10,4 +10,9 @@ export default defineConfig({
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
   ],
+  server: {
+    // The FastAPI backend (`uv run uvicorn backend.api.app:app` in backend/). Same-origin
+    // /api calls in dev, so no CORS round-trips. Override with VITE_API_URL for builds.
+    proxy: { '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true } },
+  },
 })

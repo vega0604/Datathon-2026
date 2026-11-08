@@ -7,13 +7,15 @@ import { KpiSummary } from '../components/insights/KpiSummary'
 import { Icon } from '../lib/Icon'
 import { CatchRatePage } from '../components/insights/CatchRatePage'
 import { VendorsPage } from '../components/insights/VendorsPage'
-import { aboutData, bugTypes, coverage, kpis, severity } from '../data/insights'
+import { bugTypesText, severityText } from '../data/ui'
 import { SeverityChart } from '../components/insights/SeverityChart'
 import { BubbleChart } from '../components/insights/BubbleChart'
 import { PlotFrame } from '../components/insights/ChartParts'
 import { useFitHeight } from '../lib/useFitHeight'
+import { useBenchmark, useSummary } from '../lib/api'
+import { InsightsState } from '../components/insights/InsightsState'
 
-export function InsightsSummary({ onHome, onOpenFixFirst, onUpload, software, theme = 'light', onThemeChange }) {
+export function InsightsSummary({ onHome, onOpenFixFirst, onUpload, software, totals, theme = 'light', onThemeChange }) {
   const [section, setSection] = useState('summary')
   const dark = theme === 'dark'
 
@@ -25,7 +27,7 @@ export function InsightsSummary({ onHome, onOpenFixFirst, onUpload, software, th
       <AppHeader iconDir="fixfirst" theme={theme} onThemeChange={onThemeChange} onHome={onHome} />
 
       <div className="flex min-h-0 w-full flex-1 items-start gap-4 overflow-hidden p-4 wide:gap-5 wide:p-5 compact:py-3">
-        <Sidebar current="insights" section={section} onSectionChange={setSection} onOpenFixFirst={onOpenFixFirst} onUpload={onUpload} software={software} />
+        <Sidebar current="insights" section={section} onSectionChange={setSection} onOpenFixFirst={onOpenFixFirst} onUpload={onUpload} software={software} totals={totals} />
 
         {section === 'summary' ? (
           <SummaryContent />
@@ -43,13 +45,54 @@ export function InsightsSummary({ onHome, onOpenFixFirst, onUpload, software, th
   )
 }
 
+const fmt = (n) => n.toLocaleString('en-US')
+
+function kpisFrom(s) {
+  const { benchmark_cves: cves, nist_unreviewed: unreviewed, nist_unreviewed_share_this_year: share } = s.kpis
+  const top = s.coverage.top_n
+  const picked = (top / cves) * 100
+  return [
+    { id: 'benchmark', icon: 'insights/kpi-queue', label: 'Benchmark CVEs', value: fmt(cves), pill: `Top ${top} submitted`,
+      share: { pct: picked, caption: `${top} of ${fmt(cves)} picked · ${picked.toFixed(1)}%`, tone: 'bg-chart-1' } },
+    { id: 'nist', icon: 'insights/kpi-eye', label: 'Not reviewed by NIST', value: fmt(unreviewed), pill: `${Math.round(share * 100)}% of 2026`,
+      share: { pct: share * 100, caption: `${Math.round(share * 100)}% of 2026 CVEs still unreviewed`, tone: 'bg-chart-2' } },
+  ]
+}
+
+function coverageFrom(s) {
+  const caught = s.coverage.caught_share
+  const best = s.versus_public.best_public_caught_share
+  const ratio = best ? caught / best : null
+  const picked = ((s.coverage.top_n / s.kpis.benchmark_cves) * 100).toFixed(1)
+  return {
+    caughtPct: Math.round(caught * 100),
+    footer:
+      ratio && ratio > 1
+        ? `Fixing ${picked}% of the queue beats every public baseline (${s.coverage.backtest_year} backtest)`
+        : `Fixing ${picked}% of the queue (${s.coverage.backtest_year} backtest)`,
+    footerPill: ratio ? `↗ ${ratio.toFixed(1)}× baseline` : null,
+  }
+}
+
 // The Summary section: one page with the headline results. Coverage gauge and
 // weakness types on the left, severity-vs-exploitation and the KPIs on the right.
-// (Severity and Bug types used to be separate pages; their charts live here now.)
 function SummaryContent() {
+  const summary = useSummary()
+  const benchmark = useBenchmark()
+  return <InsightsState query={summary}>{(s) => <SummaryBody s={s} benchmark={benchmark.data} />}</InsightsState>
+}
+
+function SummaryBody({ s, benchmark }) {
   // Never scrolls or clips: on short windows the charts shrink slightly to fit.
   const ref = useRef(null)
   useFitHeight(ref)
+  const about = benchmark
+    ? [
+        ['Trained on', `${benchmark.train_years.join(', ')} CVEs`],
+        ['Tested on', `${benchmark.test_years.join(', ')} CVEs`],
+        ['CVEs scored', fmt(benchmark.cves_scored)],
+      ]
+    : []
   return (
       <main ref={ref} className="flex h-full min-w-0 flex-1 flex-col gap-5 overflow-hidden xl:pt-2 [&>*]:[zoom:var(--fit,1)]">
         <div className="flex w-full shrink-0 items-end justify-between gap-6">
@@ -59,29 +102,29 @@ function SummaryContent() {
               How well our ranking spots the bugs attackers actually use.
             </p>
           </div>
-          <AboutStrip rows={aboutData} />
+          {about.length > 0 && <AboutStrip rows={about} />}
         </div>
 
         {/* Two columns: gauge over the weakness chart on the left; the severity chart
             and the public-score comparison on the right. */}
         <div className="flex min-h-0 w-full flex-1 gap-5">
           <div className="flex min-h-0 min-w-0 flex-[1.25] flex-col gap-5">
-            <CoverageCard coverage={coverage} />
+            <CoverageCard coverage={coverageFrom(s)} />
             <section className={`${summaryCard} flex-1`}>
-              <ChartHead title={bugTypes.title} subtitle={bugTypes.subtitle} />
-              <BubbleChart data={bugTypes} minH="min-h-[110px]" />
+              <ChartHead title={bugTypesText.title} subtitle={bugTypesText.subtitle} />
+              <BubbleChart weaknesses={s.weaknesses} minH="min-h-[110px]" />
             </section>
           </div>
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5">
             <section className={`${summaryCard} flex-1`}>
-              <ChartHead title={severity.bands.title} subtitle={severity.bands.subtitle} />
+              <ChartHead title={severityText.title} subtitle={severityText.subtitle} />
               <PlotFrame minH="min-h-[140px]">
-                <SeverityChart bands={severity.bands.items} />
+                <SeverityChart bands={s.severity_bands} />
               </PlotFrame>
             </section>
             <div className="flex w-full shrink-0 gap-5">
-              <KpiSummary kpis={kpis} />
+              <KpiSummary kpis={kpisFrom(s)} />
             </div>
           </div>
         </div>

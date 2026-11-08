@@ -3,10 +3,11 @@ import { InsightsSummary } from './views/InsightsSummary'
 import { FixFirstQueue } from './views/FixFirstQueue'
 import { YourSoftware } from './views/YourSoftware'
 import { switchTheme } from './lib/themeTransition'
-import { loadLibrary, saveLibrary } from './lib/sbom'
 import { LoadingScreen } from './components/LoadingScreen'
+import { deleteSbom, prefetchShell, useQueue, useSboms } from './lib/api'
 
 const THEME_KEY = 'btb-theme'
+const CURRENT_KEY = 'btb-current-sbom'
 
 function initialTheme() {
   try {
@@ -18,9 +19,20 @@ function initialTheme() {
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-// Start-up loading screen: shown until the fonts are ready and for at least
-// MIN_SPLASH_MS, so the scan animation can finish once. When the app fetches
-// from the backend, wait for the first data here too.
+function savedCurrent() {
+  try {
+    return localStorage.getItem(CURRENT_KEY)
+  } catch {
+    return null
+  }
+}
+
+// Start the shell's requests (user, SBOM list) before the first render. The splash
+// waits for them; they never reject, so a backend that's down doesn't block it.
+const shellReady = prefetchShell()
+
+// Start-up loading screen: shown until the fonts are ready and the first data has
+// arrived, and for at least MIN_SPLASH_MS, so the scan animation can finish once.
 const MIN_SPLASH_MS = 1400
 const SPLASH_FADE_MS = 360
 
@@ -30,7 +42,7 @@ function useSplash() {
     let cancelled = false
     const minTime = new Promise((r) => setTimeout(r, MIN_SPLASH_MS))
     const fonts = document.fonts?.ready ?? Promise.resolve()
-    Promise.all([minTime, fonts]).then(() => {
+    Promise.all([minTime, fonts, shellReady]).then(() => {
       if (cancelled) return
       setPhase('leaving')
       setTimeout(() => !cancelled && setPhase('done'), SPLASH_FADE_MS)
@@ -60,31 +72,46 @@ export default function App() {
     }
   }
 
-  // "Your software": the uploaded SBOM and which screen of the flow is open.
-  // Kept here so they survive moving to Fix first / Insights and back.
-  // Uploads are saved in this browser, so they're still listed next visit.
-  const [library, setLibrary] = useState(loadLibrary)
-  const [currentId, setCurrentId] = useState(() => library[0]?.id ?? null)
-  const sbom = library.find((s) => s.id === currentId) ?? null
-  const [swScreen, setSwScreen] = useState(() => ({ name: sbom ? 'overview' : 'empty' }))
-  const updateLibrary = (next) => {
-    setLibrary(next)
-    saveLibrary(next)
-  }
-  const addSbom = (s) => {
-    // Re-uploading the same file replaces the older copy instead of duplicating it.
-    const entry = { ...s, id: `${s.fileName}-${s.uploadedAt}` }
-    updateLibrary([entry, ...library.filter((x) => x.fileName !== s.fileName)])
-    setCurrentId(entry.id)
-  }
-  const removeSbom = (id) => {
-    const next = library.filter((x) => x.id !== id)
-    updateLibrary(next)
-    if (id === currentId) {
-      setCurrentId(next[0]?.id ?? null)
-      setSwScreen({ name: next.length ? 'overview' : 'empty' })
+  // Saved SBOMs come from the backend. The selected one (or the newest) drives both
+  // Your software and the Fix first queue; only its id is remembered in this browser.
+  const sboms = useSboms()
+  const library = sboms.data ?? []
+  const [chosenId, setChosenId] = useState(savedCurrent)
+  const currentId = library.some((s) => s.id === chosenId) ? chosenId : (library[0]?.id ?? null)
+  const choose = (id) => {
+    setChosenId(id)
+    try {
+      if (id) localStorage.setItem(CURRENT_KEY, id)
+      else localStorage.removeItem(CURRENT_KEY)
+    } catch {
+      /* storage unavailable */
     }
   }
+  const [swState, setSwScreen] = useState({ name: 'overview' })
+  // Nothing uploaded yet: the overview becomes the upload screen.
+  const swScreen = swState.name === 'overview' && sboms.data && !library.length ? { name: 'empty' } : swState
+
+  // One queue request per SBOM, shared by the Fix first page and every page's
+  // sidebar badges (cached, so switching pages never refetches it).
+  const queue = useQueue(currentId)
+  const totals = queue.data?.totals ?? null
+
+  const [removeError, setRemoveError] = useState(null)
+  const removeSbom = async (id) => {
+    setRemoveError(null)
+    try {
+      await deleteSbom(id)
+    } catch (e) {
+      setRemoveError(e.message)
+      return
+    }
+    if (id === currentId) {
+      const next = library.find((s) => s.id !== id)
+      choose(next?.id ?? null)
+      setSwScreen({ name: next ? 'overview' : 'empty' })
+    }
+  }
+
   const nav = {
     onOpenFixFirst: () => setPage('fixFirst'),
     onOpenInsights: () => setPage('insights'),
@@ -92,16 +119,19 @@ export default function App() {
       setPage('insights')
       setHomeKey((k) => k + 1)
     },
+    totals,
     // Saved uploads, listed in the sidebar on every page. Highlighted only on the software page.
     software: {
       library,
+      loading: sboms.loading && !sboms.data,
+      error: sboms.error?.message ?? removeError,
       currentId: page === 'software' ? currentId : null,
       onSelect: (id) => {
-        setCurrentId(id)
+        choose(id)
         setSwScreen({ name: 'overview' })
         setPage('software')
       },
-      onRemove: (id) => removeSbom(id),
+      onRemove: removeSbom,
     },
     onUpload: () => {
       setSwScreen({ name: 'empty' })
@@ -120,9 +150,9 @@ export default function App() {
       {splashScreen}
       <YourSoftware
         {...nav}
-        sbom={sbom}
+        sbomId={currentId}
         library={library}
-        onSbom={addSbom}
+        onUploaded={(id) => choose(id)}
         onSelect={nav.software.onSelect}
         onRemove={removeSbom}
         screen={swScreen}
@@ -133,7 +163,11 @@ export default function App() {
   return (
     <>
       {splashScreen}
-      {page === 'insights' ? <InsightsSummary key={homeKey} {...nav} /> : <FixFirstQueue {...nav} />}
+      {page === 'insights' ? (
+        <InsightsSummary key={homeKey} {...nav} />
+      ) : (
+        <FixFirstQueue {...nav} sbomId={currentId} sbomName={library.find((s) => s.id === currentId)?.name} queue={queue} />
+      )}
     </>
   )
 }
