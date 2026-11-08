@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, UploadFile
 from backend.api.deps import Db
 from backend.schemas.sbom import SbomOut, SbomSummary
 from backend.services import sbom as sbom_service
+from backend.services.matching import match_sbom
 from backend.services.sbom import MAX_BYTES, SbomError
 
 router = APIRouter(prefix="/api/sboms", tags=["sboms"])
@@ -18,6 +19,7 @@ def upload_sbom(file: UploadFile, db: Db):
     sbom_id = sbom_service.store_sbom(
         db, name or file.filename or "SBOM", file.filename, components
     )
+    match_sbom(db, sbom_id)
     return sbom_service.load_sbom(db, sbom_id)
 
 
