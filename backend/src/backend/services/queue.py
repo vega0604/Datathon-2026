@@ -174,9 +174,11 @@ def month_end(month: str | None) -> date | None:
 
 
 def mark_stale(rows: list[dict], today: date) -> None:
+    """Flag scores describing an old month. Being on KEV doesn't go stale."""
     for r in rows:
         end = month_end(r.get("as_of"))
-        r["stale"] = end is not None and (today - end).days > config.SCORE_STALE_DAYS
+        old = end is not None and (today - end).days > config.SCORE_STALE_DAYS
+        r["stale"] = old and not r.get("on_kev")
 
 
 def _rows(cur) -> list[dict]:

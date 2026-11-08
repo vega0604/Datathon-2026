@@ -178,6 +178,7 @@ def test_stale_flags(db, ranked):
     items = {i["cve_id"]: i for i in build_queue(db, ranked, today=date(2026, 11, 8))["items"]}
     assert not items["HI"]["stale"]  # Sep 2026: 39 days old
     assert items["OLD"]["stale"]  # Dec 2025
+    assert not items["K"]["stale"]  # on KEV since Jan 2025: never stale
     assert month_end("2026-02") == date(2026, 2, 28)
 
 
