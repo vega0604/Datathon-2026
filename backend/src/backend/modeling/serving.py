@@ -27,7 +27,13 @@ from backend.core.config import FEATURES_DIR, LOGS_DIR
 from backend.db.warehouse import connect
 from backend.modeling import explain
 from backend.modeling import features as mf
-from backend.modeling.final import SCORE_FOLD, ensemble_scores, load_final_models, reasons_for
+from backend.modeling.final import (
+    SCORE_FOLD,
+    final_config,
+    load_final_models,
+    reasons_for,
+    submission_scores,
+)
 from backend.modeling.safety import safety_score
 from backend.pipeline.features import add_assigner_history_sql
 
@@ -58,13 +64,14 @@ def model_rows(con, data: pd.DataFrame | None = None) -> pd.DataFrame:
         data = mf.load(con, folds=(SCORE_FOLD,))
     data = data.reset_index(drop=True)
     models = load_final_models()
-    scores = ensemble_scores(models, data).set_index("cve_id")
-    reasons = reasons_for(models, data, explain.load_cwe_names(con))
+    config = final_config()  # the submitted ranking: model alone or blended with safety
+    scores = submission_scores(models, data, config).set_index("cve_id")
+    reasons = reasons_for(models, data, explain.load_cwe_names(con), config["features"])
     return pd.DataFrame(
         {
             "cve_id": data["cve_id"],
             "confidence": "model",
-            "score_raw": scores.loc[data["cve_id"], "rank_avg"].to_numpy(),
+            "score_raw": scores.loc[data["cve_id"], "score_raw"].to_numpy(),
             "order": scores.loc[data["cve_id"], "score"].to_numpy(),
             "reasons": reasons,
             "as_of": data["snapshot_month"],
