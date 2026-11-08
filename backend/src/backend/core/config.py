@@ -20,3 +20,18 @@ load_dotenv(BACKEND_DIR / ".env")
 DATA_BACKEND = os.getenv("DATA_BACKEND", "duckdb")  # "duckdb" now; "tiger" arrives with SHE-10
 APP_DB_PATH = Path(os.getenv("APP_DB_PATH", DATA_DIR / "app.duckdb"))  # uploaded SBOMs
 DEMO_DIR = BACKEND_DIR / "demo"
+
+# Granite (SHE-7). Credentials come only from backend/.env; never commit them.
+WATSONX_APIKEY = os.getenv("WATSONX_APIKEY", "")
+WATSONX_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID", "")
+WATSONX_URL = os.getenv("WATSONX_URL", "")
+WATSONX_MODEL_ID = os.getenv("WATSONX_MODEL_ID", "ibm/granite-4-h-small")
+# Safety cap on watsonx tokens per process run (the free trial quota is small).
+WATSONX_TOKEN_BUDGET = int(os.getenv("WATSONX_TOKEN_BUDGET", "50000"))
+EMBEDDING_MODEL_ID = os.getenv(
+    "EMBEDDING_MODEL_ID", "ibm-granite/granite-embedding-small-english-r2"
+)
+# CPU speed settings, chosen by the SHE-37 benchmark. Backend: torch, onnx or openvino.
+EMBEDDING_MAX_SEQ_LENGTH = int(os.getenv("EMBEDDING_MAX_SEQ_LENGTH", "256"))
+EMBEDDING_BACKEND = os.getenv("EMBEDDING_BACKEND", "torch")
+EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))

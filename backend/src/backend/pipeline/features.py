@@ -205,6 +205,20 @@ def add_keywords_sql(src: str, vulns: str = "vulnerabilities") -> str:
     """
 
 
+# --- SHE-46: similarity to vulnerabilities already on KEV ----------------------------
+
+
+def add_similarity_sql(src: str, similarity: str | None = None) -> str:
+    """kev_sim_max and kev_sim_top5 from pipeline/similarity.py (point in time: only KEV
+    entries added by snapshot_end, never the row's own). NULL without an embedding."""
+    similarity = similarity or features_parquet("similarity")
+    return f"""
+        SELECT p.*, s.kev_sim_max, s.kev_sim_top5
+        FROM {src} AS p
+        LEFT JOIN {similarity} AS s ON s.cve_id = p.cve_id AND s.fold = p.fold
+    """
+
+
 # --- SHE-33: banned-column guard -----------------------------------------------------
 
 # Columns that give the answer away for 2026 (see the SHE-6 summary): never features.
@@ -231,6 +245,7 @@ FEATURE_STEPS = [
     ("assigner_history", add_assigner_history_sql),
     ("severity", add_severity_sql),
     ("keywords", add_keywords_sql),
+    ("similarity", add_similarity_sql),
 ]
 
 
@@ -253,6 +268,12 @@ def build_features(con: duckdb.DuckDBPyConnection, log: dict[str, int], audit: b
 def main() -> None:
     if not (FEATURES_DIR / "population.parquet").exists():
         raise SystemExit("No population. Run `uv run python -m backend.pipeline.population` first.")
+    if not (FEATURES_DIR / "similarity.parquet").exists():
+        raise SystemExit(
+            "No similarity feature. Run `uv run python -m backend.pipeline.embeddings` "
+            "(or its Colab --export/--import route), then "
+            "`uv run python -m backend.pipeline.similarity`."
+        )
     con = connect()
     log: dict[str, int] = {}
     log["features"] = build_features(con, log)

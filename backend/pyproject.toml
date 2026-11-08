@@ -40,8 +40,9 @@ dev = [
 granite = [
     "torch",
     "transformers",
-    "sentence-transformers",
+    "sentence-transformers[onnx,openvino]",
     "accelerate",
+    "ibm-watsonx-ai>=1.9.1",
 ]
 # Dashboard (SHE-11)
 app = []
