@@ -16,7 +16,6 @@ import re
 import subprocess
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -231,52 +230,19 @@ def write_env(best: dict, env_path: Path = BACKEND_DIR / ".env") -> None:
 # --- watsonx -----------------------------------------------------------------------
 
 
-def probe_messages(description: str) -> list[dict]:
-    """A match-check-sized question about a real description."""
-    return [
-        {
-            "role": "system",
-            "content": "Decide only from the vulnerability description. Answer with one JSON "
-            'object: {"affected": "yes|no|unknown", "reason": "<= 25 words"}.',
-        },
-        {
-            "role": "user",
-            "content": f"Description: {description[:1500]}\n\n"
-            "Component: openssl 3.0.7 (vendor: openssl). Is it affected?",
-        },
-    ]
-
-
 def benchmark_watsonx(description: str) -> dict:
-    from ibm_watsonx_ai import Credentials
-    from ibm_watsonx_ai.foundation_models import ModelInference
-
-    from backend.core.config import WATSONX_APIKEY, WATSONX_PROJECT_ID, WATSONX_URL
+    from backend.services.match_check import MATCH_MAX_TOKENS, build_match_prompt
+    from backend.services.watsonx import WatsonxClient
 
     phase(f"connecting to watsonx ({WATSONX_MODEL_ID})")
-    model = ModelInference(
-        model_id=WATSONX_MODEL_ID,
-        project_id=WATSONX_PROJECT_ID,
-        credentials=Credentials(url=WATSONX_URL, api_key=WATSONX_APIKEY),
-    )
-    params = {"max_tokens": 200, "temperature": 0, "time_limit": WATSONX_TIMEOUT_S * 1000}
+    client = WatsonxClient(purpose="benchmark", timeout_s=WATSONX_TIMEOUT_S)
+    messages = build_match_prompt(description, "openssl", "openssl", "3.0.7")
     calls = []
-    pool = ThreadPoolExecutor(max_workers=1)
     for i in range(WATSONX_CALLS):
         phase(f"watsonx call {i + 1}/{WATSONX_CALLS}")
         start = time.perf_counter()
-        future = pool.submit(model.chat, messages=probe_messages(description), params=params)
-        # Hard client-side limit: the library's own HTTP timeout is 30 minutes.
-        response = future.result(timeout=WATSONX_TIMEOUT_S)
-        usage = response.get("usage", {})
-        calls.append(
-            {
-                "latency_s": round(time.perf_counter() - start, 2),
-                "prompt_tokens": usage.get("prompt_tokens", 0),
-                "completion_tokens": usage.get("completion_tokens", 0),
-            }
-        )
-    pool.shutdown(wait=False)
+        _, usage = client.chat(messages, max_tokens=MATCH_MAX_TOKENS)
+        calls.append({"latency_s": round(time.perf_counter() - start, 2), **usage})
     usages = [(c["prompt_tokens"], c["completion_tokens"]) for c in calls]
     return {
         "model": WATSONX_MODEL_ID,
