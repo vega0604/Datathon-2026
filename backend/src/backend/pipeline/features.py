@@ -130,12 +130,56 @@ def add_assigner_history_sql(
     """
 
 
+# --- SHE-31: severity and weakness type --------------------------------------------
+
+NVD_SOURCE = "nvd@nist.gov"
+CVSS3_COLUMNS = (
+    "cvss3_score",
+    "attack_vector",
+    "attack_complexity",
+    "privileges_required",
+    "user_interaction",
+    "scope",
+    "confidentiality_impact",
+    "integrity_impact",
+    "availability_impact",
+)
+
+
+def add_severity_sql(src: str, vulns: str = "vulnerabilities") -> str:
+    """CVSS 3 only when the assigner supplied it: NIST's own score appears after its
+    analysis, which favours exploited vulnerabilities. Plus CVSS 4, the primary CWE
+    ('unknown' if blank or a NIST placeholder) and the number of CWEs."""
+    cvss3 = ",\n".join(
+        f"CASE WHEN v.cvss3_source = '{NVD_SOURCE}' THEN NULL ELSE v.{c} END AS {c}"
+        for c in CVSS3_COLUMNS
+    )
+    first_cwe = "trim(split_part(coalesce(v.cwe_ids, ''), ';', 1))"
+    return f"""
+        SELECT
+            p.*,
+            {cvss3},
+            v.cvss4_score,
+            CASE
+                WHEN {first_cwe} IN ('', 'NVD-CWE-Other', 'NVD-CWE-noinfo') THEN 'unknown'
+                ELSE {first_cwe}
+            END AS cwe_primary,
+            CASE
+                WHEN coalesce(v.cwe_ids, '') = '' THEN 0
+                ELSE len(string_split(v.cwe_ids, ';'))
+            END AS n_cwes
+        FROM {src} AS p
+        JOIN {vulns} AS v ON v.cve_id = p.cve_id
+    """
+
+
 # Applied in order to the population. Each step keeps one row per population row.
 FEATURE_STEPS = [
     ("signals", signals_at_snapshot_sql),
     ("epss_pct", add_epss_pct_sql),
     ("exposure", add_exposure_sql),
     ("assigner_history", add_assigner_history_sql),
+    ("severity", add_severity_sql),
 ]
 
 

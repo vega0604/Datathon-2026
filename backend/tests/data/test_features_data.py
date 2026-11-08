@@ -87,3 +87,18 @@ def test_assigner_history_matches_a_plain_recount(con):
           )
     """
     assert con.execute(mismatches).fetchone()[0] == 0
+
+
+# --- SHE-31 ---
+
+
+def test_no_nist_sourced_cvss(con):
+    leaked = f"""
+        SELECT count(*) FROM {FEATURES} AS f
+        JOIN vulnerabilities AS v ON v.cve_id = f.cve_id
+        WHERE v.cvss3_source = 'nvd@nist.gov' AND f.cvss3_score IS NOT NULL
+    """
+    assert con.execute(leaked).fetchone()[0] == 0
+    assert (
+        con.execute(f"SELECT count(*) FROM {FEATURES} WHERE cwe_primary IS NULL").fetchone()[0] == 0
+    )

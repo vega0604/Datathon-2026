@@ -137,3 +137,33 @@ def test_assigner_history_ignores_the_future(history):
         history, f"SELECT * FROM ({features.add_assigner_history_sql('p')}) ORDER BY cve_id"
     )
     assert after == before
+
+
+# --- SHE-31 ---
+
+
+def test_severity_uses_assigner_scores_only(con):
+    con.execute(
+        """
+        CREATE TABLE vulnerabilities AS SELECT
+            cve_id, cvss3_source, cvss3_score,
+            'NETWORK' AS attack_vector, 'LOW' AS attack_complexity, 'NONE' AS privileges_required,
+            'NONE' AS user_interaction, 'UNCHANGED' AS scope, 'HIGH' AS confidentiality_impact,
+            'HIGH' AS integrity_impact, 'HIGH' AS availability_impact,
+            NULL::DOUBLE AS cvss4_score, cwe_ids
+        FROM (VALUES
+            ('CVE-A', 'nvd@nist.gov', 9.8::DOUBLE, 'CWE-79;CWE-89'),
+            ('CVE-B', 'psirt@vendor', 7.5::DOUBLE, ''),
+            ('CVE-S', 'psirt@vendor', 5.0::DOUBLE, 'NVD-CWE-noinfo')
+        ) AS t(cve_id, cvss3_source, cvss3_score, cwe_ids)
+        """
+    )
+    sql = features.add_severity_sql("p")
+    assert rows(
+        con,
+        f"SELECT cve_id, cvss3_score, attack_vector, cwe_primary, n_cwes FROM ({sql}) ORDER BY cve_id",
+    ) == [
+        ("CVE-A", None, None, "CWE-79", 2),
+        ("CVE-B", 7.5, "NETWORK", "unknown", 0),
+        ("CVE-S", 5.0, "NETWORK", "unknown", 1),
+    ]
