@@ -9,8 +9,17 @@ from backend.api.routes import health, insights, meta, sboms
 from backend.core import config
 from backend.db.store import open_database
 
-# Vite dev server origins.
-CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+# Origins allowed to call the API from a browser: the Vite dev server and the deployed
+# frontends. No trailing slash: browsers send the Origin header without one.
+CORS_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "https://trustthehunch.wiki",
+    "https://www.trustthehunch.wiki",
+    "https://datathon-2026-black.vercel.app",
+]
 
 
 def create_app(con=None) -> FastAPI:

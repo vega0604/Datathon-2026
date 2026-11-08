@@ -12,6 +12,11 @@ export class ApiError extends Error {
   }
 }
 
+// Sent with every request. When the backend is reached through an ngrok tunnel, ngrok
+// answers browser requests with its HTML warning page unless this header is present
+// (any value), and the app would get that page instead of JSON.
+const BASE_HEADERS = { 'ngrok-skip-browser-warning': 'true' }
+
 /** Base fetch: JSON in and out, errors as ApiError with a readable message. */
 export async function apiFetch(path, { method = 'GET', json, body, signal } = {}) {
   let res
@@ -20,7 +25,8 @@ export async function apiFetch(path, { method = 'GET', json, body, signal } = {}
       method,
       signal,
       body: json === undefined ? body : JSON.stringify(json),
-      headers: json === undefined ? undefined : { 'Content-Type': 'application/json' },
+      // No Content-Type for FormData uploads: the browser sets it with the boundary.
+      headers: json === undefined ? BASE_HEADERS : { ...BASE_HEADERS, 'Content-Type': 'application/json' },
     })
   } catch {
     throw new ApiError(0, 'We couldn’t reach the server. Is the backend running?')
