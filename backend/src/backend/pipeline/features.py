@@ -80,10 +80,20 @@ def add_epss_pct_sql(src: str) -> str:
     """
 
 
+# --- SHE-28: exposure time --------------------------------------------------------
+
+
+def add_exposure_sql(src: str) -> str:
+    """Days between the snapshot and the fold's label cutoff: how long the vulnerability
+    has to reach KEV and still count."""
+    return f"SELECT *, date_diff('day', snapshot_end, cutoff) AS days_to_cutoff FROM {src}"
+
+
 # Applied in order to the population. Each step keeps one row per population row.
 FEATURE_STEPS = [
     ("signals", signals_at_snapshot_sql),
     ("epss_pct", add_epss_pct_sql),
+    ("exposure", add_exposure_sql),
 ]
 
 

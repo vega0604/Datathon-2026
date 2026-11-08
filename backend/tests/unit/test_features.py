@@ -65,3 +65,13 @@ def test_epss_pct_within_fold_and_month(con):
     )
     result = dict(rows(con, f"SELECT cve_id, epss_pct FROM ({features.add_epss_pct_sql('s')})"))
     assert result == {"A": 0.0, "B": 1.0, "C": None, "D": 0.0}
+
+
+# --- SHE-28 ---
+
+
+def test_exposure(con):
+    result = dict(
+        rows(con, f"SELECT cve_id, days_to_cutoff FROM ({features.add_exposure_sql('p')})")
+    )
+    assert result == {"CVE-A": 277, "CVE-B": 277, "CVE-S": 96}

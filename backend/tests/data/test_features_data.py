@@ -45,3 +45,13 @@ def test_signals(con):
     assert by_fold(con, "sum(any_exploit_code)") == (633, 761, 1_645)
     assert by_fold(con, "min(epss_pct)") == (0.0, 0.0, 0.0)
     assert by_fold(con, "max(epss_pct)") == (1.0, 1.0, 1.0)
+
+
+# --- SHE-28 ---
+
+
+def test_exposure(con):
+    low, high = con.execute(
+        f"SELECT min(days_to_cutoff), max(days_to_cutoff) FROM {FEATURES}"
+    ).fetchone()
+    assert (low, high) == (35, 278)  # September snapshots to January 2024 (a leap year)
