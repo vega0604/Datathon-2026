@@ -293,7 +293,7 @@ function Overview({ sbom, ranked, onScreen, onOpen, onOpenFixFirst }) {
       <FitMain className="gap-5 compact:gap-3">
         <SoftwareHeader sbom={sbom} tab="overview" onScreen={onScreen} />
         <div className="flex w-full shrink-0 gap-5 compact:gap-4">
-          <div className="flex h-[156px] min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-[22px] py-5 compact:h-[136px] compact:py-4">
+          <div className="flex min-h-[156px] min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-[22px] py-5">
             <p className="text-sm text-ink-muted">Affected components</p>
             <p className="flex items-baseline gap-2">
               <span className="text-5xl leading-[52px] font-light text-ink">{s.affected}</span>
@@ -306,13 +306,13 @@ function Overview({ sbom, ranked, onScreen, onOpen, onOpenFixFirst }) {
             </span>
             {s.total - s.checked > 0 && <p className="text-xs text-ink-muted">{s.total - s.checked} not checked (no CPE name)</p>}
           </div>
-          <div className="flex h-[156px] min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-[22px] py-5 compact:h-[136px] compact:py-4">
+          <div className="flex min-h-[156px] min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-[22px] py-5">
             <p className="text-sm text-ink-muted">Known vulnerabilities (CVEs)</p>
             <p className="text-5xl leading-[52px] font-light text-ink">{s.cves.toLocaleString()}</p>
             <SevMix sev={s.sev} />
             <p className="text-xs text-ink-muted">{sevText(s.sev, true)}</p>
           </div>
-          <div className="flex h-[156px] min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-brand px-[22px] py-5 compact:h-[136px] compact:py-4">
+          <div className="flex min-h-[156px] min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-brand px-[22px] py-5">
             <p className="text-sm font-medium text-white">Fix these first</p>
             <p className="flex items-baseline gap-2.5 text-white">
               <span className="text-5xl leading-[52px] font-light">{s.exploitedComponents}</span>
@@ -324,18 +324,19 @@ function Overview({ sbom, ranked, onScreen, onOpen, onOpenFixFirst }) {
             </button>
           </div>
         </div>
-        <section className="flex min-h-0 w-full flex-1 flex-col rounded-[20px] bg-card px-6 pt-[22px] pb-[18px] compact:pt-4 compact:pb-3">
+        <section className="flex min-h-0 w-full flex-1 flex-col items-start rounded-[20px] bg-card px-6 pt-[22px] pb-[18px]">
           <h2 className="text-xl leading-7 text-ink">Known vulnerabilities by component</h2>
           <p className="pt-1.5 pb-3 text-[13px] text-ink-muted">
             Longer bar = more CVEs (log scale). Colour and shape show the worst one (key on the right). Click a name for details.
           </p>
-          <div className="flex min-h-0 flex-1 flex-col">
+          {/* Rows keep their design height (44px); on short screens this list scrolls instead of squashing them. */}
+          <div data-fit-scroll className="relative flex min-h-0 w-full flex-1 flex-col overflow-y-auto">
             {byCount.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => onOpen(c)}
-                className="flex w-full max-h-11 flex-1 basis-0 cursor-pointer items-center gap-3.5 border-b border-line text-left hover:bg-page"
+                className="flex h-11 w-full shrink-0 cursor-pointer items-center gap-3.5 border-b border-line text-left hover:bg-page"
               >
                 <span className="flex w-44 shrink-0 flex-col">
                   <span className="truncate text-sm font-semibold text-ink">{c.name}</span>

@@ -35,13 +35,15 @@ export const insightsNav = [
 export const catchRate = {
   headline: 'Our model catches more exploited CVEs at every queue size',
   // Share of exploited CVEs caught after fixing 5k CVEs, by ranking.
+  // curve: % of exploited CVEs caught after fixing 0, 100, 200 … 5,000 CVEs.
   series: [
-    { label: 'Our model', value: 62, legend: 'legend-our-model', legendHeight: 3 },
-    { label: 'Exploit + EPSS', value: 26, legend: 'legend-exploit-epss', legendHeight: 2 },
-    { label: 'EPSS', value: 22, legend: 'legend-epss', legendHeight: 2 },
-    { label: 'Highest CVSS', value: 18, legend: 'legend-highest-cvss', legendHeight: 2 },
+    { label: 'Our model', value: 62, legend: 'legend-our-model', legendHeight: 3, curve: [0, 5.9, 11.2, 16.1, 20.4, 24.4, 28, 31.2, 34.2, 36.8, 39.2, 41.3, 43.3, 45.1, 46.7, 48.2, 49.5, 50.7, 51.7, 52.7, 53.6, 54.4, 55.1, 55.8, 56.4, 56.9, 57.4, 57.8, 58.2, 58.6, 58.9, 59.2, 59.5, 59.7, 59.9, 60.1, 60.3, 60.5, 60.6, 60.7, 60.9, 61, 61.1, 61.2, 61.2, 61.3, 61.4, 61.4, 61.5, 61.5, 61.6] },
+    { label: 'Exploit + EPSS', value: 26, legend: 'legend-exploit-epss', legendHeight: 2, curve: [0, 1.2, 2.3, 3.4, 4.4, 5.5, 6.4, 7.3, 8.2, 9.1, 9.9, 10.7, 11.5, 12.2, 12.9, 13.5, 14.2, 14.8, 15.4, 16, 16.5, 17.1, 17.6, 18, 18.5, 18.9, 19.4, 19.8, 20.2, 20.6, 21, 21.3, 21.7, 22, 22.3, 22.6, 22.9, 23.2, 23.5, 23.7, 23.9, 24.2, 24.4, 24.6, 24.8, 25.1, 25.2, 25.4, 25.6, 25.8, 25.9] },
+    { label: 'EPSS', value: 22, legend: 'legend-epss', legendHeight: 2, curve: [0, 0.9, 1.8, 2.7, 3.5, 4.3, 5, 5.7, 6.5, 7.2, 7.8, 8.4, 9.1, 9.7, 10.2, 10.8, 11.3, 11.8, 12.3, 12.8, 13.3, 13.7, 14.1, 14.6, 15, 15.3, 15.7, 16.1, 16.4, 16.8, 17.1, 17.4, 17.7, 18, 18.3, 18.5, 18.8, 19.1, 19.3, 19.5, 19.8, 20, 20.2, 20.4, 20.6, 20.8, 21, 21.2, 21.3, 21.5, 21.6] },
+    { label: 'Highest CVSS', value: 18, legend: 'legend-highest-cvss', legendHeight: 2, curve: [0, 0.7, 1.4, 2.1, 2.8, 3.4, 4, 4.6, 5.2, 5.7, 6.2, 6.8, 7.2, 7.7, 8.2, 8.7, 9.1, 9.5, 9.9, 10.3, 10.7, 11.1, 11.4, 11.8, 12.1, 12.4, 12.8, 13.1, 13.3, 13.6, 13.9, 14.2, 14.4, 14.7, 14.9, 15.2, 15.4, 15.6, 15.8, 16, 16.2, 16.4, 16.6, 16.8, 16.9, 17.1, 17.2, 17.4, 17.6, 17.7, 17.9] },
   ],
-  top500: { label: 'Fix 500 (0.7%)', value: 'Catch 24% of exploited CVEs' },
+  // Draggable marker: where it starts, and the queue size used for the "(0.7%)" share.
+  top500: { at: 500, queueSize: 72670 },
   takeaway:
     'Fixing just 0.7% of the queue, our top 500, catches about a quarter of the CVEs that went on to be exploited, roughly 4× the best public baseline.',
 }

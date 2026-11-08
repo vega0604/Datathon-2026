@@ -258,3 +258,60 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+
+/* ── Loading screen (components/LoadingScreen.jsx) ─────────────────────────
+   The wordmark is scanned in once (1.1s), then the scan light keeps sweeping
+   as a slow shimmer; contour rings ripple out in the logo's three hues. */
+.loader-root {
+  animation: loader-in 240ms ease-out both;
+}
+.loader-leave {
+  animation: loader-out 360ms ease-in forwards;
+}
+.loader-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: loader-ripple 2.7s cubic-bezier(0.22, 0.61, 0.36, 1) infinite both;
+}
+.loader-reveal {
+  animation: loader-reveal 1.1s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+.loader-scan {
+  top: -12px;
+  background: linear-gradient(to bottom, transparent, var(--color-chart-1) 25%, var(--color-ai) 75%, transparent);
+  box-shadow: 0 0 18px 4px color-mix(in srgb, var(--color-chart-1) 45%, transparent);
+  animation: loader-scan 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite both;
+}
+@keyframes loader-in {
+  from { opacity: 0; }
+}
+@keyframes loader-out {
+  to { opacity: 0; transform: scale(1.02); visibility: hidden; }
+}
+@keyframes loader-ripple {
+  0% { transform: scale(0.3); opacity: 0; }
+  20% { opacity: 0.55; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+@keyframes loader-reveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes loader-scan {
+  0% { left: -2%; opacity: 0; }
+  6% { opacity: 1; }
+  44% { opacity: 1; }
+  50% { left: 101%; opacity: 0; }
+  100% { left: 101%; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loader-ring, .loader-scan {
+    animation: none;
+  }
+  .loader-ring, .loader-scan {
+    opacity: 0;
+  }
+  .loader-reveal {
+    animation: none;
+  }
+}

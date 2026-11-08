@@ -23,7 +23,7 @@ function matches(item, q) {
 
 export function FixFirstQueue({ onHome, onOpenInsights, onUpload, software, theme = 'light', onThemeChange }) {
   const dark = theme === 'dark'
-  // The queue never scrolls or clips: on short windows it shrinks slightly to fit.
+  // On short windows the page shrinks slightly to fit, except the queue rows, which scroll.
   const mainRef = useRef(null)
   useFitHeight(mainRef)
   const [items, setItems] = useState(() => queue.map((i) => ({ ...i, status: 'To do' })))

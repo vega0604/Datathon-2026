@@ -48,13 +48,13 @@ function QueueRow({ item, selected, onSelect }) {
           onSelect(item.cveId)
         }
       }}
-      className={`flex max-h-[61px] w-full flex-1 basis-0 cursor-pointer items-center gap-2 wide:gap-3 rounded-[14px] py-[7px] pr-3 pl-2.5 short:py-1 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
+      className={`flex h-[61px] w-full shrink-0 cursor-pointer items-center gap-3 rounded-[14px] py-[7px] pr-3 pl-2.5 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
         // Inset ring instead of a border so selecting a row doesn't squeeze its columns.
         selected ? 'bg-page ring-2 ring-blue ring-inset' : 'border-b border-line hover:bg-page/70'
       }`}
     >
-      <span role="gridcell" className={`flex h-full max-h-[46px] min-h-6 ${COLS.rank} shrink-0 items-center justify-center rounded-[10px] bg-blue-soft`}>
-        <span className="text-[22px] leading-[26px] tracking-body text-blue-ink">{item.rank}</span>
+      <span role="gridcell" className={`flex h-[46px] ${COLS.rank} shrink-0 items-center justify-center rounded-[10px] bg-blue-soft`}>
+        <span className="text-[22px] leading-[26px] tracking-body text-blue-ink">#{item.rank}</span>
       </span>
       <span role="gridcell" className={`${COLS.cve} flex flex-col`}>
         <span className="font-mono text-sm leading-5 tracking-label text-blue-ink">{item.cveId}</span>
@@ -136,7 +136,7 @@ export function QueueTable({ items, view, onViewChange, query, onQueryChange, so
       </div>
 
       <div role="grid" aria-label="Fix first queue" className="flex min-h-0 w-full flex-1 flex-col">
-        <div role="row" className="type-label flex w-full shrink-0 items-center gap-2 py-1.5 pr-3 pl-2.5 text-ink-muted wide:gap-3">
+        <div role="row" className="type-label flex w-full shrink-0 items-center gap-3 py-1.5 pr-3 pl-2.5 text-ink-muted">
           <span role="columnheader" className={`${COLS.rank} shrink-0`}>Rank</span>
           <span role="columnheader" className={COLS.cve}>
             CVE ID<span className="roomy:hidden"> · what it is</span>
@@ -154,7 +154,8 @@ export function QueueTable({ items, view, onViewChange, query, onQueryChange, so
           <span role="columnheader" className={`${COLS.signal} shrink-0`}>Warning sign</span>
         </div>
 
-        <div role="rowgroup" className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        {/* Rows keep their design height (61px); on short screens this list scrolls instead of squashing them. */}
+        <div role="rowgroup" data-fit-scroll className="relative flex min-h-0 flex-1 flex-col overflow-y-auto">
           {items.map((item) => (
             <QueueRow key={item.cveId} item={item} selected={item.cveId === selectedId} onSelect={onSelect} />
           ))}

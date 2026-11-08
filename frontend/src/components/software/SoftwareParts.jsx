@@ -30,7 +30,7 @@ export function SevPill({ severity }) {
 export function SevMix({ sev, width = 231 }) {
   const total = Object.values(sev).reduce((a, b) => a + b, 0) || 1
   return (
-    <span className="flex gap-0.5" style={{ width }} aria-hidden="true">
+    <span className="flex max-w-full gap-0.5" style={{ width }} aria-hidden="true">
       {['critical', 'high', 'medium', 'low'].map((k) =>
         sev[k] ? <span key={k} className={`h-2.5 rounded-[3px] ${sevBar(k)}`} style={{ width: `${(sev[k] / total) * 100}%` }} /> : null,
       )}

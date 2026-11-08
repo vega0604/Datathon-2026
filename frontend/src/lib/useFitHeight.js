@@ -10,6 +10,7 @@ import { useLayoutEffect } from 'react'
  *  - the children stacked in a column (sum of heights + gaps),
  *  - the container's own overflow (scrollHeight),
  *  - lists inside it that would otherwise scroll (overflow-y: auto).
+ *    Mark a list with `data-fit-scroll` to let it scroll instead of shrinking the page.
  * Re-checks when the container resizes and once web fonts have loaded.
  */
 export function useFitHeight(ref) {
@@ -28,6 +29,7 @@ export function useFitHeight(ref) {
       }
       let inner = 0
       for (const d of el.querySelectorAll('*')) {
+        if (d.hasAttribute('data-fit-scroll')) continue // this list is allowed to scroll
         const oy = getComputedStyle(d).overflowY
         if ((oy === 'auto' || oy === 'scroll') && d.scrollHeight > d.clientHeight + 1) inner = Math.max(inner, d.scrollHeight - d.clientHeight)
       }

@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { InsightsSummary } from './views/InsightsSummary'
 import { FixFirstQueue } from './views/FixFirstQueue'
 import { YourSoftware } from './views/YourSoftware'
 import { switchTheme } from './lib/themeTransition'
 import { loadLibrary, saveLibrary } from './lib/sbom'
+import { LoadingScreen } from './components/LoadingScreen'
 
 const THEME_KEY = 'btb-theme'
 
@@ -17,7 +18,32 @@ function initialTheme() {
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
+// Start-up loading screen: shown until the fonts are ready and for at least
+// MIN_SPLASH_MS, so the scan animation can finish once. When the app fetches
+// from the backend, wait for the first data here too.
+const MIN_SPLASH_MS = 1400
+const SPLASH_FADE_MS = 360
+
+function useSplash() {
+  const [phase, setPhase] = useState('show') // 'show' → 'leaving' → 'done'
+  useEffect(() => {
+    let cancelled = false
+    const minTime = new Promise((r) => setTimeout(r, MIN_SPLASH_MS))
+    const fonts = document.fonts?.ready ?? Promise.resolve()
+    Promise.all([minTime, fonts]).then(() => {
+      if (cancelled) return
+      setPhase('leaving')
+      setTimeout(() => !cancelled && setPhase('done'), SPLASH_FADE_MS)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  return phase
+}
+
 export default function App() {
+  const splash = useSplash()
   const [page, setPage] = useState('insights')
   // Bumped by the logo: remounts Insights so it opens on Summary (the home page).
   const [homeKey, setHomeKey] = useState(0)
@@ -85,8 +111,13 @@ export default function App() {
     onThemeChange: changeTheme,
   }
 
+  // The app renders underneath the splash, so it's ready the moment the splash fades.
+  const splashScreen = splash !== 'done' && <LoadingScreen theme={theme} leaving={splash === 'leaving'} />
+
   if (page === 'software')
     return (
+      <>
+      {splashScreen}
       <YourSoftware
         {...nav}
         sbom={sbom}
@@ -97,6 +128,12 @@ export default function App() {
         screen={swScreen}
         onScreen={setSwScreen}
       />
+      </>
     )
-  return page === 'insights' ? <InsightsSummary key={homeKey} {...nav} /> : <FixFirstQueue {...nav} />
+  return (
+    <>
+      {splashScreen}
+      {page === 'insights' ? <InsightsSummary key={homeKey} {...nav} /> : <FixFirstQueue {...nav} />}
+    </>
+  )
 }
