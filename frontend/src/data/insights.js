@@ -111,3 +111,21 @@ export const vendors = {
   takeaway:
     'Edge vendors like Ivanti, Fortinet and Cisco have few CVEs but the highest exploitation rates; WordPress plugins and the Linux kernel are the reverse.',
 }
+
+export const model = {
+  leakage: {
+    headline: 'Banned columns would have tripled our score',
+    status: 'Audit passed, none used',
+    banned: { label: 'With banned columns (not allowed)', value: 61 },
+    submitted: { label: 'Submitted model', value: 23 },
+    takeaway: 'Columns that leak the future nearly triple the hit count, so the submitted model uses none of them.',
+  },
+  embedding: {
+    title: 'Exploited CVEs cluster in Granite’s text space',
+    clusters: [
+      { label: 'Auth bypass', x: 241.39, y: 26.3 },
+      { label: 'Remote code execution', x: 211.04, y: 319.9 },
+    ],
+    takeaway: 'KEV entries group into two dense regions, which is why Granite embeddings add signal to the ranking.',
+  },
+}

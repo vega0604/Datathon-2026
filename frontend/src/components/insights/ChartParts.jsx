@@ -49,15 +49,18 @@ export function ChartImg({ file, style }) {
   return <img alt="" src={iconUrl(file)} className="absolute block max-w-none" style={style} />
 }
 
-/** "Insights/Takeaway": the one-sentence takeaway that closes every insight chart. */
+/**
+ * "Insights/Takeaway": the one-sentence takeaway that closes every insight chart.
+ * tone: 'blue' (default), 'purple' (soft purple box) or 'ai' (white box on a purple card).
+ */
 export function Takeaway({ tone = 'blue', children }) {
+  const bg = { blue: 'bg-blue-soft', purple: 'bg-purple-soft', ai: 'bg-card' }[tone]
+  const ai = tone === 'ai'
   return (
-    <div
-      className={`flex w-full shrink-0 items-start gap-3 rounded-xl p-4 short:p-3 ${tone === 'purple' ? 'bg-purple-soft' : 'bg-blue-soft'}`}
-    >
-      <Icon name="insights/catch-rate/takeaway-idea" className="size-4" />
+    <div className={`flex w-full shrink-0 items-start gap-3 rounded-xl p-4 short:p-3 ${bg}`}>
+      <Icon name={ai ? 'insights/model/takeaway-idea-purple' : 'insights/catch-rate/takeaway-idea'} className="size-4" />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="type-label text-blue-ink">Takeaway</span>
+        <span className={`type-label ${ai ? 'text-purple-ink' : 'text-blue-ink'}`}>Takeaway</span>
         <p className="text-base leading-6 text-ink short:text-sm short:leading-5">{children}</p>
       </div>
     </div>
