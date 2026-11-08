@@ -11,8 +11,8 @@ from functools import cmp_to_key
 
 from backend.services.matching import candidates_sql
 from backend.services.queue import (
+    cached_queue,
     display_vendor,
-    full_queue,
     predictions_meta,
     vendor_names,
 )
@@ -104,12 +104,15 @@ def components_view(con, sbom_id: str) -> dict | None:
     if sbom is None:
         return None
     spec = con.execute("SELECT spec_version FROM app.sboms WHERE sbom_id = ?", [sbom_id]).fetchone()
-    queue = {r["cve_id"]: r for r in full_queue(con, sbom_id)["items"]}
+    queue = {r["cve_id"]: r for r in cached_queue(con, sbom_id)["items"]}
     pairs: dict[int, list[str]] = {}
-    for cid, cve in con.execute(
-        "SELECT component_id, cve_id FROM app.matches WHERE sbom_id = ?", [sbom_id]
+    methods: dict[int, set[str]] = {}
+    for cid, cve, method in con.execute(
+        "SELECT component_id, cve_id, method FROM app.matches WHERE sbom_id = ?", [sbom_id]
     ).fetchall():
         pairs.setdefault(cid, []).append(cve)
+        if method:
+            methods.setdefault(cid, set()).add(method)
     fixes = fixed_versions(con, sbom_id)
     names = vendor_names(con)
     comps = []
@@ -124,6 +127,7 @@ def components_view(con, sbom_id: str) -> dict | None:
                 "cpe": c["cpe"],
                 "purl": c["purl"],
                 "part": cpe_part(c["cpe"]),
+                "match_methods": sorted(methods.get(c["component_id"], ())),
                 "risk": risk(rows, fixes.get(c["component_id"])),
                 "_best": min((r["rank"] for r in rows), default=None),
             }
@@ -141,5 +145,6 @@ def components_view(con, sbom_id: str) -> dict | None:
         "component_count": sbom["component_count"],
         "spec_version": spec[0] if spec else None,
         "risk_checked": date.fromisoformat(built[:10]) if built else date.today(),
+        "cve_total": len(queue),
         "components": comps,
     }

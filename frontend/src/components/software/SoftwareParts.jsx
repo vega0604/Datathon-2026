@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { Icon } from '../../lib/Icon'
 import { useFitHeight } from '../../lib/useFitHeight'
+import { isExact, matchMethods, methodText } from '../../lib/matching'
 
 // Shared pieces for the "Your software" screens (Figma page V5, "Your software · …").
 
@@ -45,14 +46,17 @@ export const sevText = (sev, short = false) =>
     .map((k) => `${sev[k].toLocaleString()} ${short ? SHORT[k] : k}`)
     .join(' · ')
 
-export function FoundBy({ component }) {
-  if (!component.cpe)
-    return (
-      <span className="rounded-full border border-dashed border-ai bg-purple-soft px-2 py-0.5 text-xs font-medium whitespace-nowrap text-purple-ink" title="No CPE name in your SBOM. Granite would read CVE text to find matches; that step isn’t run in this demo.">
-        ✦ Needs Granite
-      </span>
-    )
-  return <span className="rounded-full bg-blue-soft px-2 py-0.5 text-xs font-medium whitespace-nowrap text-blue-ink">NIST list</span>
+export function FoundBy({ component, methods = matchMethods(component) }) {
+  if (!methods.length) return <span className="rounded-full bg-subtle px-2 py-0.5 text-xs font-medium whitespace-nowrap text-ink-muted">No match</span>
+  if (isExact(methods))
+    return <span className="rounded-full bg-blue-soft px-2 py-0.5 text-xs font-medium whitespace-nowrap text-blue-ink">NIST list</span>
+  const text = methodText(methods)
+  // Anything but an exact CPE match is outlined (dashed): those can be confirmed by IBM Granite.
+  return (
+    <span className="rounded-full border border-dashed border-ai bg-purple-soft px-2 py-0.5 text-xs font-medium whitespace-nowrap text-purple-ink" title={`Matched by ${text}. IBM Granite can confirm matches that aren’t by CPE name.`}>
+      ✦ {text[0].toUpperCase() + text.slice(1)}
+    </span>
+  )
 }
 
 /** Big blue "What to do" card from the Figma right panels. */

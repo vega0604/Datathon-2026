@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.routes import health, insights, meta, sboms
+from backend.core import config
 from backend.db.store import open_database
 
 # Vite dev server origins.
@@ -18,6 +19,8 @@ def create_app(con=None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         app.state.db = con if con is not None else open_database()
+        if con is None and config.INSIGHTS_BUILD_ON_START:
+            insights.build_if_missing()
         try:
             yield
         finally:

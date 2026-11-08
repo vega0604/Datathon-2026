@@ -38,6 +38,8 @@ GRANITE_EXPLAIN_TOP = int(os.getenv("GRANITE_EXPLAIN_TOP", "10"))
 
 # Benchmark-wide numbers for the Insights pages (backend.modeling.insights writes it).
 INSIGHTS_PATH = Path(os.getenv("INSIGHTS_PATH", FEATURES_DIR / "insights.json"))
+# Build it in the background when the API starts and it's missing (a fresh clone).
+INSIGHTS_BUILD_ON_START = os.getenv("INSIGHTS_BUILD_ON_START", "true").lower() == "true"
 
 # Push to Linear. The key stays on the backend; never commit it.
 LINEAR_API_KEY = os.getenv("LINEAR_API_KEY", "")

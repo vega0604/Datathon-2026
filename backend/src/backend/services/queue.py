@@ -14,6 +14,7 @@ Without predictions.parquet: the placeholder ranking (KEV, EPSS percentile, CVSS
 
 import json
 import re
+import time
 from datetime import date
 
 from backend.core import config
@@ -302,7 +303,6 @@ def present_row(r: dict, names: dict[str, str]) -> dict:
     r["explanation_source"] = "granite" if granite else "nvd"
     r["reasons"] = [dict(x) for x in (r.get("reasons") or [])]
     r["reasons_are_sample"] = not r["reasons"]
-    r["xforce"] = None  # no X-Force integration: the panel shows the KEV facts
     r.setdefault("signal", None)
     if r.get("score") is None and r.get("on_kev"):
         r["score"] = 1.0
@@ -355,20 +355,86 @@ def full_queue(
     return {"sbom_id": sbom_id, "total": len(rows), "counts": counts(rows), "items": rows, **out}
 
 
+# The full queue takes a few seconds for a large SBOM (every match is joined and scored),
+# and the Fix first page asks for it again on every search. It is kept per SBOM for a few
+# minutes; every write (status, ticket, upload, delete) calls `forget`.
+# Keyed by SBOM id alone: each request gets its own cursor on the one database, so the
+# connection can't be part of the key (tests clear it with forget()).
+_QUEUE_CACHE: dict[str, tuple[float, dict]] = {}
+QUEUE_CACHE_SECONDS = 300
+
+
+def forget(sbom_id: str | None = None) -> None:
+    """Drop the cached queue of one SBOM (or of all)."""
+    if sbom_id is None:
+        _QUEUE_CACHE.clear()
+    else:
+        _QUEUE_CACHE.pop(sbom_id, None)
+
+
+def cached_queue(con, sbom_id: str) -> dict:
+    """full_queue with the default (configured) scoring, cached per SBOM."""
+    now = time.monotonic()
+    hit = _QUEUE_CACHE.get(sbom_id)
+    if hit is None or now - hit[0] > QUEUE_CACHE_SECONDS:
+        hit = (now, full_queue(con, sbom_id))
+        _QUEUE_CACHE[sbom_id] = hit
+    return hit[1]
+
+
+VIEWS = ("all", "critical", "not_in_linear", "warning_signs")
+SORTS = ("rank", "cvss_desc", "cvss_asc")
+
+
+def filter_rows(
+    rows: list[dict], q: str | None = None, view: str = "all", sort: str = "rank"
+) -> list[dict]:
+    """The rows a Fix first view shows: search on CVE id and component names, a filter
+    chip, and the sort (CVSS ties keep the model's order). Never changes `rows`."""
+    needle = (q or "").strip().lower()
+    keep = {
+        "all": lambda r: True,
+        "critical": lambda r: r["severity"] == "critical",
+        "not_in_linear": lambda r: r["ticket"] is None,
+        "warning_signs": lambda r: r.get("signal") is not None,
+    }[view]
+    out = [
+        r
+        for r in rows
+        if keep(r)
+        and (
+            not needle
+            or needle in r["cve_id"].lower()
+            or any(needle in c.lower() for c in [r["component"], *r["components"]])
+        )
+    ]
+    if sort != "rank":
+        sign = -1 if sort == "cvss_desc" else 1
+        out.sort(key=lambda r: (sign * r["cvss_score"], r["rank"]))
+    return out
+
+
 def build_queue(
     con,
     sbom_id: str,
     limit: int = DEFAULT_LIMIT,
     offset: int = 0,
+    q: str | None = None,
+    view: str = "all",
+    sort: str = "rank",
     live: bool | None = None,
     today: date | None = None,
     fetch=None,
 ) -> dict:
-    """One page of the SBOM's Fix-First queue (counts cover the whole queue). `fetch`
-    replaces the FIRST call in tests."""
-    queue = full_queue(con, sbom_id, live=live, today=today, fetch=fetch)
-    queue["items"] = queue["items"][offset : offset + limit]
-    return queue
+    """One page of the SBOM's Fix-First queue after search, filter and sort. `total` and
+    `counts` cover the whole queue; `matched` is the number of rows the view selects.
+    `live`, `today` and `fetch` (the FIRST call) are for tests and skip the cache."""
+    if live is None and today is None and fetch is None:
+        queue = cached_queue(con, sbom_id)
+    else:
+        queue = full_queue(con, sbom_id, live=live, today=today, fetch=fetch)
+    rows = filter_rows(queue["items"], q, view, sort)
+    return {**queue, "matched": len(rows), "items": rows[offset : offset + limit]}
 
 
 STATUSES = ("to_do", "in_progress", "done")
@@ -394,7 +460,7 @@ def set_status(con, sbom_id: str, cve_id: str, status: str) -> None:
 
 def queue_row(con, sbom_id: str, cve_id: str) -> dict | None:
     """One presented row (with its rank in the full queue), or None if not in the queue."""
-    for row in full_queue(con, sbom_id)["items"]:
+    for row in cached_queue(con, sbom_id)["items"]:
         if row["cve_id"] == cve_id:
             return row
     return None

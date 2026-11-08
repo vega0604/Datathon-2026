@@ -1,6 +1,6 @@
 import { Icon } from '../lib/Icon'
-import { totals } from '../data/queue'
-import { insightsNav } from '../data/insights'
+import { insightsNav } from '../data/ui'
+import { useBenchmark } from '../lib/api'
 
 // One sidebar for every page (Figma V5 "Sidebar"), so its size, padding and the
 // Upload / Fix first / Insights rows sit in exactly the same place on each page.
@@ -60,12 +60,14 @@ function InsightsSubNav({ section, onSectionChange }) {
 }
 
 // The "Your software" list: shown on every page so saved uploads are always one click away.
-function SoftwareNav({ library = [], currentId, uploading, onSelect, onRemove }) {
+function SoftwareNav({ library = [], loading, error, currentId, uploading, onSelect, onRemove }) {
   return (
     <>
       <div className="h-px w-full shrink-0 bg-line" />
       <p className="type-label shrink-0 pt-3 pb-1 pl-2.5 text-ink-muted short:pt-2 narrow:sr-only">Your software</p>
-      {/* Saved uploads (kept in this browser between visits). */}
+      {error && <p role="alert" className="shrink-0 px-2.5 py-1 text-[13px] text-sev-critical narrow:sr-only">{error}</p>}
+      {loading && <p className="shrink-0 px-2.5 py-1.5 text-[13px] text-ink-muted narrow:sr-only">Loading…</p>}
+      {/* Saved uploads (stored by the backend). */}
       <div className="flex min-h-0 w-full shrink flex-col gap-0.5 overflow-y-auto narrow:pt-2">
         {uploading && (
           <p className="flex w-full shrink-0 items-center gap-2 rounded-[10px] bg-page px-2.5 py-[7px]">
@@ -82,12 +84,12 @@ function SoftwareNav({ library = [], currentId, uploading, onSelect, onRemove })
                 type="button"
                 aria-current={current ? 'page' : undefined}
                 onClick={() => onSelect(s.id)}
-                title={`${s.name} · ${s.components.length} components`}
+                title={`${s.name} · ${s.componentCount} components`}
                 className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-[7px] pl-2.5 text-left short:py-1 narrow:justify-center narrow:pl-0"
               >
                 <Icon name="software/dot-blue" className="size-2" />
                 <span className={`type-body-compact min-w-px flex-1 text-ink narrow:sr-only ${current ? 'font-semibold' : ''}`}>{s.name}</span>
-                <span className="type-label font-mono text-ink-muted narrow:hidden">{s.components.length}</span>
+                <span className="type-label font-mono text-ink-muted narrow:hidden">{s.componentCount}</span>
               </button>
               <button
                 type="button"
@@ -102,7 +104,7 @@ function SoftwareNav({ library = [], currentId, uploading, onSelect, onRemove })
           )
         })}
       </div>
-      {!library.length && !uploading && <p className="shrink-0 px-2.5 py-1.5 text-[13px] text-ink-muted narrow:sr-only">Nothing uploaded yet</p>}
+      {!library.length && !uploading && !loading && <p className="shrink-0 px-2.5 py-1.5 text-[13px] text-ink-muted narrow:sr-only">Nothing uploaded yet</p>}
     </>
   )
 }
@@ -114,7 +116,7 @@ function LastUploadCard({ library = [], uploading }) {
       {latest?.uploadedAt && (
         <div className="flex w-full shrink-0 flex-col gap-2 rounded-[18px] bg-blue-soft p-4 text-blue-ink narrow:hidden">
           <p className="type-label">Last upload</p>
-          <p className="text-base leading-6 font-semibold">{latest.components.length} components</p>
+          <p className="text-base leading-6 font-semibold">{latest.componentCount} components</p>
           <p className="type-label">
             <span className="[overflow-wrap:anywhere]">{latest.fileName}</span>
             <span className="whitespace-nowrap"> · {new Date(latest.uploadedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
@@ -125,7 +127,21 @@ function LastUploadCard({ library = [], uploading }) {
   )
 }
 
-export function Sidebar({ current, section, onSectionChange, onOpenFixFirst, onOpenInsights, onUpload, software }) {
+function BenchmarkCard() {
+  const { data } = useBenchmark()
+  if (!data?.top_n_ready) return null // hidden until the backend has a valid top500.csv
+  return (
+    <div className="flex w-full shrink-0 flex-col gap-2 rounded-[18px] bg-blue-soft p-4 whitespace-nowrap text-blue-ink narrow:hidden">
+      <p className="type-label">Benchmark run</p>
+      <p className="text-base leading-6 font-semibold">Top {data.top_n} ready</p>
+      <p className="type-label">
+        {data.top_n_file} · {data.cves_scored.toLocaleString('en-US')} ranked
+      </p>
+    </div>
+  )
+}
+
+export function Sidebar({ current, section, onSectionChange, onOpenFixFirst, onOpenInsights, onUpload, software, totals }) {
   const onFixFirst = current === 'fixFirst'
   const onInsights = current === 'insights'
   return (
@@ -141,17 +157,26 @@ export function Sidebar({ current, section, onSectionChange, onOpenFixFirst, onO
       </button>
       <div className="h-3 shrink-0 short:h-2" />
 
-      <NavRow current={onFixFirst} onClick={onOpenFixFirst} title={`Fix first · ${totals.open} open, ${totals.critical} critical`}>
+      <NavRow
+        current={onFixFirst}
+        onClick={onOpenFixFirst}
+        title={totals ? `Fix first · ${totals.open} open, ${totals.critical} critical` : 'Fix first'}
+      >
         <Icon name="fixfirst/nav-queue" className="size-[18px]" />
         <span className={`type-body-compact min-w-px flex-1 whitespace-nowrap text-ink narrow:sr-only ${onFixFirst ? 'font-semibold' : ''}`}>
           Fix first
         </span>
-        <span className={`${PILL} bg-blue-soft text-blue-ink`} aria-label={`${totals.open} open`}>
-          {totals.open}
-        </span>
-        <span className={`${PILL} bg-crit text-white`} aria-label={`${totals.critical} critical`}>
-          {totals.critical}
-        </span>
+        {/* Badges come from the selected SBOM's queue; none until there is one. */}
+        {totals && (
+          <>
+            <span className={`${PILL} bg-blue-soft text-blue-ink`} aria-label={`${totals.open} open`}>
+              {totals.open.toLocaleString('en-US')}
+            </span>
+            <span className={`${PILL} bg-crit text-white`} aria-label={`${totals.critical} critical`}>
+              {totals.critical.toLocaleString('en-US')}
+            </span>
+          </>
+        )}
       </NavRow>
 
       <NavRow current={onInsights} onClick={onOpenInsights} title="Insights">
@@ -163,13 +188,7 @@ export function Sidebar({ current, section, onSectionChange, onOpenFixFirst, onO
       <SoftwareNav {...software} />
       <div className="min-h-3 flex-1" />
       {current === 'software' && <LastUploadCard {...software} />}
-      {onFixFirst && (
-        <div className="flex w-full shrink-0 flex-col gap-2 rounded-[18px] bg-blue-soft p-4 whitespace-nowrap text-blue-ink narrow:hidden">
-          <p className="type-label">Benchmark run</p>
-          <p className="text-base leading-6 font-semibold">Top 500 ready</p>
-          <p className="type-label">top500.csv · 72,670 ranked</p>
-        </div>
-      )}
+      {onFixFirst && <BenchmarkCard />}
     </nav>
   )
 }

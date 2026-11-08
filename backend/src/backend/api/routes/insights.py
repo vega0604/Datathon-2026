@@ -5,20 +5,51 @@ served from data/features/insights.json, so a request never trains or scores any
 """
 
 import json
+import logging
+import threading
 
 from fastapi import APIRouter, HTTPException
 
 from backend.core import config
 
 router = APIRouter(prefix="/api", tags=["insights"])
+log = logging.getLogger(__name__)
 
-NOT_BUILT = "The insights haven't been built yet."
+NOT_BUILT = "The insights haven't been built yet. Run `uv run python -m backend.modeling.insights`."
+BUILDING = "The insights are being built. This takes a few minutes; the page loads when ready."
+
+_build = {"thread": None, "error": None}
+
+
+def _run_build() -> None:
+    try:
+        from backend.db.warehouse import connect
+        from backend.modeling.insights import write
+
+        write(connect())
+        log.info("built %s", config.INSIGHTS_PATH)
+    except Exception as e:
+        log.exception("building the insights failed")
+        _build["error"] = f"Building the insights failed: {e}"
+
+
+def build_if_missing() -> None:
+    """Start building insights.json in the background when it doesn't exist (a fresh
+    clone: data/ isn't in git). The routes answer 503 with BUILDING until it's written."""
+    if config.INSIGHTS_PATH.exists() or _build["thread"] is not None:
+        return
+    _build["thread"] = threading.Thread(target=_run_build, name="build-insights", daemon=True)
+    _build["thread"].start()
 
 
 def _insights() -> dict:
     path = config.INSIGHTS_PATH
     if not path.exists():
-        raise HTTPException(status_code=503, detail=NOT_BUILT)
+        thread = _build["thread"]
+        detail = (
+            BUILDING if thread is not None and thread.is_alive() else _build["error"] or NOT_BUILT
+        )
+        raise HTTPException(status_code=503, detail=detail)
     return json.loads(path.read_text(encoding="utf-8"))
 
 

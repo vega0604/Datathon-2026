@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Response, UploadFile
 
@@ -15,6 +15,7 @@ from backend.services.matching import match_sbom
 from backend.services.queue import (
     DEFAULT_LIMIT,
     build_queue,
+    forget,
     in_queue,
     predictions_source,
     queue_row,
@@ -44,6 +45,7 @@ def _ingest(file: UploadFile, db) -> str:
     match_descriptions(db, sbom_id)  # vulnerabilities NIST hasn't analysed (no product list)
     if config.GRANITE_MATCH_CHECK:
         verify_description_matches(db, sbom_id, predictions=predictions_source())
+    forget(sbom_id)  # a re-upload of the same file keeps its id
     return sbom_id
 
 
@@ -96,6 +98,7 @@ def get_sbom(sbom_id: str, db: Db):
 def delete_sbom(sbom_id: str, db: Db):
     if not sbom_service.delete_sbom(db, sbom_id):
         raise HTTPException(status_code=404, detail=NO_SBOM)
+    forget(sbom_id)
     return Response(status_code=204)
 
 
@@ -113,9 +116,14 @@ def get_queue(
     db: Db,
     limit: Annotated[int, Query(ge=1, le=DEFAULT_LIMIT)] = DEFAULT_LIMIT,
     offset: Annotated[int, Query(ge=0)] = 0,
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    view: Literal["all", "critical", "not_in_linear", "warning_signs"] = "all",
+    sort: Literal["rank", "cvss_desc", "cvss_asc"] = "rank",
 ):
+    """A page of the queue. `q` searches CVE ids and component names, `view` is a filter
+    chip, `sort` orders by CVSS (ties keep the rank); `matched` counts the selected rows."""
     _need_sbom(db, sbom_id)
-    return build_queue(db, sbom_id, limit=limit, offset=offset)
+    return build_queue(db, sbom_id, limit=limit, offset=offset, q=q, view=view, sort=sort)
 
 
 def _row(db, sbom_id: str, cve_id: str) -> dict:
@@ -133,6 +141,7 @@ def change_status(sbom_id: str, cve_id: str, body: StatusIn, db: Db):
     if not in_queue(db, sbom_id, cve_id):
         raise HTTPException(status_code=404, detail=NO_CVE)
     set_status(db, sbom_id, cve_id, body.status)
+    forget(sbom_id)
     return _row(db, sbom_id, cve_id)
 
 
@@ -151,4 +160,5 @@ def push_to_linear(sbom_id: str, cve_id: str, db: Db, response: Response):
         ticket = create_ticket(db, sbom_id, _row(db, sbom_id, cve_id))
     except LinearError as e:
         raise HTTPException(status_code=502, detail=str(e)) from e
+    forget(sbom_id)
     return {"ticket": ticket}
