@@ -112,14 +112,14 @@ function SummaryBody({ s, benchmark }) {
           <div className="flex min-h-0 min-w-0 flex-[1.25] flex-col gap-5">
             <CoverageCard coverage={coverageFrom(s)} />
             <section className={`${summaryCard} flex-1`}>
-              <ChartHead title={bugTypesText.title} subtitle={bugTypesText.subtitle} />
+              <ChartHead icon="insights/card-bubbles" title={bugTypesText.title} subtitle={bugTypesText.subtitle} />
               <BubbleChart weaknesses={s.weaknesses} />
             </section>
           </div>
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5">
             <section className={`${summaryCard} flex-1`}>
-              <ChartHead title={severityText.title} subtitle={severityText.subtitle} />
+              <ChartHead icon="insights/card-bars" title={severityText.title} subtitle={severityText.subtitle} />
               <PlotFrame minH="min-h-[140px]">
                 <SeverityChart bands={s.severity_bands} />
               </PlotFrame>
@@ -155,10 +155,14 @@ function AboutStrip({ rows }) {
   )
 }
 
-function ChartHead({ title, subtitle }) {
+// Same header as Coverage overview: icon + short title, with the finding underneath.
+function ChartHead({ icon, title, subtitle }) {
   return (
     <div className="flex shrink-0 flex-col gap-1">
-      <h2 className="text-lg leading-7 text-ink short:text-base short:leading-6">{title}</h2>
+      <div className="flex items-center gap-2.5">
+        <Icon name={icon} className="size-5" />
+        <h2 className="text-lg leading-7 whitespace-nowrap text-ink">{title}</h2>
+      </div>
       <p className="type-label text-ink-muted">{subtitle}</p>
     </div>
   )

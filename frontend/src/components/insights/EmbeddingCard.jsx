@@ -1,6 +1,8 @@
 import { iconUrl } from '../../lib/Icon'
 import { embeddingText } from '../../data/ui'
 import { ChartImg, PlotFrame, PlotSurface, Takeaway, chartText, plotBox } from './ChartParts'
+import { CardHead, ChartPopup } from './ExpandableCard'
+import { useExpand } from '../../lib/useExpand'
 
 const ICON = 'insights/model'
 
@@ -62,18 +64,32 @@ function EmbeddingMap({ points, clusters }) {
   )
 }
 
-// "Exploited CVEs cluster in Granite’s text space", on the Model overview page
-// (GET /api/insights/catch-rate `embedding`).
+function Legend() {
+  return (
+    <div className="flex shrink-0 flex-wrap gap-2">
+      <LegendPill file="legend-dot" size={7}>Not on KEV (dot)</LegendPill>
+      <LegendPill file="legend-diamond" size={11}>On KEV (diamond)</LegendPill>
+    </div>
+  )
+}
+
+// Granite text map on the Model overview page (GET /api/insights/catch-rate `embedding`),
+// with an expand button that opens it in a large popup.
 export function EmbeddingCard({ embedding, takeaway }) {
+  const expand = useExpand()
+  const head = { icon: 'insights/card-bubbles', title: embeddingText.title, subtitle: embeddingText.subtitle }
+  const map = <EmbeddingMap points={embedding?.points ?? []} clusters={embedding?.clusters ?? []} />
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
-      <h2 className="shrink-0 text-lg leading-7 text-ink xl:text-xl">{embeddingText.title}</h2>
-      <div className="flex shrink-0 flex-wrap gap-2">
-        <LegendPill file="legend-dot" size={7}>Not on KEV (dot)</LegendPill>
-        <LegendPill file="legend-diamond" size={11}>On KEV (diamond)</LegendPill>
-      </div>
-      <EmbeddingMap points={embedding?.points ?? []} clusters={embedding?.clusters ?? []} />
+      <CardHead {...head} onExpand={expand.open} />
+      <Legend />
+      {map}
       {takeaway && <Takeaway>{takeaway}</Takeaway>}
+      <ChartPopup expand={expand} {...head} size="w-[min(900px,94vw)]">
+        <Legend />
+        {map}
+        {takeaway && <Takeaway>{takeaway}</Takeaway>}
+      </ChartPopup>
     </div>
   )
 }

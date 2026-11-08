@@ -8,6 +8,8 @@ import { InsightsState } from './InsightsState'
 import { EmbeddingCard } from './EmbeddingCard'
 import { Takeaway } from './ChartParts'
 import { CatchRateChart } from './CatchRateChart'
+import { CardHead, ChartPopup } from './ExpandableCard'
+import { useExpand } from '../../lib/useExpand'
 
 function LegendPill({ file, height, children }) {
   const themed = useThemedIcon()
@@ -38,6 +40,45 @@ function toChart(data, benchmark) {
   return { series, top500: { at, queueSize } }
 }
 
+function Legend({ curves }) {
+  return (
+    <div className="flex shrink-0 flex-wrap gap-2">
+      {curves.map((c) => {
+        const legend = catchRateText.legend[c.ranking] ?? catchRateText.legend.cvss
+        return (
+          <LegendPill key={c.ranking} file={legend.file} height={legend.height}>
+            {c.label}
+          </LegendPill>
+        )
+      })}
+    </div>
+  )
+}
+
+// Catch-rate card, with an expand button that opens the chart in a large popup.
+function CatchRateCard({ data, chart }) {
+  const expand = useExpand()
+  const head = { icon: 'insights/card-line', title: catchRateText.title, subtitle: catchRateText.subtitle }
+  const takeaway = data.takeaways?.curves && <Takeaway>{data.takeaways.curves}</Takeaway>
+  return (
+    <div className="flex min-h-0 min-w-0 flex-[1.4] flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
+      <CardHead {...head} onExpand={expand.open} />
+      <Legend curves={data.curves} />
+      <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
+        <CatchRateChart {...chart} />
+      </div>
+      {takeaway}
+      <ChartPopup expand={expand} {...head}>
+        <Legend curves={data.curves} />
+        <div className="min-h-0 w-full flex-1">
+          <CatchRateChart {...chart} />
+        </div>
+        {takeaway}
+      </ChartPopup>
+    </div>
+  )
+}
+
 function CatchRateBody({ data }) {
   const benchmark = useBenchmark().data
   // Never scrolls or clips: on short windows both cards shrink slightly to fit.
@@ -55,23 +96,7 @@ function CatchRateBody({ data }) {
         </div>
 
         <section className="flex min-h-0 w-full flex-1 gap-4 rounded-[32px] bg-card p-4 shadow-float xl:gap-5 xl:p-6 short:p-4">
-          <div className="flex min-h-0 min-w-0 flex-[1.4] flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
-            <h2 className="shrink-0 text-lg leading-7 text-ink xl:text-xl">{catchRateText.headline}</h2>
-            <div className="flex shrink-0 flex-wrap gap-2">
-              {data.curves.map((c) => {
-                const legend = catchRateText.legend[c.ranking] ?? catchRateText.legend.cvss
-                return (
-                  <LegendPill key={c.ranking} file={legend.file} height={legend.height}>
-                    {c.label}
-                  </LegendPill>
-                )
-              })}
-            </div>
-            <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
-              <CatchRateChart {...toChart(data, benchmark)} />
-            </div>
-            {data.takeaways?.curves && <Takeaway>{data.takeaways.curves}</Takeaway>}
-          </div>
+          <CatchRateCard data={data} chart={toChart(data, benchmark)} />
           <EmbeddingCard embedding={data.embedding} takeaway={data.takeaways?.embedding} />
         </section>
       </main>

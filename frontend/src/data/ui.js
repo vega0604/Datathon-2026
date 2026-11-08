@@ -18,18 +18,19 @@ export const signals = {
 }
 
 export const severityText = {
-  title: 'Severity alone misses most attacks',
-  subtitle: 'Share reaching KEV, by CVSS band',
+  title: 'Severity vs. attacks',
+  subtitle: 'Severity alone misses most attacks · share reaching KEV, by CVSS band',
   labels: { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' },
 }
 
 export const bugTypesText = {
-  title: 'Some weakness types are exploited far beyond their volume',
-  subtitle: 'One bubble per CWE · x = CVE count (log), y = share reaching KEV, size = KEV count',
+  title: 'Weakness types',
+  subtitle: 'Some are exploited far beyond their volume · one bubble per CWE, size = KEV count',
 }
 
 export const catchRateText = {
-  headline: 'Our model catches more exploited CVEs at every queue size',
+  title: 'Catch rate',
+  subtitle: 'Our model catches more exploited CVEs at every queue size',
   // Legend graphics per ranking (exported Figma swatches).
   legend: {
     model: { file: 'legend-our-model', height: 3 },
@@ -39,7 +40,10 @@ export const catchRateText = {
   },
 }
 
-export const embeddingText = { title: 'Exploited CVEs cluster in Granite’s text space' }
+export const embeddingText = {
+  title: 'Granite text map',
+  subtitle: 'Exploited CVEs cluster in Granite’s text space',
+}
 
 export const vendorsText = {
   title: 'A handful of vendors carry most of the exploitation',

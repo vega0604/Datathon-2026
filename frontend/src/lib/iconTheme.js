@@ -9,6 +9,9 @@ const DARK_DIRS = { 'fixfirst/': 'fixfirst-dark/', 'nav-v5/': 'nav-v5-dark/' }
 // Insights icons (path after insights/) that have a dark twin in insights-dark/.
 const DARK_INSIGHTS = new Set([
   'card-target',
+  'card-bubbles',
+  'card-bars',
+  'card-line',
   'kpi-queue',
   'kpi-eye',
   'versus-target',
