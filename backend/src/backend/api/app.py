@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.api.routes import health, meta, sboms
+from backend.api.routes import health, insights, meta, sboms
 from backend.db.store import open_database
 
 # Vite dev server origins.
@@ -34,6 +34,7 @@ def create_app(con=None) -> FastAPI:
     app.include_router(health.router)
     app.include_router(meta.router)
     app.include_router(sboms.router)
+    app.include_router(insights.router)
     return app
 
 

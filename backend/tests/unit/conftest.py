@@ -24,10 +24,12 @@ def db():
         """
         CREATE TABLE vulnerabilities (
             cve_id VARCHAR, published DATE, description VARCHAR,
-            cvss3_score DOUBLE, cvss4_score DOUBLE
+            cvss3_score DOUBLE, cvss4_score DOUBLE, cwe_ids VARCHAR
         )
         """
     )
+    con.execute("CREATE TABLE weakness_types (cwe_id VARCHAR, name VARCHAR)")
+    con.execute("INSERT INTO weakness_types VALUES ('CWE-787', 'Out-of-bounds Write')")
     con.execute(
         """
         CREATE TABLE scoreboard_2026 (
@@ -66,7 +68,10 @@ def db():
         )
         """
     )
-    con.execute("INSERT INTO vulnerabilities VALUES ('CVE-1', DATE '2024-01-01', 'd', 7.5, NULL)")
+    con.execute(
+        "INSERT INTO vulnerabilities (cve_id, published, description, cvss3_score) "
+        "VALUES ('CVE-1', DATE '2024-01-01', 'd', 7.5)"
+    )
     con.execute("ATTACH ':memory:' AS app")
     init_store(con)
     yield con

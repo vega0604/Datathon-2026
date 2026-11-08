@@ -163,6 +163,138 @@ def reasons_from_contributions(
     return out
 
 
+# --- short reason bars for the frontend panel ---------------------------------------------
+
+LABEL_MAX = 45
+# The panel has three icons: exploit (code), exposure (shield), vendor (building).
+KIND = {"exploit": "exploit", "epss": "exploit", "assigner": "vendor"}  # default: exposure
+SHORT_KEYWORDS = {
+    "kw_unauthenticated": "Mentions unauthenticated access",
+    "kw_remote_code_execution": "Mentions remote code execution",
+    "kw_command_injection": "Mentions command injection",
+    "kw_pre_auth": "Mentions pre-authentication access",
+    "kw_default_config": "Affects the default configuration",
+    "kw_auth_bypass": "Mentions an authentication bypass",
+    "kw_path_traversal": "Mentions path traversal",
+    "kw_deserialization": "Mentions unsafe deserialization",
+    "kw_privilege_escalation": "Mentions privilege escalation",
+    "kw_sql_injection": "Mentions SQL injection",
+    "kw_exploited": "Says it has been exploited",
+}
+SHORT_FLAGS = {"metasploit": "Metasploit", "nuclei": "Nuclei", "exploitdb": "Exploit-DB",
+               "poc_github": "GitHub PoC"}  # fmt: skip
+
+
+def clip(text: str, limit: int = LABEL_MAX) -> str:
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def organisation(assigner, names: dict[str, str] | None = None) -> str:
+    """A readable organisation name from an assigner e-mail ("psirt@fortinet.com" ->
+    "Fortinet"). `names` maps vendor keys to CISA display names ("paloaltonetworks" ->
+    "Palo Alto Networks")."""
+    if not present(assigner) or UUID.match(str(assigner)) or "@" not in str(assigner):
+        return "Its vendor"
+    domain = str(assigner).split("@", 1)[1].lower().split(".")
+    name = domain[-2] if len(domain) >= 2 else domain[0]
+    special = {"github": "GitHub", "vuldb": "VulDB", "mitre": "MITRE", "hackerone": "HackerOne",
+               "wordfence": "Wordfence", "patchstack": "Patchstack", "redhat": "Red Hat"}  # fmt: skip
+    if name in special:
+        return special[name]
+    return (names or {}).get(re.sub(r"[^a-z0-9]", "", name)) or name.capitalize()
+
+
+def short_cwe(name: str) -> str:
+    """'Improper Neutralization of ... ('OS Command Injection')' -> 'OS Command Injection'."""
+    if "('" in name and name.endswith("')"):
+        return name[name.index("('") + 2 : -2]
+    return re.sub(r"\s*\(.*?\)", "", name)
+
+
+def exploit_label(flags: list[str]) -> str:
+    full = f"Public exploit code ({', '.join(flags)})"
+    if len(full) <= LABEL_MAX or len(flags) == 1:
+        return clip(full)
+    return f"Public exploit code ({flags[0]} +{len(flags) - 1} more)"
+
+
+def short_label(
+    name: str, row, cwe_names: dict[str, str] | None = None, org_names: dict[str, str] | None = None
+) -> str | None:
+    """Under 45 characters, true for the row whatever the sign of its contribution."""
+    if name == "exploit":
+        flags = [label for column, label in SHORT_FLAGS.items() if row.get(column) == 1]
+        return exploit_label(flags) if flags else "No public exploit code yet"
+    if name == "epss":
+        pct = row.get("epss_pct")
+        if not present(pct):
+            return "No EPSS score yet"
+        return f"EPSS above {math.floor(pct * 100)}% of CVEs that month"
+    if name == "assigner":
+        n = row.get("assigner_kev_prior")
+        org = organisation(row.get("assigner"), org_names)
+        if not present(n) or n <= 0:
+            return clip(f"{org}: no earlier KEV entries")
+        return clip(f"{org}: {int(n):,} earlier KEV entr{'y' if int(n) == 1 else 'ies'}")
+    if name == "similarity":
+        sim = row.get("kev_sim_max")
+        return None if not present(sim) else f"Resembles exploited CVEs ({sim:.2f})"
+    if name in SHORT_KEYWORDS:
+        return SHORT_KEYWORDS[name] if row.get(name) == 1 else None
+    if name == "cvss":
+        score = row.get("cvss3_score")
+        if not present(score):
+            return None
+        parts = []
+        if row.get("attack_vector") == "NETWORK":
+            parts.append("Network")
+        if row.get("privileges_required") == "NONE":
+            parts.append("no privileges")
+        lead = ", ".join(parts)
+        return clip(f"{lead} (CVSS {score:.1f})" if lead else f"CVSS {score:.1f} from the vendor")
+    if name == "cwe":
+        cwe = row.get("cwe_primary")
+        if not present(cwe) or cwe in ("unknown", "other"):
+            return None
+        title = (cwe_names or {}).get(cwe) or cwe
+        return clip(f"Weakness: {short_cwe(title)}")
+    return None
+
+
+def bars_from_contributions(
+    contributions: np.ndarray,
+    feature_names: list[str],
+    raw: pd.DataFrame,
+    k: int = 3,
+    cwe_names: dict[str, str] | None = None,
+    org_names: dict[str, str] | None = None,
+) -> list[list[dict]]:
+    """Up to k reason bars per row: {kind, label, value}, value = the family's summed SHAP
+    contribution (log-odds). Positive families first (largest first), then negative ones
+    (most negative first), skipping any that can't be stated truthfully."""
+    families = [family(f) for f in feature_names]
+    names = sorted({f for f in families if f})
+    index = {name: i for i, name in enumerate(names)}
+    totals = np.zeros((contributions.shape[0], len(names)))
+    for j, fam in enumerate(families):
+        if fam:
+            totals[:, index[fam]] += contributions[:, j]
+    out = []
+    for i, row in enumerate(raw.to_dict("records")):
+        values = totals[i]
+        order = sorted(range(len(names)), key=lambda j: (values[j] <= 0, -abs(values[j])))
+        bars = []
+        for j in order:
+            if len(bars) == k:
+                break
+            label = short_label(names[j], row, cwe_names, org_names)
+            if label:
+                bars.append({"kind": KIND.get(names[j], "exposure"), "label": label,
+                             "value": round(float(values[j]), 4)})  # fmt: skip
+        out.append(bars)
+    return out
+
+
 def shap_values(booster, X: pd.DataFrame) -> np.ndarray:
     import shap
 
@@ -177,6 +309,18 @@ def top_reasons(booster, X: pd.DataFrame, raw_df: pd.DataFrame, k: int = 3, cwe_
     assigner and the uncollapsed cwe_primary)."""
     contributions = shap_values(booster, X)
     return reasons_from_contributions(contributions, list(X.columns), raw_df, k, cwe_names)
+
+
+def load_org_names(con) -> dict[str, str]:
+    """Vendor key -> CISA's display name, for assigner organisations."""
+    try:
+        rows = con.execute(
+            "SELECT vendor_key, mode(vendor) FROM clean.kev "
+            "WHERE vendor_key IS NOT NULL AND vendor IS NOT NULL GROUP BY 1"
+        ).fetchall()
+    except Exception:  # noqa: BLE001 - no KEV table
+        return {}
+    return {k: v for k, v in rows if k and v}
 
 
 def load_cwe_names(con) -> dict[str, str]:

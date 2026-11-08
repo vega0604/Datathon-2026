@@ -76,6 +76,29 @@ How it works:
 
 Without `predictions.parquet` the queue falls back to a placeholder ranking (KEV, EPSS, CVSS): build it with `uv run python -m backend.modeling.select` (or `serving`).
 
+## Endpoints for the frontend
+
+Everything the React app reads (see the frontend API handoff). Build the data once:
+`uv run python -m backend.modeling.select` (models, `predictions.parquet`), then
+`uv run python -m backend.modeling.insights` (`insights.json`).
+
+| Method and path | What it returns |
+| --- | --- |
+| `GET /api/sboms/{id}/queue` | Every queue row (default `limit` 1000) with `counts`, and per row: rank, component, score, severity, CVSS rank, warning `signal`, `status`, Linear `ticket`, plain-words `explanation`, 3 `reasons` bars (`kind`, `label`, SHAP `value`), KEV and CWE facts |
+| `PATCH /api/sboms/{id}/queue/{cve_id}` | `{"status": "to_do" \| "in_progress" \| "done"}`; returns the updated row |
+| `POST /api/sboms/{id}/queue/{cve_id}/linear` | Creates the Linear issue (201) or returns the existing one (200); 502 if Linear isn't set up or fails |
+| `POST /api/sboms` | Upload CycloneDX JSON or XML (max 10 MB, 413 above); returns the SBOM with every component and its `risk`. Same filename replaces the earlier upload |
+| `GET /api/sboms` | Saved SBOMs, newest first |
+| `GET /api/sboms/{id}/components` | The SBOM with `spec_version`, `risk_checked` and each component's `part`, `rank` and `risk` (CVE count, severity mix, max CVSS and EPSS, `fixed_in`, KEV entries, top 3 CVEs) |
+| `DELETE /api/sboms/{id}` | 204; removes its components, matches, statuses and tickets |
+| `GET /api/insights/summary`, `/catch-rate`, `/vendors` | The Insights pages, from `insights.json` (503 until built) |
+| `GET /api/benchmark` | The "About this data" facts |
+| `GET /api/me` | The header user, from `ME_NAME` / `ME_ROLE` / `ME_AVATAR_URL` (no login yet) |
+
+Settings in `backend/.env` (see `.env.example`): `LINEAR_API_KEY` and `LINEAR_TEAM_KEY` for Push to Linear; `GRANITE_EXPLANATIONS=true` to let Granite write the explanation of the top `GRANITE_EXPLAIN_TOP` rows of each queue (cached per CVE). There is no IBM X-Force integration: `xforce` is always `null`, so the panel shows the KEV facts.
+
+Warning signs (`signal`, the first that applies at the row's `as_of` month): `exploit_code` (public exploit code appeared that month), `vendor_attacked` (another CVE in one of the same vulnerable products went onto KEV in the 30 days before), `score_jump` (EPSS rose by 0.1 or more since the month before).
+
 ## Dependency groups
 
 | Group | What it's for | Story |
