@@ -53,3 +53,16 @@ def test_matches_in_scoreboard_and_kev(con, uploaded):
 def test_wordpress_has_fewer_matches_than_chrome(uploaded):
     _, comps = uploaded
     assert comps["WordPress"]["matched_cves"] < comps["Google Chrome"]["matched_cves"]
+
+
+def test_queue_kev_first_and_total(con, uploaded):
+    sbom_id, _ = uploaded
+    with TestClient(create_app(con)) as client:
+        body = client.get(f"/api/sboms/{sbom_id}/queue?limit=20").json()
+    distinct = con.execute(
+        "SELECT count(DISTINCT cve_id) FROM app.matches WHERE sbom_id = ?", [sbom_id]
+    ).fetchone()[0]
+    assert body["ranking"] == "epss_placeholder"
+    assert body["total"] == distinct
+    assert len(body["items"]) == 20
+    assert all(i["on_kev"] for i in body["items"])

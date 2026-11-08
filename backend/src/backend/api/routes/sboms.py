@@ -1,9 +1,13 @@
-from fastapi import APIRouter, HTTPException, UploadFile
+from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, Query, UploadFile
 
 from backend.api.deps import Db
+from backend.schemas.queue import QueueOut
 from backend.schemas.sbom import SbomComponentsOut, SbomOut, SbomSummary
 from backend.services import sbom as sbom_service
 from backend.services.matching import match_sbom
+from backend.services.queue import build_queue
 from backend.services.sbom import MAX_BYTES, SbomError
 
 router = APIRouter(prefix="/api/sboms", tags=["sboms"])
@@ -46,3 +50,15 @@ def get_components(sbom_id: str, db: Db):
         "name": sbom["name"],
         "components": sbom_service.component_summaries(db, sbom_id),
     }
+
+
+@router.get("/{sbom_id}/queue", response_model=QueueOut)
+def get_queue(
+    sbom_id: str,
+    db: Db,
+    limit: Annotated[int, Query(ge=1, le=1000)] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
+):
+    if sbom_service.load_sbom(db, sbom_id) is None:
+        raise HTTPException(status_code=404, detail="SBOM not found")
+    return build_queue(db, sbom_id, limit=limit, offset=offset)
