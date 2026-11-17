@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFitHeight } from '../lib/useFitHeight'
-import { AppHeader } from '../components/insights/AppHeader'
-import { Sidebar } from '../components/Sidebar'
+import { AppShell, MobileSheet } from '../components/AppShell'
 import { QueueTable } from '../components/QueueTable'
 import { WhyPanel } from '../components/WhyPanel'
-import { IconDarkContext } from '../lib/iconTheme'
+import { useIsMobile } from '../lib/useIsMobile'
 import { pushToLinear, setStatus, useQueueView } from '../lib/api'
 
 // Fix first · v5 (Figma page "V5", frame "Fix first · v5 · Light · 1512").
@@ -31,7 +30,10 @@ function matches(item, q) {
 }
 
 export function FixFirstQueue({ onHome, onOpenInsights, onUpload, software, totals, theme = 'light', onThemeChange, sbomId, sbomName, queue }) {
-  const dark = theme === 'dark'
+  // Desktop shows the details panel beside the queue; mobile opens it as a
+  // full-screen sheet only after a row is tapped.
+  const mobile = useIsMobile()
+  const [sheetOpen, setSheetOpen] = useState(false)
   // On short windows the page shrinks slightly to fit, except the queue rows, which scroll.
   const mainRef = useRef(null)
   useFitHeight(mainRef)
@@ -83,6 +85,7 @@ export function FixFirstQueue({ onHome, onOpenInsights, onUpload, software, tota
   const select = (id) => {
     setChosenId(id)
     setPanelOpen(true)
+    setSheetOpen(true)
     setActionError(null)
   }
   const updateStatus = async (id, status) => {
@@ -124,7 +127,7 @@ export function FixFirstQueue({ onHome, onOpenInsights, onUpload, software, tota
         onQueryChange={(q) => (setQuery(q), setShown(PAGE))}
         sort={sort}
         onSortChange={setSort}
-        selectedId={panelOpen ? selectedId : null}
+        selectedId={(mobile ? sheetOpen : panelOpen) ? selectedId : null}
         onSelect={select}
         onSeeAll={seeAll}
         more={filtered.length - visible.length}
@@ -137,17 +140,23 @@ export function FixFirstQueue({ onHome, onOpenInsights, onUpload, software, tota
   // plus the selected row if it was found by search further down.
   const panelItems = selected && !visible.includes(selected) ? [...visible, selected] : visible
 
+  const panelProps = {
+    item: selected,
+    error: actionError,
+    onStatusChange: updateStatus,
+    onPushToLinear: sendToLinear,
+  }
+
   return (
-    <IconDarkContext.Provider value={dark}>
-    <div className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[560px] min-w-[1024px] flex-col bg-page font-sans`}>
-      <AppHeader iconDir="fixfirst" theme={theme} onThemeChange={onThemeChange} onHome={onHome} />
-
-      <div className="flex min-h-0 w-full flex-1 items-start gap-4 overflow-hidden p-4 wide:gap-5 wide:p-5 compact:py-3">
-        <Sidebar current="fixFirst" onOpenInsights={onOpenInsights} onUpload={onUpload} software={software} totals={totals} />
-
-        <main ref={mainRef} className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden pt-2 [&>*]:[zoom:var(--fit,1)]">
+    <AppShell
+      theme={theme}
+      onThemeChange={onThemeChange}
+      onHome={onHome}
+      sidebar={{ current: 'fixFirst', onOpenInsights, onUpload, software, totals }}
+    >
+        <main ref={mainRef} className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden pt-2 [&>*]:[zoom:var(--fit,1)] mobile:h-auto mobile:flex-none mobile:gap-3 mobile:overflow-visible mobile:pt-0">
           <div className="flex shrink-0 flex-col gap-1">
-            <h1 className="flex items-center gap-3 text-[44px] leading-[64px] font-light text-ink short:text-[36px] short:leading-[48px]">
+            <h1 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[44px] leading-[64px] font-light text-ink short:text-[36px] short:leading-[48px] mobile:text-[34px] mobile:leading-[44px]">
               Fix first
               {queue.data?.ranking === 'epss_placeholder' && (
                 <span className="type-label rounded-full bg-subtle px-2.5 py-1 font-normal text-ink-muted" title="The model's scores aren't built on the server yet: ranked by KEV, EPSS and CVSS.">
@@ -164,29 +173,26 @@ export function FixFirstQueue({ onHome, onOpenInsights, onUpload, software, tota
           {body}
         </main>
 
-        {queue.data && panelOpen && selected && (
-          <WhyPanel
-            item={selected}
-            items={panelItems}
-            error={actionError}
-            onClose={() => setPanelOpen(false)}
-            onStatusChange={updateStatus}
-            onPushToLinear={sendToLinear}
-          />
+        {!mobile && queue.data && panelOpen && selected && (
+          <WhyPanel {...panelProps} items={panelItems} onClose={() => setPanelOpen(false)} />
         )}
-      </div>
-    </div>
-    </IconDarkContext.Provider>
+        {mobile && queue.data && sheetOpen && selected && (
+          <MobileSheet label={`Details for ${selected.cveId}`} onClose={() => setSheetOpen(false)}>
+            {/* Only this row's text: the sheet scrolls, so it doesn't need a steady size. */}
+            <WhyPanel {...panelProps} items={[selected]} onClose={() => setSheetOpen(false)} />
+          </MobileSheet>
+        )}
+    </AppShell>
   )
 }
 
 function Notice({ title, children, action, onAction }) {
   return (
-    <section className="flex min-h-px w-full flex-1 flex-col items-center justify-center gap-3 rounded-[28px] bg-card p-10 text-center shadow-float" role="status">
+    <section className="flex min-h-px w-full flex-1 flex-col items-center justify-center gap-3 rounded-[28px] bg-card p-10 text-center shadow-float max-sm:rounded-3xl max-sm:px-5 max-sm:py-8" role="status">
       <h2 className="text-xl leading-7 text-ink">{title}</h2>
       <p className="type-body max-w-[460px] text-ink-muted">{children}</p>
       {action && (
-        <button type="button" onClick={onAction} className="mt-2 cursor-pointer rounded-full bg-blue px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-strong">
+        <button type="button" onClick={onAction} className="mt-2 mobile:min-h-11 cursor-pointer rounded-full bg-blue px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-strong">
           {action}
         </button>
       )}

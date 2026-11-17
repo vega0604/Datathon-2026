@@ -61,7 +61,7 @@ function VendorsBody({ data }) {
     .filter(Boolean)
     .map((c) => ({ name: c.name, cves: `${c.cves.toLocaleString('en-US')} CVEs`, kev: c.kev }))
   return (
-      <main ref={ref} className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden xl:gap-5 xl:pt-2 [&>*]:[zoom:var(--fit,1)]">
+      <main ref={ref} className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden xl:gap-5 xl:pt-2 [&>*]:[zoom:var(--fit,1)] mobile:h-auto mobile:flex-none mobile:overflow-visible">
         <div className="flex shrink-0 flex-col items-start gap-1 xl:gap-2">
           <h1 className="text-[clamp(30px,3vw,44px)] leading-[1.18] font-light text-ink">Vendors</h1>
           <p className="text-sm leading-5 text-ink-muted xl:text-base xl:leading-6">
@@ -69,7 +69,7 @@ function VendorsBody({ data }) {
           </p>
         </div>
 
-        <section className="flex min-h-0 w-full flex-1 overflow-y-auto rounded-[32px] bg-card p-4 shadow-float xl:p-6 short:p-4">
+        <section className="flex min-h-0 w-full flex-1 overflow-y-auto rounded-[32px] bg-card p-4 shadow-float xl:p-6 short:p-4 mobile:flex-none mobile:overflow-visible max-sm:rounded-3xl max-sm:p-3">
           <div className="flex min-h-min w-full flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
             <div className="flex shrink-0 flex-col gap-1">
               <h2 className="text-lg leading-7 text-ink xl:text-xl">{vendorsText.title}</h2>
@@ -83,9 +83,9 @@ function VendorsBody({ data }) {
               ))}
             </div>
 
-            <div className="flex w-full flex-1 items-stretch gap-5">
+            <div className="flex w-full flex-1 items-stretch gap-5 mobile:flex-col">
               {/* Heatmap fills the space it gets; the layout is recomputed on resize */}
-              <div className="min-h-[160px] w-[62%] shrink-0">
+              <div className="min-h-[160px] w-[62%] shrink-0 mobile:h-[min(80vw,380px)] mobile:w-full">
                 <VendorHeatmap cells={cells} />
               </div>
               <div className="flex min-w-0 flex-1 flex-col justify-start gap-2.5 short:gap-2">

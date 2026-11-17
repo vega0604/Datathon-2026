@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from '../../lib/Icon'
+import { useDialog } from '../../lib/useDialog'
 
 // Card header shared by the chart cards: icon + short title, the finding underneath,
 // and an optional expand button on the right.
@@ -10,7 +11,7 @@ export function CardHead({ icon, title, subtitle, onExpand, onClose }) {
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex items-center gap-2.5">
           <Icon name={icon} className="size-5" />
-          <h2 className="text-lg leading-7 whitespace-nowrap text-ink">{title}</h2>
+          <h2 className="text-lg leading-7 text-ink sm:whitespace-nowrap">{title}</h2>
         </div>
         {subtitle && <p className="type-label text-ink-muted">{subtitle}</p>}
       </div>
@@ -37,7 +38,7 @@ function RoundButton({ label, onClick, autoFocus, children }) {
       aria-label={label}
       title={label}
       autoFocus={autoFocus}
-      className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-card text-ink-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-blue"
+      className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-card text-ink-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-blue mobile:size-10"
     >
       <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         {children}
@@ -53,24 +54,23 @@ function RoundButton({ label, onClick, autoFocus, children }) {
  */
 export function ChartPopup({ expand, icon, title, subtitle, size = 'w-[min(1200px,94vw)]', children }) {
   const { target, close } = expand
-  useEffect(() => {
-    if (!target) return
-    const onKey = (e) => e.key === 'Escape' && close()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [target, close])
+  // Focus moves into the popup, Tab stays inside it, Esc closes it, and focus goes
+  // back to the expand button afterwards.
+  const ref = useRef(null)
+  useDialog(ref, close, Boolean(target))
 
   if (!target) return null
   return createPortal(
     <div
-      className="chart-fade fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6 font-sans dark:bg-black/60"
+      className="chart-fade fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6 font-sans dark:bg-black/60 mobile:p-2"
       onMouseDown={(e) => e.target === e.currentTarget && close()}
     >
       <div
+        ref={ref}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`flex h-[min(780px,90vh)] ${size} flex-col gap-4 rounded-[28px] border border-line bg-page p-6 shadow-panel`}
+        className={`flex h-[min(780px,90vh)] ${size} flex-col gap-4 overflow-y-auto rounded-[28px] border border-line bg-page p-6 shadow-panel mobile:h-[min(780px,94dvh)] mobile:w-full mobile:p-4`}
       >
         <CardHead icon={icon} title={title} subtitle={subtitle} onClose={close} />
         {children}

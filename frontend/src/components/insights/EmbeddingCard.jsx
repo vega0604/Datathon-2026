@@ -80,7 +80,7 @@ export function EmbeddingCard({ embedding, takeaway }) {
   const head = { icon: 'insights/card-bubbles', title: embeddingText.title, subtitle: embeddingText.subtitle }
   const map = <EmbeddingMap points={embedding?.points ?? []} clusters={embedding?.clusters ?? []} />
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4 mobile:flex-none">
       <CardHead {...head} onExpand={expand.open} />
       <Legend />
       {map}

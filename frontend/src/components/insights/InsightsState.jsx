@@ -17,8 +17,8 @@ export function InsightsState({ query, children }) {
 
   if (query.data) return children(query.data)
   return (
-    <main className="flex h-full min-w-0 flex-1 items-center justify-center" role="status">
-      <div className="flex max-w-[420px] flex-col items-center gap-3 rounded-[28px] bg-card p-10 text-center shadow-float">
+    <main className="flex h-full min-w-0 flex-1 items-center justify-center mobile:h-auto mobile:py-10" role="status">
+      <div className="flex max-w-[420px] flex-col items-center gap-3 rounded-[28px] bg-card p-10 text-center shadow-float max-sm:p-6">
         {query.error ? (
           <>
             <p className="text-lg text-ink">{building ? 'These insights aren’t ready yet' : 'We couldn’t load these insights'}</p>

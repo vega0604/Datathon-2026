@@ -1,4 +1,5 @@
 import { useLayoutEffect } from 'react'
+import { isMobile } from './useIsMobile'
 
 /**
  * Guarantees a container never needs to scroll or clip. After layout it measures
@@ -38,6 +39,8 @@ export function useFitHeight(ref, watch) {
     }
     const fit = () => {
       el.style.setProperty('--fit', '1')
+      // The mobile layout scrolls like a normal page, so nothing needs shrinking.
+      if (isMobile()) return
       let zoom = 1
       // Zoom doesn't scale every part exactly (gaps, borders), so refine a few times.
       for (let i = 0; i < 4; i++) {

@@ -5,6 +5,7 @@ import { YourSoftware } from './views/YourSoftware'
 import { switchTheme } from './lib/themeTransition'
 import { LoadingScreen } from './components/LoadingScreen'
 import { deleteSbom, prefetchShell, useQueue, useSboms } from './lib/api'
+import { isMobile } from './lib/useIsMobile'
 
 const THEME_KEY = 'btb-theme'
 const CURRENT_KEY = 'btb-current-sbom'
@@ -90,6 +91,12 @@ export default function App() {
   const [swState, setSwScreen] = useState({ name: 'overview' })
   // Nothing uploaded yet: the overview becomes the upload screen.
   const swScreen = swState.name === 'overview' && sboms.data && !library.length ? { name: 'empty' } : swState
+
+  // On mobile the whole page scrolls, so a new page or screen starts at the top.
+  const screenKey = `${page}:${homeKey}:${page === 'software' ? `${swScreen.name}:${swScreen.id ?? ''}:${currentId}` : ''}`
+  useEffect(() => {
+    if (isMobile()) window.scrollTo(0, 0)
+  }, [screenKey])
 
   // One queue request per SBOM, shared by the Fix first page and every page's
   // sidebar (cached, so switching pages never refetches it).

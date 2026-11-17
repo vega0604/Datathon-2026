@@ -61,16 +61,16 @@ function CatchRateCard({ data, chart }) {
   const head = { icon: 'insights/card-line', title: catchRateText.title, subtitle: catchRateText.subtitle }
   const takeaway = data.takeaways?.curves && <Takeaway>{data.takeaways.curves}</Takeaway>
   return (
-    <div className="flex min-h-0 min-w-0 flex-[1.4] flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4">
+    <div className="flex min-h-0 min-w-0 flex-[1.4] flex-col gap-4 rounded-3xl bg-page p-4 xl:p-6 short:gap-3 short:p-4 mobile:flex-none">
       <CardHead {...head} onExpand={expand.open} />
       <Legend curves={data.curves} />
-      <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
+      <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size] mobile:h-[320px] mobile:flex-none">
         <CatchRateChart {...chart} />
       </div>
       {takeaway}
       <ChartPopup expand={expand} {...head}>
         <Legend curves={data.curves} />
-        <div className="min-h-0 w-full flex-1">
+        <div className="min-h-[260px] w-full flex-1">
           <CatchRateChart {...chart} />
         </div>
         {takeaway}
@@ -86,7 +86,7 @@ function CatchRateBody({ data }) {
   useFitHeight(ref)
   const backtest = data.backtest
   return (
-      <main ref={ref} className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden xl:gap-5 xl:pt-2 [&>*]:[zoom:var(--fit,1)]">
+      <main ref={ref} className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-hidden xl:gap-5 xl:pt-2 [&>*]:[zoom:var(--fit,1)] mobile:h-auto mobile:flex-none mobile:overflow-visible">
         <div className="flex shrink-0 flex-col items-start gap-1 xl:gap-2">
           <h1 className="text-[clamp(30px,3vw,44px)] leading-[1.18] font-light text-ink">Model overview</h1>
           <p className="text-sm leading-5 text-ink-muted xl:text-base xl:leading-6">
@@ -95,7 +95,7 @@ function CatchRateBody({ data }) {
           </p>
         </div>
 
-        <section className="flex min-h-0 w-full flex-1 gap-4 rounded-[32px] bg-card p-4 shadow-float xl:gap-5 xl:p-6 short:p-4">
+        <section className="flex min-h-0 w-full flex-1 gap-4 rounded-[32px] bg-card p-4 shadow-float xl:gap-5 xl:p-6 short:p-4 mobile:flex-none mobile:flex-col max-sm:rounded-3xl max-sm:p-3">
           <CatchRateCard data={data} chart={toChart(data, benchmark)} />
           <EmbeddingCard embedding={data.embedding} takeaway={data.takeaways?.embedding} />
         </section>

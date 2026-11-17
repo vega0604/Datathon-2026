@@ -29,6 +29,17 @@ function yStep(max) {
   return 0.02
 }
 
+// Drops x ticks whose labels would touch the previous one (narrow cards, e.g. phones).
+function spaced(ticks) {
+  const kept = []
+  for (const tick of ticks) {
+    const prev = kept.at(-1)
+    const room = prev ? (fmtCount(prev.t).length + fmtCount(tick.t).length) * 3.6 + 10 : 0
+    if (!prev || tick.x - prev.x >= room) kept.push(tick)
+  }
+  return kept
+}
+
 const hits = (a, b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y
 
 /** Positions every bubble, the callout and as many labels as fit without touching. */
@@ -106,7 +117,7 @@ function layout(weaknesses, W, H) {
     avgLabel,
     yZero,
     yTicks: Array.from({ length: Math.round(yMax / step) + 1 }, (_, i) => ({ t: i * step, y: yAt(i * step) })),
-    xTicks: LOG_TICKS.filter((t) => Math.log10(t) >= lo && Math.log10(t) <= hi).map((t) => ({ t, x: xAt(t) })),
+    xTicks: spaced(LOG_TICKS.filter((t) => Math.log10(t) >= lo && Math.log10(t) <= hi).map((t) => ({ t, x: xAt(t) }))),
     decimals: step < 0.01 ? 1 : 0,
   }
 }

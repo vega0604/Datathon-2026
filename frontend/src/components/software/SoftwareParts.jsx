@@ -63,16 +63,16 @@ export function FoundBy({ component, methods = matchMethods(component) }) {
 export function BlueCard({ children, action, onAction, grow = true }) {
   // No overflow-hidden on the card itself: it must never shrink below its text.
   return (
-    <div className={`relative flex w-full flex-col justify-between gap-4 rounded-3xl bg-brand p-6 ${grow ? 'flex-1' : 'shrink-0'}`}>
+    <div className={`relative flex w-full flex-col justify-between gap-4 rounded-3xl bg-brand p-6 max-sm:p-5 ${grow ? 'flex-1' : 'shrink-0'}`}>
       <div className="relative flex flex-col items-start gap-4">
         <span className="type-label rounded-full border border-white px-3 py-1.5 text-white">What to do</span>
-        <p className="text-xl leading-7 text-white">{children}</p>
+        <p className="text-xl leading-7 text-white max-sm:text-lg max-sm:leading-7">{children}</p>
       </div>
       {action && (
         <button
           type="button"
           onClick={onAction}
-          className="relative cursor-pointer self-start rounded-full bg-on-brand px-5 py-3 text-left text-base leading-6 font-semibold text-primary-strong hover:bg-on-brand-hover"
+          className="relative cursor-pointer self-start rounded-full bg-on-brand px-5 py-3 text-left text-base leading-6 font-semibold whitespace-pre-wrap text-primary-strong hover:bg-on-brand-hover"
         >
           {action}
         </button>
@@ -118,7 +118,7 @@ export function FactRow({ label, value }) {
   )
 }
 
-/** Right-hand column shared by every "Your software" screen. */
+/** Right-hand column shared by every "Your software" screen (below the page on mobile). */
 // Never scrolls: on short windows its sections shrink slightly instead (useFitHeight).
 export function SidePanel({ children }) {
   const ref = useRef(null)
@@ -126,7 +126,7 @@ export function SidePanel({ children }) {
   return (
     <aside
       ref={ref}
-      className="flex h-full w-[300px] shrink-0 flex-col gap-5 overflow-hidden rounded-3xl bg-card p-6 shadow-float wide:w-[320px] narrow:w-[260px] narrow:p-5 compact:gap-3 compact:p-5 [&>*]:[zoom:var(--fit,1)]"
+      className="flex h-full w-[300px] shrink-0 flex-col gap-5 overflow-hidden rounded-3xl bg-card p-6 shadow-float wide:w-[320px] narrow:w-[260px] narrow:p-5 compact:gap-3 compact:p-5 [&>*]:[zoom:var(--fit,1)] mobile:h-auto mobile:w-full mobile:gap-4 mobile:overflow-visible max-sm:p-4"
     >
       {children}
     </aside>
@@ -138,7 +138,7 @@ export function FitMain({ className = '', children }) {
   const ref = useRef(null)
   useFitHeight(ref)
   return (
-    <main ref={ref} className={`flex h-full min-w-0 flex-1 flex-col overflow-hidden pt-2 [&>*]:[zoom:var(--fit,1)] ${className}`}>
+    <main ref={ref} className={`flex h-full min-w-0 flex-1 flex-col overflow-hidden pt-2 [&>*]:[zoom:var(--fit,1)] mobile:h-auto mobile:flex-none mobile:overflow-visible mobile:pt-0 ${className}`}>
       {children}
     </main>
   )
@@ -147,7 +147,7 @@ export function FitMain({ className = '', children }) {
 export function PageTitle({ title, subtitle, children }) {
   return (
     <div className="flex w-full shrink-0 flex-col items-start gap-1.5">
-      <h1 className="text-4xl leading-[44px] font-light text-ink compact:text-[32px] compact:leading-10">{title}</h1>
+      <h1 className="text-4xl leading-[44px] font-light [overflow-wrap:anywhere] text-ink compact:text-[32px] compact:leading-10 max-sm:text-[32px] max-sm:leading-10">{title}</h1>
       {subtitle && <p className="text-[15px] text-ink-muted">{subtitle}</p>}
       {children}
     </div>
@@ -164,7 +164,7 @@ export function Tabs({ value, onChange, items }) {
           role="tab"
           aria-selected={value === id}
           onClick={() => onChange(id)}
-          className={`flex h-9 cursor-pointer items-center rounded-full px-[18px] text-sm whitespace-nowrap ${
+          className={`flex h-9 cursor-pointer items-center rounded-full px-[18px] text-sm whitespace-nowrap mobile:h-10 ${
             value === id ? 'bg-card font-semibold text-blue-ink' : 'text-ink-muted hover:text-ink'
           }`}
         >

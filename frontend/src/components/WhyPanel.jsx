@@ -37,9 +37,9 @@ function LinearButton({ onPush }) {
       type="button"
       disabled={busy}
       onClick={push}
-      className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-full bg-blue pr-4 pl-[18px] hover:bg-primary-strong disabled:cursor-wait disabled:opacity-80"
+      className="flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-full bg-blue pr-4 pl-[18px] hover:bg-primary-strong disabled:cursor-wait disabled:opacity-80 mobile:h-11"
     >
-      <span className="type-body font-semibold whitespace-nowrap text-white">{busy ? 'Sending…' : 'Push to Linear'}</span>
+      <span className="type-body font-semibold whitespace-nowrap text-white" aria-live="polite">{busy ? 'Sending…' : 'Push to Linear'}</span>
       {!busy && <Icon name="fixfirst/arrow-up-white" className="size-4" />}
     </button>
   )
@@ -52,7 +52,7 @@ function CloseButton({ onClose }) {
       aria-label="Close details"
       title="Close"
       onClick={onClose}
-      className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line hover:bg-page"
+      className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line hover:bg-page mobile:size-11"
     >
       <Icon name="fixfirst/icon-close" className="size-4" />
     </button>
@@ -130,7 +130,7 @@ function Reasons({ item, items }) {
   // (the tallest label anywhere): even spacing, and nothing moves between ranks.
   const allLabels = items.flatMap((it) => (it.reasons ?? []).map((r, k) => ({ cveId: `${it.cveId}#${k}`, label: r.label })))
   return (
-    <div className="flex w-full flex-1 flex-col gap-3 rounded-[20px] bg-page p-4 short:gap-2 short:p-3">
+    <div className="flex w-full flex-1 flex-col gap-3 rounded-[20px] bg-page p-4 short:gap-2 short:p-3 mobile:flex-none">
       <div className="flex shrink-0 items-center gap-2">
         <p className="text-base leading-6 font-semibold text-ink">Why it ranks #{rank}</p>
         {item.reasonsAreSample && (
@@ -146,7 +146,7 @@ function Reasons({ item, items }) {
         <p className="type-body text-ink-muted">No model reasons yet: ranked by CISA KEV, EPSS and CVSS.</p>
       )}
       {/* Rows share the card's spare height evenly. */}
-      <div className="flex flex-1 flex-col justify-evenly gap-2.5 short:gap-1.5">
+      <div className="flex flex-1 flex-col justify-evenly gap-2.5 short:gap-1.5 mobile:flex-none mobile:gap-4">
       {reasons.map((r, i) => (
         <div key={r.label} className="flex w-full items-center gap-2.5">
           <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-card">
@@ -189,7 +189,7 @@ export function WhyPanel({ item, items, error, onClose, onStatusChange, onPushTo
     <aside
       ref={ref}
       aria-label={`Details for ${item.cveId}`}
-      className={`relative flex h-full w-[400px] shrink-0 flex-col gap-4 overflow-hidden rounded-[28px] bg-card p-6 shadow-float short:gap-3 short:p-5 wide:w-[420px] [&>*]:[zoom:var(--fit,1)]`}
+      className={`relative flex h-full w-[400px] shrink-0 flex-col gap-4 overflow-hidden rounded-[28px] bg-card p-6 shadow-float short:gap-3 short:p-5 wide:w-[420px] [&>*]:[zoom:var(--fit,1)] mobile:mx-auto mobile:min-h-full mobile:h-auto mobile:w-full mobile:max-w-[640px] mobile:overflow-visible mobile:rounded-none mobile:p-4 mobile:pb-8 mobile:shadow-none sm:mobile:p-6`}
     >
             <div className="flex w-full shrink-0 items-center gap-2">
         <Icon name="fixfirst/icon-ticket" className="size-4" />
@@ -203,7 +203,7 @@ export function WhyPanel({ item, items, error, onClose, onStatusChange, onPushTo
           {item.vendorInitials ?? item.component.slice(0, 2).toUpperCase()}
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
-          <h2 className="text-[32px] leading-10 font-normal whitespace-nowrap text-ink">{item.cveId}</h2>
+          <h2 className="text-[32px] leading-10 font-normal whitespace-nowrap text-ink max-sm:text-2xl max-sm:leading-8">{item.cveId}</h2>
           <Stable
             items={items}
             current={item}
@@ -212,15 +212,15 @@ export function WhyPanel({ item, items, error, onClose, onStatusChange, onPushTo
         </div>
       </div>
 
-      <div className="flex w-full shrink-0 items-center gap-2 rounded-[20px] bg-page p-2.5">
-        <label className="relative flex h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-line-strong bg-card pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-blue/40">
+      <div className="flex w-full shrink-0 flex-wrap items-center gap-2 rounded-[20px] bg-page p-2.5">
+        <label className="relative flex h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-line-strong bg-card pr-2.5 pl-3 focus-within:ring-2 focus-within:ring-blue/40 mobile:h-11">
           <span className="type-body whitespace-nowrap text-ink">{item.status}</span>
           <Icon name="fixfirst/chevron-down" className="size-3.5" />
           <select
             aria-label="Status"
             value={item.status}
             onChange={(e) => onStatusChange(item.cveId, e.target.value)}
-            className="absolute inset-0 cursor-pointer opacity-0"
+            className="absolute inset-0 cursor-pointer opacity-0 mobile:text-base"
           >
             <option>To do</option>
             <option>In progress</option>
@@ -234,9 +234,10 @@ export function WhyPanel({ item, items, error, onClose, onStatusChange, onPushTo
             href={item.ticketUrl ?? undefined}
             target="_blank"
             rel="noreferrer"
-            className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-primary-strong pr-4 pl-[18px]"
+            className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-primary-strong pr-4 pl-[18px] mobile:h-11"
           >
             <span className="type-body font-semibold whitespace-nowrap text-white">In Linear · {item.ticket}</span>
+            <span className="sr-only"> (opens in a new tab)</span>
           </a>
         ) : (
           <LinearButton key={item.cveId} onPush={() => onPushToLinear(item.cveId)} />

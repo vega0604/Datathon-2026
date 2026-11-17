@@ -22,9 +22,10 @@ export const chartText = {
 /** Shrinks its child plot to fit both the available width and height. */
 export function PlotFrame({ children, minH = 'min-h-[240px]' }) {
   // min-h keeps labels legible on short screens. Summary passes a smaller one: its
-  // grid shrinks as a whole (useFitHeight) instead of scrolling.
+  // grid shrinks as a whole (useFitHeight) instead of scrolling. On mobile the page
+  // scrolls, so the frame gets its own height (about a square, capped) to size the plot.
   return (
-    <div className={`flex w-full flex-1 items-center justify-center [container-type:size] ${minH}`}>{children}</div>
+    <div className={`flex w-full flex-1 items-center justify-center [container-type:size] ${minH} mobile:h-[min(88vw,420px)] mobile:flex-none`}>{children}</div>
   )
 }
 

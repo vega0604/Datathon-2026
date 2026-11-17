@@ -7,8 +7,10 @@ import { insightsNav } from '../data/ui'
 // sub-nav; Your software shows the uploaded SBOM and the last-upload card.
 // Below 1200px wide (`narrow:`) it collapses to an icon rail: labels stay in the
 // page for screen readers (sr-only) and show as tooltips.
+// On mobile the same sidebar opens inside the slide-out menu (variant="drawer"),
+// always with full labels.
 
-const ROW = 'flex h-[38px] w-full shrink-0 items-center gap-2 rounded-xl px-2.5 py-[9px] text-left wide:gap-2.5 short:h-[34px] short:py-1.5 narrow:justify-center narrow:px-0'
+const ROW = 'flex h-[38px] w-full shrink-0 items-center gap-2 rounded-xl px-2.5 py-[9px] text-left wide:gap-2.5 short:h-[34px] short:py-1.5 narrow:justify-center narrow:px-0 mobile:h-11'
 
 function CurrentBar() {
   return <span className="h-5 w-[3px] shrink-0 rounded-[2px] bg-blue narrow:hidden" />
@@ -40,7 +42,7 @@ function InsightsSubNav({ section, onSectionChange }) {
             aria-current={current ? 'page' : undefined}
             onClick={() => onSectionChange(item.id)}
             title={item.label}
-            className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-2 py-1.5 text-left short:py-1 narrow:justify-center narrow:px-0 ${
+            className={`flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-2 py-1.5 text-left short:py-1 narrow:justify-center narrow:px-0 mobile:py-2 ${
               current ? 'bg-blue-soft' : 'hover:bg-page'
             }`}
           >
@@ -83,7 +85,7 @@ function SoftwareNav({ library = [], loading, error, currentId, uploading, onSel
                 aria-current={current ? 'page' : undefined}
                 onClick={() => onSelect(s.id)}
                 title={`${s.name} · ${s.componentCount} components`}
-                className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-[7px] pl-2.5 text-left short:py-1 narrow:justify-center narrow:pl-0"
+                className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-[7px] pl-2.5 text-left short:py-1 narrow:justify-center narrow:pl-0 mobile:py-2.5"
               >
                 <Icon name="software/dot-blue" className="size-2" />
                 <span className={`type-body-compact min-w-px flex-1 text-ink narrow:sr-only ${current ? 'font-semibold' : ''}`}>{s.name}</span>
@@ -94,9 +96,9 @@ function SoftwareNav({ library = [], loading, error, currentId, uploading, onSel
                 onClick={() => onRemove(s.id)}
                 aria-label={`Remove ${s.name}`}
                 title="Remove from this list"
-                className="mr-1 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-subtle hover:text-ink focus-visible:opacity-100 narrow:hidden"
+                className="mr-1 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-subtle hover:text-ink focus-visible:opacity-100 narrow:hidden touch:opacity-100 mobile:size-10 mobile:opacity-100"
               >
-                ×
+                <span aria-hidden="true">×</span>
               </button>
             </div>
           )
@@ -125,16 +127,21 @@ function LastUploadCard({ library = [], uploading }) {
   )
 }
 
-export function Sidebar({ current, section, onSectionChange, onOpenFixFirst, onOpenInsights, onUpload, software, totals }) {
+const NAV = {
+  rail: 'h-full w-[200px] rounded-3xl px-3 py-4 shadow-float wide:w-[220px] wide:px-4 wide:py-5 short:py-3 narrow:w-[68px] narrow:px-2.5',
+  drawer: 'h-full w-full px-4 py-4',
+}
+
+export function Sidebar({ current, section, onSectionChange, onOpenFixFirst, onOpenInsights, onUpload, software, totals, variant = 'rail' }) {
   const onFixFirst = current === 'fixFirst'
   const onInsights = current === 'insights'
   return (
-    <nav aria-label="Main" className="flex h-full w-[200px] shrink-0 flex-col gap-1 overflow-y-auto rounded-3xl bg-card px-3 py-4 shadow-float wide:w-[220px] wide:px-4 wide:py-5 short:py-3 narrow:w-[68px] narrow:px-2.5">
+    <nav aria-label="Main" className={`flex shrink-0 flex-col gap-1 overflow-y-auto bg-card ${NAV[variant]}`}>
       <button
         type="button"
         onClick={onUpload}
         title="Upload SBOM"
-        className="flex h-[42px] w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full bg-blue px-5 hover:bg-primary-strong short:h-[38px] narrow:px-0"
+        className="flex h-[42px] w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full bg-blue px-5 hover:bg-primary-strong short:h-[38px] narrow:px-0 mobile:h-11"
       >
         <Icon name="fixfirst/icon-plus" className="size-4" />
         <span className="text-sm leading-5 font-semibold whitespace-nowrap text-white narrow:sr-only">Upload SBOM</span>

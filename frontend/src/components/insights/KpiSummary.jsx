@@ -4,7 +4,7 @@ import { Icon } from '../../lib/Icon'
 // shown as two cards side by side under the Severity chart.
 function KpiCard({ kpi }) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 rounded-[28px] bg-card p-5 shadow-float short:gap-1.5 short:p-4">
+    <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 rounded-[28px] bg-card p-5 shadow-float short:gap-1.5 short:p-4 max-sm:rounded-3xl max-sm:p-4">
       <div className="flex items-center gap-2.5">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-soft">
           <Icon name={kpi.icon} className="size-[18px]" />

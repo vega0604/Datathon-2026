@@ -48,12 +48,12 @@ function SegmentedGauge({ pct }) {
 // the right. Kept short so the weakness chart below it has room for readable labels.
 export function CoverageCard({ coverage }) {
   return (
-    <section className="flex w-full min-w-0 shrink-0 items-center gap-6 rounded-[28px] bg-card p-6 shadow-float short:p-5">
+    <section className="flex w-full min-w-0 shrink-0 items-center gap-6 rounded-[28px] bg-card p-6 shadow-float short:p-5 max-sm:flex-col max-sm:items-stretch max-sm:gap-3 max-sm:rounded-3xl max-sm:p-4">
       {/* Gauge height follows the window height so it stays large on big screens. */}
-      <div className="flex h-[clamp(120px,17vh,200px)] w-[30%] shrink-0 items-center justify-center">
+      <div className="flex h-[clamp(120px,17vh,200px)] w-[30%] shrink-0 items-center justify-center mobile:h-[170px] max-sm:order-2 max-sm:w-full">
         <SegmentedGauge pct={coverage.caughtPct} />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+      <div className="contents min-w-0 flex-1 flex-col gap-2.5 sm:flex">
         <div className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <div className="flex items-center gap-2.5">
             <Icon name="insights/card-target" className="size-5" />
@@ -70,9 +70,9 @@ export function CoverageCard({ coverage }) {
             </span>
           </div>
         </div>
-        <p className="text-base leading-6 text-ink">of exploited CVEs caught by fixing our top {coverage.topN ?? 500}</p>
+        <p className="text-base leading-6 text-ink max-sm:order-3 max-sm:text-center">of exploited CVEs caught by fixing our top {coverage.topN ?? 500}</p>
         {coverage.footer && (
-          <div className="flex items-center gap-3 border-t border-line pt-2.5">
+          <div className="flex items-center gap-3 border-t border-line pt-2.5 max-sm:order-4">
             {coverage.footerPill && (
               <span className="type-label shrink-0 rounded-full bg-blue px-2.5 py-1 font-semibold whitespace-nowrap text-white">
                 {coverage.footerPill}

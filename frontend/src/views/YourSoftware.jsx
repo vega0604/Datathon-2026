@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AppHeader } from '../components/insights/AppHeader'
-import { Sidebar } from '../components/Sidebar'
+import { AppShell } from '../components/AppShell'
 import { Icon } from '../lib/Icon'
-import { IconDarkContext } from '../lib/iconTheme'
 import { DEMO_FILE, DEMO_URL, MAX_BYTES, previewSbom, rankComponents, summarize, toCsv, worstSeverity } from '../lib/sbom'
 import { uploadSbom, useSbom } from '../lib/api'
 import { useApi } from '../lib/useApi'
@@ -16,7 +14,6 @@ import { BlueCard, FactRow, FitMain, FoundBy, PageTitle, SevMix, SevPill, SidePa
 const fmtDate = (d) => new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
 export function YourSoftware({ onHome, sbomId, library = [], onUploaded, onSelect, onRemove, screen, onScreen, onOpenFixFirst, onOpenInsights, software, totals, theme = 'light', onThemeChange }) {
-  const dark = theme === 'dark'
   const [job, setJob] = useState(null) // the upload in progress
   const [error, setError] = useState(null)
   // The selected SBOM with every component and its risk (cached per SBOM).
@@ -80,22 +77,21 @@ export function YourSoftware({ onHome, sbomId, library = [], onUploaded, onSelec
   else content = <Overview sbom={sbom} onScreen={onScreen} onOpen={open} onOpenFixFirst={onOpenFixFirst} />
 
   return (
-    <IconDarkContext.Provider value={dark}>
-      <div className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[560px] min-w-[1024px] flex-col bg-page font-sans`}>
-        <AppHeader iconDir="fixfirst" theme={theme} onThemeChange={onThemeChange} onHome={onHome} />
-        <div className="flex min-h-0 w-full flex-1 items-start gap-4 overflow-hidden p-4 wide:gap-5 wide:p-5 compact:py-3">
-          <Sidebar
-            current="software"
-            onOpenFixFirst={onOpenFixFirst}
-            onOpenInsights={onOpenInsights}
-            onUpload={() => onScreen({ name: 'empty' })}
-            totals={totals}
-            software={{ ...software, library, currentId: sbomId, uploading: job?.sbom, onSelect, onRemove }}
-          />
-          {content}
-        </div>
-      </div>
-    </IconDarkContext.Provider>
+    <AppShell
+      theme={theme}
+      onThemeChange={onThemeChange}
+      onHome={onHome}
+      sidebar={{
+        current: 'software',
+        onOpenFixFirst,
+        onOpenInsights,
+        onUpload: () => onScreen({ name: 'empty' }),
+        totals,
+        software: { ...software, library, currentId: sbomId, uploading: job?.sbom, onSelect, onRemove },
+      }}
+    >
+      {content}
+    </AppShell>
   )
 }
 
@@ -139,21 +135,21 @@ function Empty({ onFile, onDemo, error }) {
             onDragOver={(e) => (e.preventDefault(), setDragging(true))}
             onDragLeave={() => setDragging(false)}
             onDrop={(e) => (e.preventDefault(), setDragging(false), onFile(e.dataTransfer.files[0]))}
-            className={`flex w-full max-w-[640px] flex-col items-center gap-4 rounded-[28px] border-2 border-dashed border-blue px-12 pt-12 pb-10 compact:gap-3 compact:pt-8 compact:pb-7 ${dragging ? 'bg-blue-soft' : 'bg-card'}`}
+            className={`flex w-full max-w-[640px] flex-col items-center gap-4 rounded-[28px] border-2 border-dashed border-blue px-12 pt-12 pb-10 mobile:text-center compact:gap-3 compact:pt-8 compact:pb-7 max-sm:rounded-3xl max-sm:px-5 max-sm:pt-8 max-sm:pb-7 ${dragging ? 'bg-blue-soft' : 'bg-card'}`}
           >
             <span className="flex size-[72px] items-center justify-center rounded-full bg-blue compact:size-14">
               <Icon name="software/upload-white" className="size-[30px]" />
             </span>
-            <p className="text-[28px] font-light text-ink">Choose your SBOM file</p>
+            <p className="text-[28px] font-light text-ink max-sm:text-2xl">Choose your SBOM file</p>
             <p className="text-[15px] text-ink-muted">CycloneDX, as .json or .xml, up to 10 MB</p>
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
               <button type="button" onClick={pick} className="cursor-pointer rounded-full bg-blue px-[26px] py-3.5 text-base font-semibold text-white hover:bg-primary-strong">
                 Choose a file
               </button>
               <button type="button" onClick={onDemo} className="cursor-pointer rounded-full border border-line-strong bg-card px-6 py-3.5 text-base font-medium text-blue-ink hover:bg-blue-soft">
                 Try the demo file
               </button>
-              <input ref={input} type="file" accept=".json,.xml,application/json,text/xml" className="hidden" onChange={(e) => onFile(e.target.files[0])} />
+              <input ref={input} type="file" accept=".json,.xml,application/json,text/xml" className="hidden" tabIndex={-1} aria-hidden="true" onChange={(e) => onFile(e.target.files[0])} />
             </div>
             {error ? (
               <p role="alert" className="text-[13px] font-medium text-sev-critical">{error}</p>
@@ -163,21 +159,21 @@ function Empty({ onFile, onDemo, error }) {
               </p>
             )}
           </div>
-          <div className="flex gap-4">
+          <ol className="flex gap-4 mobile:flex-wrap mobile:justify-center max-sm:w-full max-sm:flex-col max-sm:gap-2.5">
             {[
               ['1', 'Upload', 'We list every component', 'bg-blue-soft', 'text-blue-ink'],
               ['2', 'Match', 'We find known CVEs for each', 'bg-purple-soft', 'text-purple-ink'],
               ['3', 'Fix', 'We tell you what to fix first', 'bg-green-soft', 'text-ink'],
             ].map(([n, t, d, bg, ink]) => (
-              <div key={n} className={`flex w-[202px] flex-col gap-1.5 rounded-[20px] px-5 py-[18px] ${bg}`}>
+              <li key={n} className={`flex w-[202px] flex-col gap-1.5 rounded-[20px] px-5 py-[18px] max-sm:w-full ${bg}`}>
                 <div className="flex items-center gap-2">
-                  <span className={`flex size-[26px] items-center justify-center rounded-full bg-card text-[13px] font-semibold ${ink}`}>{n}</span>
+                  <span aria-hidden="true" className={`flex size-[26px] items-center justify-center rounded-full bg-card text-[13px] font-semibold ${ink}`}>{n}</span>
                   <span className={`text-base font-semibold ${ink}`}>{t}</span>
                 </div>
                 <p className="text-[13px] leading-[18px] text-ink-muted">{d}</p>
-              </div>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       </FitMain>
     </>
@@ -227,20 +223,20 @@ function Uploading({ job, onDone, onFail, onCancel }) {
       <FitMain className="gap-5">
         <PageTitle title="Uploading" subtitle="This takes a few seconds. You can leave this page." />
         <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-          <div className="relative w-full max-w-[620px] overflow-hidden rounded-[28px] bg-card shadow-float" role="status" aria-live="polite">
+          <div className="relative w-full max-w-[620px] overflow-hidden rounded-[28px] bg-card shadow-float max-sm:rounded-3xl" role="status" aria-live="polite">
             <div className="relative h-[170px] overflow-hidden bg-blue">
               <Icon name="software/band-ring-1" className="absolute top-[-120px] left-[430px] size-[280px]" />
               <Icon name="software/band-ring-2" className="absolute top-[60px] left-[500px] size-[200px]" />
               <Icon name="software/band-ring-3" className="absolute top-[70px] left-[-70px] size-[180px]" />
-              <span className="absolute top-6 left-7 flex items-center gap-2 rounded-full border border-white py-1.5 pr-3.5 pl-2.5">
+              <span className="absolute top-6 left-7 flex max-w-[calc(100%-3.5rem)] items-center gap-2 rounded-full border border-white py-1.5 pr-3.5 pl-2.5 max-sm:left-5 max-sm:max-w-[calc(100%-2.5rem)]">
                 <Icon name="software/upload-chip" className="size-4" />
-                <span className="text-[13px] text-white">
+                <span className="truncate text-[13px] text-white">
                   {job.sbom.fileName} · {job.sbom.sizeKB} KB
                 </span>
               </span>
-              <p className="absolute top-[68px] left-6 text-[72px] leading-[76px] font-light text-white">{pct}%</p>
+              <p className="absolute top-[68px] left-6 text-[72px] leading-[76px] font-light text-white max-sm:left-4 max-sm:text-[60px]">{pct}%</p>
             </div>
-            <div className="flex flex-col gap-3.5 px-7 pt-6 pb-6">
+            <div className="flex flex-col gap-3.5 px-7 pt-6 pb-6 max-sm:px-4">
               <div className="flex gap-1" aria-hidden="true">
                 {job.sbom.components.map((c, i) => (
                   <span key={c.id} className={`h-3 min-w-0 flex-1 rounded-[3px] ${i < step ? 'bg-blue' : 'bg-track'}`} />
@@ -256,8 +252,8 @@ function Uploading({ job, onDone, onFail, onCancel }) {
                   Next: matching {noCpe.length} component{noCpe.length === 1 ? '' : 's'} with no CPE name by name and CVE text
                 </Step>
               )}
-              <div className="flex items-center justify-between pt-3">
-                <button type="button" onClick={onCancel} className="flex cursor-pointer items-center gap-1.5 text-sm font-medium text-blue-ink hover:underline">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3">
+                <button type="button" onClick={onCancel} className="flex mobile:min-h-11 cursor-pointer items-center gap-1.5 text-sm font-medium text-blue-ink hover:underline">
                   <Icon name="software/close-blue" className="size-3.5" />
                   Cancel
                 </button>
@@ -285,7 +281,7 @@ function Step({ state, children }) {
   return (
     <div className="flex items-center gap-3">
       {icon}
-      <p className={`text-[15px] ${state === 'active' ? 'font-semibold text-ink' : state === 'next' ? 'text-ink-muted' : 'text-ink'}`}>{children}</p>
+      <p className={`min-w-0 text-[15px] ${state === 'active' ? 'font-semibold text-ink' : state === 'next' ? 'text-ink-muted' : 'text-ink'}`}>{children}</p>
     </div>
   )
 }
@@ -295,8 +291,8 @@ function SoftwareHeader({ sbom, tab, onScreen }) {
   return (
     <>
       <PageTitle title="Your software" subtitle={`${sbom.components.length} components from ${sbom.fileName} · uploaded ${fmtDate(sbom.uploadedAt)}`}>
-        <span className="mt-0.5 flex items-center gap-2 rounded-full bg-card px-3 py-1.5">
-          <Icon name="software/dot-blue" className="size-2" />
+        <span className="mt-0.5 flex items-center gap-2 rounded-full bg-card px-3 py-1.5 max-sm:items-start max-sm:rounded-2xl">
+          <Icon name="software/dot-blue" className="size-2 max-sm:mt-1" />
           <span className="text-xs text-ink-muted">
             Components are from your file. CVEs from NIST NVD and CISA KEV, checked {fmtDate(sbom.riskChecked)}.
           </span>
@@ -316,36 +312,39 @@ function Overview({ sbom, onScreen, onOpen, onOpenFixFirst }) {
     <>
       <FitMain className="gap-5 compact:gap-3">
         <SoftwareHeader sbom={sbom} tab="overview" onScreen={onScreen} />
-        <section className="flex min-h-0 w-full flex-1 flex-col items-start rounded-[20px] bg-card px-6 pt-[22px] pb-[18px]">
+        <section className="flex min-h-0 w-full flex-1 flex-col items-start rounded-[20px] bg-card px-6 pt-[22px] pb-[18px] mobile:flex-none max-sm:px-4">
           <h2 className="text-xl leading-7 text-ink">Known vulnerabilities by component</h2>
           <p className="pt-1.5 pb-3 text-[13px] text-ink-muted">
             Longer bar = more CVEs (log scale). The pill on each row shows the worst one. Click a name for details.
           </p>
           {/* Rows keep their design height (44px); on short screens this list scrolls instead of squashing them. */}
-          <div data-fit-scroll className="relative flex min-h-0 w-full flex-1 flex-col overflow-y-auto">
+          <div data-fit-scroll className="relative flex min-h-0 w-full flex-1 flex-col overflow-y-auto mobile:flex-none mobile:overflow-visible">
             {byCount.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => onOpen(c)}
-                className="flex h-11 w-full shrink-0 cursor-pointer items-center gap-3.5 border-b border-line text-left hover:bg-page"
+                className="flex h-11 w-full shrink-0 cursor-pointer items-center gap-3.5 border-b border-line text-left hover:bg-page max-sm:h-auto max-sm:min-h-14 max-sm:flex-wrap max-sm:gap-x-3 max-sm:gap-y-1.5 max-sm:py-2"
               >
-                <span className="flex w-44 shrink-0 flex-col">
+                <span className="flex w-44 shrink-0 flex-col max-sm:w-auto max-sm:min-w-0 max-sm:flex-1">
                   <span className="truncate text-sm font-semibold text-ink">{c.name}</span>
                   <span className="truncate text-xs text-ink-muted">
                     {c.vendor} · {c.version}
                   </span>
                 </span>
-                <span className="relative h-3.5 w-[300px] min-w-0 shrink overflow-hidden rounded-[7px] bg-track">
+                <span className="relative h-3.5 w-[300px] min-w-0 shrink overflow-hidden rounded-[7px] bg-track max-sm:order-last max-sm:w-full max-sm:basis-full">
                   <span className={`absolute inset-y-0 left-0 rounded-[7px] ${sevBar(worstSeverity(c.risk))}`} style={{ width: scale(c.risk.cveCount) }} />
                 </span>
-                <span className="w-14 shrink-0 text-right text-lg font-semibold text-ink">{c.risk.cveCount.toLocaleString()}</span>
-                <span className="min-w-px flex-1" />
+                <span className="w-14 shrink-0 text-right text-lg font-semibold text-ink max-sm:w-auto">
+                  {c.risk.cveCount.toLocaleString()}
+                  <span className="sr-only"> CVEs</span>
+                </span>
+                <span className="min-w-px flex-1 max-sm:hidden" />
                 <SevPill severity={worstSeverity(c.risk)} />
               </button>
             ))}
           </div>
-          <button type="button" onClick={() => onScreen({ name: 'all' })} className="flex shrink-0 cursor-pointer items-center gap-1.5 self-start pt-2.5 text-sm font-medium text-blue-ink hover:underline">
+          <button type="button" onClick={() => onScreen({ name: 'all' })} className="flex mobile:min-h-11 shrink-0 cursor-pointer items-center gap-1.5 self-start pt-2.5 text-sm font-medium text-blue-ink hover:underline">
             See all {s.total} components
             <Icon name="software/chevron-right-blue" className="size-3.5" />
           </button>
@@ -396,7 +395,8 @@ function Overview({ sbom, onScreen, onOpen, onOpenFixFirst }) {
 
 /* ── All components ────────────────────────────────────────────────────── */
 // One column template for the header and every row, so they always line up.
-const ALL_COLS = 'grid grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,0.8fr)_132px_56px_112px] items-center gap-x-3 narrow:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,0.8fr)_56px_112px]'
+// Mobile: Component (with vendor · version under it), CVEs and worst severity only.
+const ALL_COLS = 'grid grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,0.8fr)_132px_56px_112px] items-center gap-x-3 narrow:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,0.8fr)_56px_112px] mobile:grid-cols-[minmax(0,1fr)_56px_auto]'
 
 function AllComponents({ sbom, ranked, onScreen, onOpen }) {
   const s = summarize(sbom)
@@ -412,31 +412,39 @@ function AllComponents({ sbom, ranked, onScreen, onOpen }) {
     <>
       <FitMain className="gap-5 compact:gap-3">
         <SoftwareHeader sbom={sbom} tab="all" onScreen={onScreen} />
-        <section className="flex min-h-0 w-full flex-1 flex-col rounded-[20px] bg-card px-6 pt-2 pb-3" aria-label="All components">
+        <section className="flex min-h-0 w-full flex-1 flex-col rounded-[20px] bg-card px-6 pt-2 pb-3 mobile:flex-none max-sm:px-4" aria-label="All components">
           <div className={`${ALL_COLS} h-11 w-full shrink-0 border-b border-line text-sm font-medium text-ink-muted`}>
             <span>Component</span>
-            <span>Vendor</span>
-            <span>Version</span>
-            <span className="narrow:hidden">Found by</span>
+            <span className="mobile:hidden">Vendor</span>
+            <span className="mobile:hidden">Version</span>
+            <span className="narrow:hidden mobile:hidden">Found by</span>
             <span className="text-right">CVEs</span>
             <span>Worst severity</span>
           </div>
           {/* Rows keep a comfortable height; the list scrolls rather than shrinking the text. */}
-          <div data-fit-scroll className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <div data-fit-scroll className="flex min-h-0 flex-1 flex-col overflow-y-auto mobile:flex-none mobile:overflow-visible">
             {rows.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => onOpen(c)}
-                className={`${ALL_COLS} h-[52px] w-full shrink-0 cursor-pointer border-b border-line text-left hover:bg-page`}
+                className={`${ALL_COLS} h-[52px] w-full shrink-0 cursor-pointer border-b border-line text-left hover:bg-page mobile:h-auto mobile:min-h-14 mobile:py-2`}
               >
-                <span className="truncate text-base font-medium text-ink" title={c.name}>{c.name}</span>
-                <span className="truncate text-[15px] text-ink-muted" title={c.vendor ?? undefined}>{c.vendor ?? '—'}</span>
-                <span className="truncate font-mono text-sm text-ink" title={c.version}>{c.version}</span>
-                <span className="min-w-0 narrow:hidden [&_span]:text-[13px]">
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate text-base font-medium text-ink" title={c.name}>{c.name}</span>
+                  <span className="hidden truncate text-[13px] text-ink-muted mobile:block">
+                    {c.vendor ?? '—'} · <span className="font-mono">{c.version}</span>
+                  </span>
+                </span>
+                <span className="truncate text-[15px] text-ink-muted mobile:hidden" title={c.vendor ?? undefined}>{c.vendor ?? '—'}</span>
+                <span className="truncate font-mono text-sm text-ink mobile:hidden" title={c.version}>{c.version}</span>
+                <span className="min-w-0 narrow:hidden mobile:hidden [&_span]:text-[13px]">
                   <FoundBy component={c} />
                 </span>
-                <span className={`text-right text-base font-semibold ${c.risk?.cveCount ? 'text-ink' : 'text-ink-muted'}`}>{c.risk ? c.risk.cveCount.toLocaleString() : '—'}</span>
+                <span className={`text-right text-base font-semibold ${c.risk?.cveCount ? 'text-ink' : 'text-ink-muted'}`}>
+                  {c.risk ? c.risk.cveCount.toLocaleString() : '—'}
+                  <span className="sr-only"> CVEs</span>
+                </span>
                 <span className="min-w-0 [&_span]:text-[13px]">
                   <SevPill severity={worstSeverity(c.risk)} />
                 </span>
@@ -486,7 +494,7 @@ function matchSteps(c, methods) {
   if (methods.includes('cpe'))
     steps.push(
       <>
-        Your SBOM names it with a CPE <code className="rounded-md bg-card px-2 py-0.5 font-mono text-xs text-ink">{c.cpe.split(':').slice(0, 6).join(':')}</code>, and NIST lists it in the CVE records
+        Your SBOM names it with a CPE <code className="rounded-md bg-card px-2 py-0.5 font-mono text-xs [overflow-wrap:anywhere] text-ink">{c.cpe.split(':').slice(0, 6).join(':')}</code>, and NIST lists it in the CVE records
       </>,
     )
   else if (!c.cpe) steps.push('Your SBOM has no CPE name for it')
@@ -511,12 +519,12 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
   return (
     <>
       <FitMain className="gap-4 compact:gap-3">
-        <button type="button" onClick={() => onScreen({ name: 'all' })} className="flex shrink-0 cursor-pointer items-center gap-1.5 self-start rounded-full border border-line bg-card py-2 pr-3.5 pl-2.5 font-medium text-blue-ink hover:bg-blue-soft">
-          <span className="text-sm">←</span>
+        <button type="button" onClick={() => onScreen({ name: 'all' })} className="flex shrink-0 cursor-pointer items-center gap-1.5 self-start rounded-full border border-line bg-card py-2 pr-3.5 pl-2.5 font-medium text-blue-ink hover:bg-blue-soft mobile:min-h-11">
+          <span className="text-sm" aria-hidden="true">←</span>
           <span className="text-[13px]">All components</span>
         </button>
         <PageTitle title={`${c.name} ${c.version}`} subtitle={[c.vendor, c.part].filter(Boolean).join(' · ')} />
-        <div className="flex w-full shrink-0 gap-4">
+        <div className="flex w-full shrink-0 gap-4 max-sm:flex-col max-sm:gap-3">
           <div className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-[20px] bg-card px-5 py-[18px]">
             <p className="text-[13px] text-ink-muted">Known CVEs</p>
             <p className="text-[40px] leading-tight font-light text-ink">{r ? r.cveCount.toLocaleString() : '—'}</p>
@@ -536,8 +544,8 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
             <p className="text-xs text-ink">On CISA’s exploited list (KEV)</p>
           </div>
         </div>
-        <div className="flex w-full shrink-0 flex-col gap-3 rounded-[20px] bg-blue-soft px-6 py-5 compact:gap-2 compact:py-4">
-          <div className="flex items-center gap-2.5">
+        <div className="flex w-full shrink-0 flex-col gap-3 rounded-[20px] bg-blue-soft px-6 py-5 compact:gap-2 compact:py-4 max-sm:px-4">
+          <div className="flex flex-wrap items-center gap-2.5">
             <p className="text-lg font-medium text-blue-ink">How it matched</p>
             <FoundBy component={c} />
           </div>
@@ -548,9 +556,9 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
           ))}
         </div>
         {r?.cveCount > 0 && (
-          <section className="flex w-full flex-1 flex-col rounded-[20px] bg-card px-6 pt-[18px] pb-3.5">
+          <section className="flex w-full flex-1 flex-col rounded-[20px] bg-card px-6 pt-[18px] pb-3.5 mobile:flex-none max-sm:px-4">
             <h2 className="text-lg font-medium text-ink">Top known vulnerabilities</h2>
-            <div className="flex w-full shrink-0 items-center gap-4 border-b border-line pt-3.5 pb-2 text-xs font-medium text-ink-muted">
+            <div className="flex w-full shrink-0 items-center gap-4 border-b border-line pt-3.5 pb-2 text-xs font-medium text-ink-muted max-sm:hidden">
               <span className="w-[140px] shrink-0">CVE</span>
               <span className="min-w-0 flex-1">What it is</span>
               <span className="w-[50px] shrink-0 text-right">CVSS</span>
@@ -558,13 +566,17 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
               <span className="w-[100px] shrink-0">Severity</span>
             </div>
             {r.top.map((v) => (
-              <div key={v.id} className="flex w-full items-center gap-4 border-b border-line py-2.5">
-                <a href={`https://nvd.nist.gov/vuln/detail/${v.id}`} target="_blank" rel="noreferrer" className="w-[140px] shrink-0 font-mono text-sm text-ink hover:underline">
+              <div key={v.id} className="flex w-full items-center gap-4 border-b border-line py-2.5 max-sm:flex-wrap max-sm:gap-x-3 max-sm:gap-y-1.5 max-sm:py-3">
+                <a href={`https://nvd.nist.gov/vuln/detail/${v.id}`} target="_blank" rel="noreferrer" className="w-[140px] shrink-0 font-mono text-sm text-ink hover:underline max-sm:w-auto max-sm:py-1">
                   {v.id}
+                  <span className="sr-only"> on NVD (opens in a new tab)</span>
                 </a>
-                <span className="line-clamp-2 min-w-0 flex-1 text-sm text-ink-muted">{v.kev?.name ?? v.summary}</span>
-                <span className="w-[50px] shrink-0 text-right text-sm font-semibold text-ink">{v.cvss ?? '—'}</span>
-                <span className="w-[150px] shrink-0">
+                <span className="line-clamp-2 min-w-0 flex-1 text-sm text-ink-muted max-sm:order-last max-sm:basis-full">{v.kev?.name ?? v.summary}</span>
+                <span className="w-[50px] shrink-0 text-right text-sm font-semibold text-ink max-sm:w-auto">
+                  <span className="hidden font-normal text-ink-muted max-sm:inline">CVSS </span>
+                  {v.cvss ?? '—'}
+                </span>
+                <span className="w-[150px] shrink-0 max-sm:w-auto">
                   {v.kev ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-critical-soft py-0.5 pr-2.5 pl-2">
                       <Icon name="software/bell-red" className="size-3" />
@@ -574,20 +586,21 @@ function ComponentDetail({ sbom, ranked, id, onScreen, onOpenFixFirst }) {
                     <span className="text-xs text-ink-muted">Not on KEV</span>
                   )}
                 </span>
-                <span className="w-[100px] shrink-0">
+                <span className="w-[100px] shrink-0 max-sm:w-auto">
                   <SevPill severity={v.severity} />
                 </span>
               </div>
             ))}
             {r.cveCount > r.top.length && (
-              <div className="mt-3 flex shrink-0 items-center gap-3 rounded-xl bg-subtle px-4 py-3">
+              <div className="mt-3 flex shrink-0 items-center gap-3 rounded-xl bg-subtle px-4 py-3 max-sm:flex-wrap max-sm:gap-2">
                 <span className="text-sm font-medium whitespace-nowrap text-ink">The other {(r.cveCount - r.top.length).toLocaleString()}</span>
                 <SevMix sev={rest} width={240} />
-                <span className="truncate text-[13px] text-ink-muted">{sevText(rest)}</span>
+                <span className="truncate text-[13px] text-ink-muted max-sm:whitespace-normal">{sevText(rest)}</span>
               </div>
             )}
             <a href={nvdLink} target="_blank" rel="noreferrer" className="shrink-0 self-start pt-3.5 text-sm font-medium text-blue-ink hover:underline">
-              See all {r.cveCount.toLocaleString()} CVEs on NVD ↗
+              See all {r.cveCount.toLocaleString()} CVEs on NVD <span aria-hidden="true">↗</span>
+              <span className="sr-only"> (opens in a new tab)</span>
             </a>
           </section>
         )}
@@ -701,8 +714,11 @@ function AskWhy({ ranked, focusId, onScreen, onOpenFixFirst }) {
   const [extra, setExtra] = useState([])
   const [draft, setDraft] = useState('')
   const listRef = useRef(null)
+  // Brings the newest answer into view: inside the list on desktop, in the page on mobile.
   useEffect(() => {
-    if (extra.length) listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
+    if (!extra.length) return
+    const smooth = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    listRef.current?.lastElementChild?.scrollIntoView({ block: 'nearest', behavior: smooth ? 'smooth' : 'auto' })
   }, [extra])
 
   const answer = (q) => {
@@ -727,17 +743,17 @@ function AskWhy({ ranked, focusId, onScreen, onOpenFixFirst }) {
 
   return (
     <>
-      <main className="flex h-full min-w-0 flex-1 flex-col gap-4 pt-2">
-        <div className="flex shrink-0 items-start justify-between gap-4">
+      <main className="flex h-full min-w-0 flex-1 flex-col gap-4 pt-2 mobile:h-auto mobile:flex-none mobile:pt-0">
+        <div className="flex shrink-0 items-start justify-between gap-4 max-sm:flex-col max-sm:gap-3">
           <div className="min-w-0 flex-1">
             <PageTitle title="Ask why" subtitle="Ask why anything is ranked where it is. Answers use only the facts shown." />
           </div>
-          <button type="button" onClick={onOpenFixFirst} className="shrink-0 cursor-pointer rounded-full border border-line bg-card px-4 py-2.5 text-sm font-medium text-ink hover:bg-page">
+          <button type="button" onClick={onOpenFixFirst} className="mobile:min-h-11 shrink-0 cursor-pointer rounded-full border border-line bg-card px-4 py-2.5 text-sm font-medium text-ink hover:bg-page">
             Back to Fix first
           </button>
         </div>
-        <section className="flex min-h-0 w-full flex-1 flex-col rounded-[24px] bg-card px-7 pt-6 pb-5">
-          <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
+        <section className="flex min-h-0 w-full flex-1 flex-col rounded-[24px] bg-card px-7 pt-6 pb-5 mobile:flex-none max-sm:px-4 max-sm:pt-5">
+          <div ref={listRef} role="log" aria-live="polite" aria-label="Conversation" className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1 mobile:flex-none mobile:overflow-visible mobile:pr-0">
             <Bubble>
               Why is {a.c.name} ranked above {b.c.name}? Their CVSS scores are {Math.abs(a.cvss - b.cvss) <= 0.5 ? 'almost the same' : `${a.cvss} and ${b.cvss}`}.
             </Bubble>
@@ -745,7 +761,7 @@ function AskWhy({ ranked, focusId, onScreen, onOpenFixFirst }) {
               <p className="text-sm text-ink">
                 Both would be bad if attacked, but {a.c.name} is {a.kev > b.kev || a.epss > b.epss ? 'far more likely to be attacked' : 'ranked higher on the facts we have'}. That’s what we rank on.
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-3 max-sm:flex-col">
                 <CompareCard f={a} strong />
                 <CompareCard f={b} />
               </div>
@@ -778,17 +794,17 @@ function AskWhy({ ranked, focusId, onScreen, onOpenFixFirst }) {
               ),
             )}
           </div>
-          <div className="flex shrink-0 items-center gap-2 pt-4 text-xs text-ink-muted">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 pt-4 text-xs text-ink-muted">
             Try asking
             {['What changed this week?', 'Which software is riskiest?', 'Why is #2 above #3?'].map((q) => (
-              <button key={q} type="button" onClick={() => ask(q)} className="cursor-pointer rounded-full bg-purple-soft px-3 py-1.5 text-ink hover:brightness-95">
+              <button key={q} type="button" onClick={() => ask(q)} className="cursor-pointer rounded-full bg-purple-soft px-3 py-1.5 text-ink hover:brightness-95 mobile:min-h-10 mobile:text-[13px]">
                 {q}
               </button>
             ))}
           </div>
           <form onSubmit={(e) => (e.preventDefault(), ask(draft))} className="mt-3 flex shrink-0 items-center gap-2 rounded-full border border-line-strong py-1.5 pr-1.5 pl-4">
-            <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Ask a question…" aria-label="Ask a question" className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted" />
-            <button type="submit" aria-label="Send" className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-blue hover:bg-primary-strong">
+            <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Ask a question…" aria-label="Ask a question" className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted mobile:text-base" />
+            <button type="submit" aria-label="Send" className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-blue hover:bg-primary-strong mobile:size-10">
               <Icon name="fixfirst/arrow-up-white" className="size-4" />
             </button>
           </form>
@@ -828,7 +844,7 @@ function AskWhy({ ranked, focusId, onScreen, onOpenFixFirst }) {
 }
 
 function Bubble({ children }) {
-  return <p className="max-w-[70%] self-end rounded-[18px] bg-brand px-4 py-2.5 text-sm text-white">{children}</p>
+  return <p className="max-w-[70%] self-end rounded-[18px] bg-brand px-4 py-2.5 text-sm text-white max-sm:max-w-[88%]">{children}</p>
 }
 
 function Answer({ children, note }) {
