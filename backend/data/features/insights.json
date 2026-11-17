@@ -1,0 +1,2340 @@
+{
+  "built_at": "2026-11-08T13:49:12+00:00",
+  "summary": {
+    "coverage": {
+      "top_n": 500,
+      "caught_share": 0.3333,
+      "backtest_year": 2025,
+      "positives": 48
+    },
+    "kpis": {
+      "benchmark_cves": 72670,
+      "nist_unreviewed": 51046,
+      "nist_unreviewed_share_this_year": 0.5536
+    },
+    "versus_public": {
+      "best_public_hits_in_top_n": 8,
+      "best_public_caught_share": 0.2708,
+      "any_cve_exploited_rate": 0.0037
+    },
+    "severity_bands": [
+      {
+        "band": "critical",
+        "cvss_min": 9.0,
+        "cvss_max": 10.0,
+        "kev_share": 0.01158
+      },
+      {
+        "band": "high",
+        "cvss_min": 7.0,
+        "cvss_max": 8.9,
+        "kev_share": 0.00626
+      },
+      {
+        "band": "medium",
+        "cvss_min": 4.0,
+        "cvss_max": 6.9,
+        "kev_share": 0.00119
+      },
+      {
+        "band": "low",
+        "cvss_min": 0.1,
+        "cvss_max": 3.9,
+        "kev_share": 0.00066
+      }
+    ],
+    "weaknesses": {
+      "overall_kev_share": 0.00378,
+      "items": [
+        {
+          "cwe_id": "CWE-79",
+          "name": "Cross-site Scripting",
+          "cve_count": 48261,
+          "kev_count": 27,
+          "kev_share": 0.00056
+        },
+        {
+          "cwe_id": "CWE-89",
+          "name": "SQL Injection",
+          "cve_count": 17564,
+          "kev_count": 22,
+          "kev_share": 0.00125
+        },
+        {
+          "cwe_id": "CWE-119",
+          "name": "Improper Restriction of Operations with…",
+          "cve_count": 14536,
+          "kev_count": 50,
+          "kev_share": 0.00344
+        },
+        {
+          "cwe_id": "CWE-20",
+          "name": "Improper Input Validation",
+          "cve_count": 13139,
+          "kev_count": 63,
+          "kev_share": 0.00479
+        },
+        {
+          "cwe_id": "CWE-200",
+          "name": "Exposure of Sensitive Information to an…",
+          "cve_count": 11674,
+          "kev_count": 14,
+          "kev_share": 0.0012
+        },
+        {
+          "cwe_id": "CWE-787",
+          "name": "Out-of-bounds Write",
+          "cve_count": 10971,
+          "kev_count": 121,
+          "kev_share": 0.01103
+        },
+        {
+          "cwe_id": "CWE-22",
+          "name": "Path Traversal",
+          "cve_count": 10769,
+          "kev_count": 76,
+          "kev_share": 0.00706
+        },
+        {
+          "cwe_id": "CWE-862",
+          "name": "Missing Authorization",
+          "cve_count": 10502,
+          "kev_count": 7,
+          "kev_share": 0.00067
+        },
+        {
+          "cwe_id": "CWE-125",
+          "name": "Out-of-bounds Read",
+          "cve_count": 10303,
+          "kev_count": 16,
+          "kev_share": 0.00155
+        },
+        {
+          "cwe_id": "CWE-352",
+          "name": "Cross-Site Request Forgery (CSRF)",
+          "cve_count": 9723,
+          "kev_count": 4,
+          "kev_share": 0.00041
+        },
+        {
+          "cwe_id": "CWE-416",
+          "name": "Use After Free",
+          "cve_count": 9022,
+          "kev_count": 92,
+          "kev_share": 0.0102
+        },
+        {
+          "cwe_id": "CWE-284",
+          "name": "Improper Access Control",
+          "cve_count": 7925,
+          "kev_count": 29,
+          "kev_share": 0.00366
+        },
+        {
+          "cwe_id": "CWE-78",
+          "name": "OS Command Injection",
+          "cve_count": 5954,
+          "kev_count": 96,
+          "kev_share": 0.01612
+        },
+        {
+          "cwe_id": "CWE-74",
+          "name": "Injection",
+          "cve_count": 5501,
+          "kev_count": 13,
+          "kev_share": 0.00236
+        },
+        {
+          "cwe_id": "CWE-476",
+          "name": "NULL Pointer Dereference",
+          "cve_count": 5489,
+          "kev_count": 0,
+          "kev_share": 0.0
+        }
+      ]
+    },
+    "takeaways": {
+      "severity": "Critical CVEs reach KEV about 10× as often as Medium ones, yet only 1.2% of Critical CVEs ever do.",
+      "weaknesses": "OS Command Injection has the highest KEV rate of the common weakness types: 1.6% of its CVEs.",
+      "coverage": "In the 2025 backtest, our top 500 (scaled) caught 33% of exploited CVEs; exploit code + EPSS caught 27%."
+    }
+  },
+  "catch_rate": {
+    "curves": [
+      {
+        "ranking": "model",
+        "label": "Our model",
+        "points": [
+          {
+            "fixed": 0,
+            "caught_share": 0.0
+          },
+          {
+            "fixed": 100,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 200,
+            "caught_share": 0.2083
+          },
+          {
+            "fixed": 300,
+            "caught_share": 0.2708
+          },
+          {
+            "fixed": 400,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 500,
+            "caught_share": 0.3333
+          },
+          {
+            "fixed": 600,
+            "caught_share": 0.3333
+          },
+          {
+            "fixed": 700,
+            "caught_share": 0.3542
+          },
+          {
+            "fixed": 800,
+            "caught_share": 0.3542
+          },
+          {
+            "fixed": 900,
+            "caught_share": 0.3542
+          },
+          {
+            "fixed": 1000,
+            "caught_share": 0.375
+          },
+          {
+            "fixed": 1100,
+            "caught_share": 0.375
+          },
+          {
+            "fixed": 1200,
+            "caught_share": 0.4167
+          },
+          {
+            "fixed": 1300,
+            "caught_share": 0.4167
+          },
+          {
+            "fixed": 1400,
+            "caught_share": 0.4167
+          },
+          {
+            "fixed": 1500,
+            "caught_share": 0.4167
+          },
+          {
+            "fixed": 1600,
+            "caught_share": 0.4167
+          },
+          {
+            "fixed": 1700,
+            "caught_share": 0.4167
+          },
+          {
+            "fixed": 1800,
+            "caught_share": 0.4167
+          },
+          {
+            "fixed": 1900,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2000,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2100,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2200,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2300,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 2400,
+            "caught_share": 0.5
+          },
+          {
+            "fixed": 2500,
+            "caught_share": 0.5
+          },
+          {
+            "fixed": 2600,
+            "caught_share": 0.5
+          },
+          {
+            "fixed": 2700,
+            "caught_share": 0.5
+          },
+          {
+            "fixed": 2800,
+            "caught_share": 0.5
+          },
+          {
+            "fixed": 2900,
+            "caught_share": 0.5417
+          },
+          {
+            "fixed": 3000,
+            "caught_share": 0.5417
+          },
+          {
+            "fixed": 3100,
+            "caught_share": 0.5417
+          },
+          {
+            "fixed": 3200,
+            "caught_share": 0.5417
+          },
+          {
+            "fixed": 3300,
+            "caught_share": 0.5625
+          },
+          {
+            "fixed": 3400,
+            "caught_share": 0.5625
+          },
+          {
+            "fixed": 3500,
+            "caught_share": 0.5625
+          },
+          {
+            "fixed": 3600,
+            "caught_share": 0.5625
+          },
+          {
+            "fixed": 3700,
+            "caught_share": 0.5625
+          },
+          {
+            "fixed": 3800,
+            "caught_share": 0.5625
+          },
+          {
+            "fixed": 3900,
+            "caught_share": 0.5833
+          },
+          {
+            "fixed": 4000,
+            "caught_share": 0.5833
+          },
+          {
+            "fixed": 4100,
+            "caught_share": 0.5833
+          },
+          {
+            "fixed": 4200,
+            "caught_share": 0.5833
+          },
+          {
+            "fixed": 4300,
+            "caught_share": 0.5833
+          },
+          {
+            "fixed": 4400,
+            "caught_share": 0.5833
+          },
+          {
+            "fixed": 4500,
+            "caught_share": 0.5833
+          },
+          {
+            "fixed": 4600,
+            "caught_share": 0.5833
+          },
+          {
+            "fixed": 4700,
+            "caught_share": 0.5833
+          },
+          {
+            "fixed": 4800,
+            "caught_share": 0.5833
+          },
+          {
+            "fixed": 4900,
+            "caught_share": 0.5833
+          },
+          {
+            "fixed": 5000,
+            "caught_share": 0.5833
+          }
+        ]
+      },
+      {
+        "ranking": "exploit_epss",
+        "label": "Exploit + EPSS",
+        "points": [
+          {
+            "fixed": 0,
+            "caught_share": 0.0
+          },
+          {
+            "fixed": 100,
+            "caught_share": 0.0833
+          },
+          {
+            "fixed": 200,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 300,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 400,
+            "caught_share": 0.2708
+          },
+          {
+            "fixed": 500,
+            "caught_share": 0.2708
+          },
+          {
+            "fixed": 600,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 700,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 800,
+            "caught_share": 0.3542
+          },
+          {
+            "fixed": 900,
+            "caught_share": 0.3542
+          },
+          {
+            "fixed": 1000,
+            "caught_share": 0.3542
+          },
+          {
+            "fixed": 1100,
+            "caught_share": 0.3542
+          },
+          {
+            "fixed": 1200,
+            "caught_share": 0.375
+          },
+          {
+            "fixed": 1300,
+            "caught_share": 0.375
+          },
+          {
+            "fixed": 1400,
+            "caught_share": 0.375
+          },
+          {
+            "fixed": 1500,
+            "caught_share": 0.4167
+          },
+          {
+            "fixed": 1600,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 1700,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 1800,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 1900,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2000,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2100,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2200,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2300,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2400,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2500,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2600,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2700,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2800,
+            "caught_share": 0.4375
+          },
+          {
+            "fixed": 2900,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 3000,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 3100,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 3200,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 3300,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 3400,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 3500,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 3600,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 3700,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 3800,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 3900,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 4000,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 4100,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 4200,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 4300,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 4400,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 4500,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 4600,
+            "caught_share": 0.4583
+          },
+          {
+            "fixed": 4700,
+            "caught_share": 0.4792
+          },
+          {
+            "fixed": 4800,
+            "caught_share": 0.4792
+          },
+          {
+            "fixed": 4900,
+            "caught_share": 0.4792
+          },
+          {
+            "fixed": 5000,
+            "caught_share": 0.4792
+          }
+        ]
+      },
+      {
+        "ranking": "epss",
+        "label": "EPSS",
+        "points": [
+          {
+            "fixed": 0,
+            "caught_share": 0.0
+          },
+          {
+            "fixed": 100,
+            "caught_share": 0.0625
+          },
+          {
+            "fixed": 200,
+            "caught_share": 0.0833
+          },
+          {
+            "fixed": 300,
+            "caught_share": 0.125
+          },
+          {
+            "fixed": 400,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 500,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 600,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 700,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 800,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 900,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1000,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1100,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1200,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1300,
+            "caught_share": 0.1875
+          },
+          {
+            "fixed": 1400,
+            "caught_share": 0.1875
+          },
+          {
+            "fixed": 1500,
+            "caught_share": 0.1875
+          },
+          {
+            "fixed": 1600,
+            "caught_share": 0.2083
+          },
+          {
+            "fixed": 1700,
+            "caught_share": 0.2292
+          },
+          {
+            "fixed": 1800,
+            "caught_share": 0.2292
+          },
+          {
+            "fixed": 1900,
+            "caught_share": 0.2292
+          },
+          {
+            "fixed": 2000,
+            "caught_share": 0.2292
+          },
+          {
+            "fixed": 2100,
+            "caught_share": 0.25
+          },
+          {
+            "fixed": 2200,
+            "caught_share": 0.2708
+          },
+          {
+            "fixed": 2300,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 2400,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 2500,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 2600,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 2700,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 2800,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 2900,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3000,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3100,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3200,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3300,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3400,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3500,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3600,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 3700,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 3800,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 3900,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 4000,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 4100,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 4200,
+            "caught_share": 0.3333
+          },
+          {
+            "fixed": 4300,
+            "caught_share": 0.3333
+          },
+          {
+            "fixed": 4400,
+            "caught_share": 0.3333
+          },
+          {
+            "fixed": 4500,
+            "caught_share": 0.3333
+          },
+          {
+            "fixed": 4600,
+            "caught_share": 0.3333
+          },
+          {
+            "fixed": 4700,
+            "caught_share": 0.3542
+          },
+          {
+            "fixed": 4800,
+            "caught_share": 0.3542
+          },
+          {
+            "fixed": 4900,
+            "caught_share": 0.3542
+          },
+          {
+            "fixed": 5000,
+            "caught_share": 0.375
+          }
+        ]
+      },
+      {
+        "ranking": "cvss",
+        "label": "Highest CVSS",
+        "points": [
+          {
+            "fixed": 0,
+            "caught_share": 0.0
+          },
+          {
+            "fixed": 100,
+            "caught_share": 0.0833
+          },
+          {
+            "fixed": 200,
+            "caught_share": 0.0833
+          },
+          {
+            "fixed": 300,
+            "caught_share": 0.0833
+          },
+          {
+            "fixed": 400,
+            "caught_share": 0.1042
+          },
+          {
+            "fixed": 500,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 600,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 700,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 800,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 900,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1000,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1100,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1200,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1300,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1400,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1500,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1600,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1700,
+            "caught_share": 0.1667
+          },
+          {
+            "fixed": 1800,
+            "caught_share": 0.1875
+          },
+          {
+            "fixed": 1900,
+            "caught_share": 0.2292
+          },
+          {
+            "fixed": 2000,
+            "caught_share": 0.2292
+          },
+          {
+            "fixed": 2100,
+            "caught_share": 0.25
+          },
+          {
+            "fixed": 2200,
+            "caught_share": 0.25
+          },
+          {
+            "fixed": 2300,
+            "caught_share": 0.25
+          },
+          {
+            "fixed": 2400,
+            "caught_share": 0.25
+          },
+          {
+            "fixed": 2500,
+            "caught_share": 0.25
+          },
+          {
+            "fixed": 2600,
+            "caught_share": 0.25
+          },
+          {
+            "fixed": 2700,
+            "caught_share": 0.2708
+          },
+          {
+            "fixed": 2800,
+            "caught_share": 0.2708
+          },
+          {
+            "fixed": 2900,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3000,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3100,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3200,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3300,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3400,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3500,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3600,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3700,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3800,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 3900,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 4000,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 4100,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 4200,
+            "caught_share": 0.2917
+          },
+          {
+            "fixed": 4300,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 4400,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 4500,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 4600,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 4700,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 4800,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 4900,
+            "caught_share": 0.3125
+          },
+          {
+            "fixed": 5000,
+            "caught_share": 0.3125
+          }
+        ]
+      }
+    ],
+    "top_n": {
+      "fixed": 500,
+      "share_of_queue": 0.0069,
+      "caught_share": 0.3333
+    },
+    "backtest": {
+      "train_year": 2024,
+      "test_year": 2025,
+      "fold_rows": 35281,
+      "positives": 48
+    },
+    "embedding": {
+      "points": [
+        {
+          "cve_id": "CVE-2024-29824",
+          "x": 0.5604,
+          "y": 0.407,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2025-2776",
+          "x": 0.5803,
+          "y": 0.2109,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2025-35939",
+          "x": 0.3344,
+          "y": 0.2421,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2025-24472",
+          "x": 0.7092,
+          "y": 0.0851,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2025-6218",
+          "x": 0.7229,
+          "y": 0.3065,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-27348",
+          "x": 0.6957,
+          "y": 0.2659,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-58136",
+          "x": 0.5077,
+          "y": 0.5334,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-45195",
+          "x": 0.5406,
+          "y": 0.4347,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-37085",
+          "x": 0.7956,
+          "y": 0.0281,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2025-25181",
+          "x": 0.5478,
+          "y": 0.3946,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-23897",
+          "x": 0.5242,
+          "y": 0.2299,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-32113",
+          "x": 0.6525,
+          "y": 0.2452,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-13161",
+          "x": 0.6493,
+          "y": 0.1871,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-23692",
+          "x": 0.6283,
+          "y": 0.4913,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2025-48927",
+          "x": 0.727,
+          "y": 0.3991,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2025-5086",
+          "x": 0.7043,
+          "y": 0.3959,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-23113",
+          "x": 0.5925,
+          "y": 0.3229,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-6047",
+          "x": 0.6263,
+          "y": 0.3977,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-28995",
+          "x": 0.7085,
+          "y": 0.2136,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2025-6554",
+          "x": 0.4585,
+          "y": 0.4576,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2023-7028",
+          "x": 0.638,
+          "y": 0.0948,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2024-28987",
+          "x": 0.5504,
+          "y": 0.1038,
+          "on_kev": true
+        },
+        {
+          "cve_id": "CVE-2023-52363",
+          "x": 0.6117,
+          "y": 0.4422,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-0959",
+          "x": 0.2896,
+          "y": 0.4913,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-6094",
+          "x": 0.0799,
+          "y": 0.4719,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-20030",
+          "x": 0.6395,
+          "y": 0.3728,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-0194",
+          "x": 0.6584,
+          "y": 0.1297,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-3475",
+          "x": 0.2212,
+          "y": 0.4331,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-38732",
+          "x": 0.2809,
+          "y": 0.4204,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-31261",
+          "x": 0.5506,
+          "y": 0.3211,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-24009",
+          "x": 0.7443,
+          "y": 0.3494,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-1396",
+          "x": 0.5528,
+          "y": 0.1676,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-5880",
+          "x": 0.6059,
+          "y": 0.3876,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-49739",
+          "x": 0.6666,
+          "y": 0.225,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-44820",
+          "x": 0.5131,
+          "y": 0.4433,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-21761",
+          "x": 0.5232,
+          "y": 0.1719,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-24757",
+          "x": 0.6435,
+          "y": 0.2216,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-2130",
+          "x": 0.5396,
+          "y": 0.5451,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-30602",
+          "x": 0.0923,
+          "y": 0.6766,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-25078",
+          "x": 0.8854,
+          "y": 0.5875,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-38364",
+          "x": 0.9639,
+          "y": 0.8701,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-47544",
+          "x": 0.2391,
+          "y": 0.6129,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-4287",
+          "x": 0.5343,
+          "y": 0.4262,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-29480",
+          "x": 0.794,
+          "y": 0.5797,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-23194",
+          "x": 0.6909,
+          "y": 0.3511,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-29208",
+          "x": 0.6696,
+          "y": 0.1358,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-47121",
+          "x": 0.6758,
+          "y": 0.1365,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-21673",
+          "x": 0.9881,
+          "y": 0.8263,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-6143",
+          "x": 0.7109,
+          "y": 0.4804,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-48923",
+          "x": 0.0853,
+          "y": 0.6921,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-47040",
+          "x": 0.2128,
+          "y": 0.3701,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-38032",
+          "x": 0.9781,
+          "y": 0.9282,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-49178",
+          "x": 0.7522,
+          "y": 0.5797,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-41788",
+          "x": 0.6153,
+          "y": 0.376,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-56760",
+          "x": 0.6488,
+          "y": 0.2976,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-5648",
+          "x": 0.3755,
+          "y": 0.3384,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-12799",
+          "x": 0.7426,
+          "y": 0.1407,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-9655",
+          "x": 0.4203,
+          "y": 0.3014,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-48332",
+          "x": 0.3697,
+          "y": 0.4939,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-36002",
+          "x": 0.9897,
+          "y": 0.8624,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-33213",
+          "x": 0.7781,
+          "y": 0.6135,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-50162",
+          "x": 0.4816,
+          "y": 0.371,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-27499",
+          "x": 0.2777,
+          "y": 0.4765,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-45053",
+          "x": 0.4402,
+          "y": 0.2777,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-38002",
+          "x": 0.7676,
+          "y": 0.17,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-39546",
+          "x": 0.82,
+          "y": 0.282,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-22470",
+          "x": 0.6577,
+          "y": 0.4796,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-32109",
+          "x": 0.2096,
+          "y": 0.5404,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-26876",
+          "x": 0.519,
+          "y": 0.3503,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-3171",
+          "x": 0.4498,
+          "y": 0.4023,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-42110",
+          "x": 0.9696,
+          "y": 0.8942,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-3744",
+          "x": 0.8019,
+          "y": 0.0,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-33633",
+          "x": 0.1634,
+          "y": 0.6658,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-1377",
+          "x": 0.0441,
+          "y": 0.5419,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-35298",
+          "x": 0.4691,
+          "y": 0.226,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-7511",
+          "x": 0.4726,
+          "y": 0.4118,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-46738",
+          "x": 0.9264,
+          "y": 0.8461,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-7080",
+          "x": 0.6244,
+          "y": 0.3684,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-2595",
+          "x": 0.5428,
+          "y": 0.1913,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-52271",
+          "x": 0.8772,
+          "y": 0.5005,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-3745",
+          "x": 0.1528,
+          "y": 0.6784,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-24474",
+          "x": 0.4771,
+          "y": 0.3961,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-13865",
+          "x": 0.1126,
+          "y": 0.4708,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-0014",
+          "x": 0.8036,
+          "y": 0.2034,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-6609",
+          "x": 0.7146,
+          "y": 0.5297,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-5372",
+          "x": 0.6704,
+          "y": 0.3518,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-34204",
+          "x": 0.6368,
+          "y": 0.4639,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-30946",
+          "x": 0.3622,
+          "y": 0.5083,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-8374",
+          "x": 0.5228,
+          "y": 0.4877,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2022-49508",
+          "x": 0.9005,
+          "y": 0.8402,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-23689",
+          "x": 0.6032,
+          "y": 0.1119,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2022-4962",
+          "x": 0.6782,
+          "y": 0.2282,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-33668",
+          "x": 0.427,
+          "y": 0.3826,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-38278",
+          "x": 0.7285,
+          "y": 0.5026,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-45067",
+          "x": 0.7918,
+          "y": 0.0587,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-2514",
+          "x": 0.5034,
+          "y": 0.4324,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-21184",
+          "x": 0.7378,
+          "y": 0.2311,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-36512",
+          "x": 0.509,
+          "y": 0.231,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-30048",
+          "x": 0.5718,
+          "y": 0.2531,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-38986",
+          "x": 0.5855,
+          "y": 0.5267,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-21143",
+          "x": 0.6034,
+          "y": 0.3187,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-38520",
+          "x": 0.4885,
+          "y": 0.3959,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-40993",
+          "x": 0.935,
+          "y": 0.9245,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-23998",
+          "x": 0.2231,
+          "y": 0.6507,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-45816",
+          "x": 0.5427,
+          "y": 0.1974,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-30160",
+          "x": 0.7427,
+          "y": 0.5961,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2021-47331",
+          "x": 0.9577,
+          "y": 0.8601,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-24827",
+          "x": 0.7698,
+          "y": 0.1525,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-13705",
+          "x": 0.0827,
+          "y": 0.5447,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-8796",
+          "x": 0.6312,
+          "y": 0.1488,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-2124",
+          "x": 0.5281,
+          "y": 0.3651,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-24876",
+          "x": 0.5877,
+          "y": 0.1446,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-2230",
+          "x": 0.6465,
+          "y": 0.0435,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-1075",
+          "x": 0.2956,
+          "y": 0.4375,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-13400",
+          "x": 0.091,
+          "y": 0.6037,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-7120",
+          "x": 0.5126,
+          "y": 0.3829,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-4498",
+          "x": 0.5806,
+          "y": 0.446,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-5406",
+          "x": 0.7199,
+          "y": 0.2091,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-21259",
+          "x": 0.6167,
+          "y": 0.2671,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-23528",
+          "x": 0.7098,
+          "y": 0.3321,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-22091",
+          "x": 0.9823,
+          "y": 0.8395,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-26080",
+          "x": 0.2305,
+          "y": 0.3966,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-6573",
+          "x": 0.7447,
+          "y": 0.1146,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-48956",
+          "x": 0.6742,
+          "y": 0.5951,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2022-50371",
+          "x": 0.9496,
+          "y": 0.922,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-31083",
+          "x": 0.6829,
+          "y": 0.6652,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-47276",
+          "x": 0.6515,
+          "y": 0.239,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-6125",
+          "x": 0.368,
+          "y": 0.3284,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-10426",
+          "x": 0.4645,
+          "y": 0.3684,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-37110",
+          "x": 0.7432,
+          "y": 0.1817,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-0443",
+          "x": 0.9837,
+          "y": 0.7676,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-23783",
+          "x": 0.7241,
+          "y": 0.1516,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-37118",
+          "x": 0.3279,
+          "y": 0.3467,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-6885",
+          "x": 0.3875,
+          "y": 0.4112,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-21583",
+          "x": 0.6981,
+          "y": 0.5545,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-5553",
+          "x": 0.0266,
+          "y": 0.5622,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-38386",
+          "x": 0.6634,
+          "y": 0.2992,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-39830",
+          "x": 1.0,
+          "y": 0.9364,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2019-19751",
+          "x": 0.6949,
+          "y": 0.3038,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-8996",
+          "x": 0.6204,
+          "y": 0.1334,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-31306",
+          "x": 0.0033,
+          "y": 0.6712,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-32541",
+          "x": 0.0265,
+          "y": 0.6665,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-42497",
+          "x": 0.6937,
+          "y": 0.0297,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-26770",
+          "x": 0.1208,
+          "y": 0.6029,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-25126",
+          "x": 0.5663,
+          "y": 0.6148,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-31323",
+          "x": 0.6442,
+          "y": 0.2179,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-3618",
+          "x": 0.5138,
+          "y": 0.4611,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-37894",
+          "x": 0.9653,
+          "y": 1.0,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-47867",
+          "x": 0.7258,
+          "y": 0.3477,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-53387",
+          "x": 0.3218,
+          "y": 0.5832,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-28865",
+          "x": 0.4284,
+          "y": 0.3815,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-7481",
+          "x": 0.5349,
+          "y": 0.4804,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-25394",
+          "x": 0.8299,
+          "y": 0.7804,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-42520",
+          "x": 0.556,
+          "y": 0.5143,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-30386",
+          "x": 0.5495,
+          "y": 0.2401,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-27312",
+          "x": 0.2145,
+          "y": 0.5933,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-40568",
+          "x": 0.8151,
+          "y": 0.5893,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-6896",
+          "x": 0.1105,
+          "y": 0.4665,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-30724",
+          "x": 0.5422,
+          "y": 0.3479,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-58665",
+          "x": 0.0,
+          "y": 0.6701,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-33101",
+          "x": 0.2005,
+          "y": 0.496,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-36558",
+          "x": 0.703,
+          "y": 0.3389,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-5158",
+          "x": 0.7398,
+          "y": 0.3379,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-27347",
+          "x": 0.7627,
+          "y": 0.2637,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-32642",
+          "x": 0.4207,
+          "y": 0.3733,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-57347",
+          "x": 0.5335,
+          "y": 0.5976,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-37293",
+          "x": 0.786,
+          "y": 0.4154,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-8537",
+          "x": 0.6045,
+          "y": 0.1983,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-11718",
+          "x": 0.0755,
+          "y": 0.4691,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-4609",
+          "x": 0.5639,
+          "y": 0.225,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-8956",
+          "x": 0.8093,
+          "y": 0.5136,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-7536",
+          "x": 0.4339,
+          "y": 0.5343,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-49791",
+          "x": 0.2827,
+          "y": 0.3636,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-3881",
+          "x": 0.6232,
+          "y": 0.548,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-36183",
+          "x": 0.2524,
+          "y": 0.3589,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-55552",
+          "x": 0.6627,
+          "y": 0.5732,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-29819",
+          "x": 0.0899,
+          "y": 0.6586,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-2839",
+          "x": 0.0981,
+          "y": 0.5437,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-44423",
+          "x": 0.692,
+          "y": 0.418,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2021-47333",
+          "x": 0.9442,
+          "y": 0.8141,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-48978",
+          "x": 0.689,
+          "y": 0.4242,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-7091",
+          "x": 0.6549,
+          "y": 0.2119,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-21525",
+          "x": 0.693,
+          "y": 0.5414,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-22494",
+          "x": 0.2588,
+          "y": 0.507,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-30755",
+          "x": 0.2539,
+          "y": 0.6137,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-4839",
+          "x": 0.535,
+          "y": 0.4427,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-27490",
+          "x": 0.843,
+          "y": 0.2589,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-39378",
+          "x": 0.6844,
+          "y": 0.3377,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-41030",
+          "x": 0.5755,
+          "y": 0.3763,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-29921",
+          "x": 0.2128,
+          "y": 0.5951,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-26953",
+          "x": 0.569,
+          "y": 0.346,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-36201",
+          "x": 0.2128,
+          "y": 0.3772,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-13926",
+          "x": 0.2221,
+          "y": 0.6471,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-4200",
+          "x": 0.5998,
+          "y": 0.2915,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-29027",
+          "x": 0.5484,
+          "y": 0.3718,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2025-31419",
+          "x": 0.1331,
+          "y": 0.6998,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-0378",
+          "x": 0.1065,
+          "y": 0.5019,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-41171",
+          "x": 0.6955,
+          "y": 0.4975,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2024-29773",
+          "x": 0.3128,
+          "y": 0.4232,
+          "on_kev": false
+        },
+        {
+          "cve_id": "CVE-2023-53334",
+          "x": 0.9725,
+          "y": 0.9254,
+          "on_kev": false
+        }
+      ],
+      "clusters": [
+        {
+          "label": "Cross-site Scripting",
+          "x": 0.1239,
+          "y": 0.5931
+        },
+        {
+          "label": "Stack-based Buffer Overflow",
+          "x": 0.7084,
+          "y": 0.5267
+        },
+        {
+          "label": "Path Traversal",
+          "x": 0.6706,
+          "y": 0.2069
+        },
+        {
+          "label": "NULL Pointer Dereference",
+          "x": 0.9551,
+          "y": 0.8728
+        },
+        {
+          "label": "Cross-Site Request Forgery (CSRF)",
+          "x": 0.2987,
+          "y": 0.4154
+        },
+        {
+          "label": "Injection",
+          "x": 0.5247,
+          "y": 0.3995
+        }
+      ]
+    },
+    "takeaways": {
+      "curves": "Fixing the top 500 by our ranking catches 33% of the CVEs exploited later, against 27% for exploit code + EPSS.",
+      "embedding": "Descriptions of exploited CVEs (diamonds) sit close together: Granite's embedding places similar attacks near each other."
+    }
+  },
+  "vendors": {
+    "cells": [
+      {
+        "vendor": "Microsoft",
+        "cve_count": 17847,
+        "kev_share": 0.02045
+      },
+      {
+        "vendor": "Google",
+        "cve_count": 16742,
+        "kev_share": 0.00532
+      },
+      {
+        "vendor": "Linux",
+        "cve_count": 15314,
+        "kev_share": 0.00157
+      },
+      {
+        "vendor": "Oracle",
+        "cve_count": 13228,
+        "kev_share": 0.00567
+      },
+      {
+        "vendor": "Debian",
+        "cve_count": 10158,
+        "kev_share": 0.01142
+      },
+      {
+        "vendor": "Apple",
+        "cve_count": 9493,
+        "kev_share": 0.01011
+      },
+      {
+        "vendor": "IBM",
+        "cve_count": 9057,
+        "kev_share": 0.0011
+      },
+      {
+        "vendor": "Adobe",
+        "cve_count": 7850,
+        "kev_share": 0.00968
+      },
+      {
+        "vendor": "Cisco",
+        "cve_count": 6719,
+        "kev_share": 0.01295
+      },
+      {
+        "vendor": "Red Hat",
+        "cve_count": 5941,
+        "kev_share": 0.01464
+      },
+      {
+        "vendor": "Other",
+        "cve_count": 253255,
+        "kev_share": 0.00466
+      }
+    ],
+    "ranking": [
+      "Microsoft",
+      "Red Hat",
+      "Cisco",
+      "Debian"
+    ],
+    "takeaway": "Microsoft has the highest KEV rate of the largest vendors: 2.0% of its 17,847 CVEs were exploited."
+  },
+  "benchmark": {
+    "train_years": [
+      2024
+    ],
+    "test_years": [
+      2025
+    ],
+    "final_train_years": [
+      2024,
+      2025
+    ],
+    "cves_scored": 72670,
+    "top_n": 500,
+    "top_n_file": "top500.csv",
+    "top_n_ready": true,
+    "data_checked": "2026-11-08"
+  }
+}

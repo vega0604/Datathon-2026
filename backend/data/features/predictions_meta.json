@@ -1,0 +1,11 @@
+{
+  "variant": "blend_a0.25",
+  "alpha": 0.25,
+  "built_at": "2026-11-08T11:11:07+00:00",
+  "signals_through": "2025-12",
+  "scoreboard_months": [
+    "2026-01",
+    "2026-09"
+  ],
+  "refresh": "load newer signal files, rerun clean and features, then `uv run python -m backend.modeling.serving`"
+}

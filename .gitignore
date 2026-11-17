@@ -3,6 +3,8 @@
 data/
 # …but the frontend's data modules (imported by the UI) are source code.
 !frontend/src/data/
+# backend/data is re-opened so the runtime files below can be committed.
+!backend/data/
 outputs/
 !outputs/charts/
 !outputs/top500.csv
@@ -41,6 +43,26 @@ backend/src/backend/data/
 # ...except small files we want in the repo
 !backend/src/backend/vendor_aliases.csv
 !backend/outputs/top500.csv
+
+# ...and the files the API reads at runtime (~100 MB), so a deploy needs no pipeline run.
+# Raw CSVs, embeddings and the other intermediate files stay ignored.
+!backend/data/app.duckdb
+!backend/data/parquet/
+backend/data/parquet/*
+!backend/data/parquet/vulnerabilities.parquet
+!backend/data/parquet/weakness_types.parquet
+!backend/data/parquet/scoreboard_2026.parquet
+!backend/data/clean/
+backend/data/clean/*
+!backend/data/clean/kev.parquet
+!backend/data/clean/exploit_signals.parquet
+!backend/data/clean/affected_products.parquet
+!backend/data/clean/vendor_aliases.parquet
+!backend/data/features/
+backend/data/features/*
+!backend/data/features/predictions.parquet
+!backend/data/features/predictions_meta.json
+!backend/data/features/insights.json
 
 # Generated outputs: keep only the submission and charts
 backend/outputs/*
