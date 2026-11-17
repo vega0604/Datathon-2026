@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { AppHeader } from './insights/AppHeader'
 import { Sidebar } from './Sidebar'
 import { IconDarkContext } from '../lib/iconTheme'
@@ -17,6 +17,8 @@ export function AppShell({ theme = 'light', onThemeChange, onHome, sidebar, chil
   const mobile = useIsMobile()
   const [menuOpen, setMenuOpen] = useState(false)
   const close = () => setMenuOpen(false)
+  const rootRef = useRef(null)
+  usePageBackground(rootRef, dark)
 
   // In the menu, picking a destination also closes the menu.
   const andClose = (fn) => fn && ((...args) => (close(), fn(...args)))
@@ -31,7 +33,7 @@ export function AppShell({ theme = 'light', onThemeChange, onHome, sidebar, chil
 
   return (
     <IconDarkContext.Provider value={dark}>
-      <div className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[560px] flex-col bg-page font-sans mobile:h-auto mobile:min-h-dvh`}>
+      <div ref={rootRef} className={`theme-v5 ${dark ? 'theme-dark' : ''} flex h-screen min-h-[560px] flex-col bg-page font-sans mobile:h-auto mobile:min-h-dvh`}>
         <a
           href="#content"
           className="sr-only rounded-full bg-blue px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[70]"
@@ -57,6 +59,31 @@ export function AppShell({ theme = 'light', onThemeChange, onHome, sidebar, chil
       </div>
     </IconDarkContext.Provider>
   )
+}
+
+/**
+ * Gives <html> and <body> the current skin's page colour. The theme classes live on
+ * the app's root div, so without this the document behind it stays light: on phones
+ * that shows as a white strip below the content when the browser toolbar collapses,
+ * in the overscroll bounce, and in Safari's translucent toolbar (which tints itself
+ * from the page background). Also sets theme-color and color-scheme to match.
+ */
+function usePageBackground(rootRef, dark) {
+  useLayoutEffect(() => {
+    const root = rootRef.current
+    if (!root) return
+    const page = getComputedStyle(root).getPropertyValue('--color-page').trim()
+    if (!page) return
+    for (const el of [document.documentElement, document.body]) el.style.backgroundColor = page
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+    let meta = document.querySelector('meta[name="theme-color"]')
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.name = 'theme-color'
+      document.head.appendChild(meta)
+    }
+    meta.content = page
+  }, [rootRef, dark])
 }
 
 function MenuDrawer({ onClose, children }) {

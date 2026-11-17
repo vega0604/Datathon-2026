@@ -2,7 +2,8 @@ import { Icon } from '../lib/Icon'
 import { signals } from '../data/ui'
 
 // On phones (< 640px) a row wraps onto two lines: rank chip on the left (absolutely
-// placed), CVE + component and risk on the first line, CVSS and the warning sign below.
+// placed), CVE + component and risk on the first line, CVSS and the warning sign below,
+// each with a small caption since the header row is hidden there.
 // Tablets have room for the desktop row.
 const COLS = {
   rank: 'w-12',
@@ -48,6 +49,16 @@ function WarningSign({ signal }) {
   )
 }
 
+// Phones hide the column header row, so each value carries its own small caption.
+// Screen readers already get the column names from the (visually hidden) header row.
+function Caption({ children }) {
+  return (
+    <span aria-hidden="true" className="hidden text-[11px] leading-4 font-medium text-ink-muted max-sm:block">
+      {children}
+    </span>
+  )
+}
+
 function QueueRow({ item, selected, onSelect }) {
   return (
     <div
@@ -76,8 +87,8 @@ function QueueRow({ item, selected, onSelect }) {
       <span role="gridcell" className={`${COLS.what} type-body-compact truncate font-semibold text-ink`}>
         {item.component}
       </span>
-      <span role="gridcell" className={`flex h-5 ${COLS.risk} shrink-0 flex-col gap-1 overflow-hidden max-sm:h-auto`}>
-        <span className="sr-only">Risk </span>
+      <span role="gridcell" className={`flex h-5 ${COLS.risk} shrink-0 flex-col gap-1 overflow-hidden max-sm:h-auto max-sm:gap-0.5`}>
+        <Caption>Risk</Caption>
         <span className="font-mono text-sm leading-5 tracking-label text-ink">{item.score.toFixed(2)}</span>
         <span className="relative h-1.5 w-10 shrink-0 overflow-hidden rounded-full bg-subtle">
           <span className="absolute inset-y-0 left-0 rounded-full bg-blue" style={{ width: `${item.score * 100}%` }} />
@@ -85,10 +96,12 @@ function QueueRow({ item, selected, onSelect }) {
       </span>
       {/* Phones: starts the second line. */}
       <span aria-hidden="true" className="hidden basis-full max-sm:block" />
-      <span role="gridcell" className={`flex ${COLS.cvss} shrink-0 items-center`}>
+      <span role="gridcell" className={`flex ${COLS.cvss} shrink-0 items-center max-sm:flex-col max-sm:items-start max-sm:gap-1`}>
+        <Caption>CVSS</Caption>
         <SeverityTag cvss={item.cvss} severity={item.severity} />
       </span>
-      <span role="gridcell" className={`flex h-7 ${COLS.signal} shrink-0 items-center overflow-hidden`}>
+      <span role="gridcell" className={`flex h-7 ${COLS.signal} shrink-0 items-center overflow-hidden max-sm:flex-col max-sm:items-start max-sm:gap-1`}>
+        <Caption>Warning sign</Caption>
         <WarningSign signal={item.signal} />
       </span>
     </div>
